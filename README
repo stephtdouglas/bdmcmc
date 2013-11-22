@@ -1,0 +1,9 @@
+bdmcmc
+Created by Stephanie Douglas, 22 November 2013
+stephanietdouglas@gmail.com
+
+This repository will contain the code for my first year project.
+
+The goal of the project is to determine how well we can constrain brown dwarf atmospheric parameters (Teff, logg) using models and low-resolution spectra.
+
+I will be using MCMC to do this.
