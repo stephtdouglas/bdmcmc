@@ -4,23 +4,75 @@
 
 
 import numpy as np
-#import triangle # by Dan Foreman-Mackey
+# import triangle # by Dan Foreman-Mackey
+# import Adrian's chain-plotting code
 
-class BDSampler(object,wave,flux,noise,model):
+# config loads database and makes it available as db
+from config import * 
 
-    def __init__(self):
-        self.date = datetime.date.isoformat(datetime.date.today()) # string
+
+class BDSampler(object):
+    """
+    Class to contain and run emcee on a spectrum and model grid
+    and to plot/analyze outputs
+
+    Call as:
+       from bdmcmc import bdfit
+       x = bdfit.BDSampler(obj_name,spectrum,model,params)
+      where obj_name (string) gives an identifier for the object
+            spectrum (dict) contains 'wavelength','flux','unc'
+            model (dict) keyed by params, 'wsyn', 'fsyn'
+            params (list of strings) parameters to vary in fit, 
+              must be keys of model
+    """
+
+    def __init__(self,obj_name,spectrum,model,params):
+        """
+        Creates the variables:
+            date (string)
+            name (string)
+            wave (array)
+            flux (array)
+            unc (array)
+            model (dict)
+            mod_keys (list of strings)
+            params (list of strings)
+            ndim (int)
+        """
+
+        # date string to version output files for a particular run
+        self.date = datetime.date.isoformat(datetime.date.today()) 
+        # Eventually - Add a timestamp?
+
+        self.name = obj_name
+
+        self.wave = spectrum['wavelength']
+        self.flux = spectrum['flux']
+        self.unc = spectrum['unc']
+
+        self.model = model
+        self.mod_keys = model.keys()
+        if ('wsyn' in self.mod_keys)==False:
+            print "ERROR! model wavelength must be keyed with 'wsyn'!"
+        if ('fsyn' in self.mod_keys)==False:
+            print "ERROR! model flux must be keyed with 'fsyn'!"
+
+        self.params = params
+        self.ndim = len(self.params)
+
+        for p in self.params:
+            if (p in self.mod_keys)==False:
+                print 'ERROR! parameter {} not found!'.format(p)
+
+     
 
     def lnlike(self):
         """
         """
 
         model = []
-        x = []
-        y = []
-        yerr = []
 
-        return -0.5*(np.sum((y-model)**2/(yerr**2)))
+        return -0.5*(np.sum((self.flux-model)**2/(self.unc**2)))
 
 
     def lnprior(self):
