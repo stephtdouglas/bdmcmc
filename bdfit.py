@@ -9,8 +9,7 @@ import numpy as np
 class BDSampler(object,wave,flux,noise,model):
 
     def __init__(self):
-        print 'hello world'
-
+        self.date = datetime.date.isoformat(datetime.date.today()) # string
 
     def lnlike(self):
         """
