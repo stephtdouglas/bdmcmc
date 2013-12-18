@@ -54,3 +54,38 @@ def falt2(w, f, FWHM):
     return ftar2
 
 
+class AtmoModel(object):
+    """
+    at the moment, the model must be contained in a pickle file,
+    given by filename
+    """
+
+    def __init__(self,filename,params_to_ignore=None,
+        wave_key='wsyn',flux_key='fsyn'):
+        """
+        """
+        mfile = open(filename,'rb')
+        self.model = cPickle.load(mfile)
+        mfile.close()
+
+        if wave_key!='wsyn':
+            self.model['wsyn'] = self.model.pop(wave_key)
+        if flux_key!='fsyn':
+            self.model['fsyn'] = self.model.pop(flux_key)
+
+        if params_to_ignore!=None:
+            for drop in params_to_ignore:
+                junk = self.model.pop(drop)
+
+        self.mod_keys = self.model.keys()
+        if ('wsyn' in self.mod_keys)==False:
+            print "ERROR! model wavelength must be keyed with 'wsyn'!"
+            print self.mod_keys
+        if ('fsyn' in self.mod_keys)==False:
+            print "ERROR! model flux must be keyed with 'fsyn'!"
+            print self.mod_keys
+
+        temp_mod = dict(self.model)
+        temp_mod.pop('wsyn')
+        temp_mod.pop('fsyn')
+        self.params = temp_mod.keys()
