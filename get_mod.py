@@ -24,17 +24,25 @@ def falt2(w, f, FWHM):
     #Defining the resolution of the observed data
     res = (np.sqrt(2.0)*FWHM)/2.35482
 
-    #print w,f
+    print w,f
+
+    while len(w)==1:
+        w = w[0]
+        print w,f
 
     #floor() converts the input to the nearest integer not greater than the input
     nw = (max(w) - min(w))/(res*0.1)
     nw2 = np.floor(nw) + 1.0
-    #print 'nw',nw, nw2-1
+    print 'nw',nw, nw2-1
 
     #Creating a wavelength grid
     wtar = np.arange(nw2)*res*0.1 + w[0]
     #print len(w),len(wtar)
     #print w[0:10],wtar[0:10]
+
+    print wtar
+    while len(wtar)==1:
+        wtar = wtar[0]
 
     #Interpolating to match a flux array to the wavelength grid
     ftar = np.interp(wtar, w, f)
@@ -48,6 +56,7 @@ def falt2(w, f, FWHM):
     fconvol = np.convolve(ftar, yk, 'same')
     fconvol2 = fconvol/(1.0/(0.1*res))
 
+    print len(w), len(wtar), len(fconvol2)
     ftar2 = np.interp(w, wtar, fconvol2)
     #print ftar2
 
