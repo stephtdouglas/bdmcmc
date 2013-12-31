@@ -9,7 +9,7 @@ import numpy as np
 # config loads database and makes it available as db
 from config import * 
 
-def spectrum_query(telescope_id,instrument_id,
+def spectrum_query(source_id,telescope_id,instrument_id,
     obs_date=None,filename=None,order=None):
     """
     Inputs:
@@ -46,15 +46,18 @@ def spectrum_query(telescope_id,instrument_id,
 
     base_query = "SELECT wavelength, flux, unc FROM spectra WHERE "
     #print base_query
-    end_query = " telescope_id={} AND instrument_id={}".format(
-        telescope_id,instrument_id)
+    end_query = " source_id={} AND telescope_id={} AND instrument_id={}".format(
+        source_id,telescope_id,instrument_id)
     #print end_query
     full_query = base_query+query_add+end_query
-    print full_query
+    #print full_query
 
     q_result = db.dict.execute(full_query).fetchall()
 
-    return q_result[0]
+    try:
+        return q_result[0]
+    except:
+        return {'wavelength':[],'flux':[],'unc':[]}
 
 
 class BrownDwarf(object):
@@ -124,7 +127,7 @@ class BrownDwarf(object):
         spex_id = 6
         irtf_id = 7
 
-        self.specs['low'] = spectrum_query(
+        self.specs['low'] = spectrum_query(self.sid,
             irtf_id, spex_id, obs_date, filename)
         
 
@@ -146,7 +149,7 @@ class BrownDwarf(object):
         inst_id = 9 # NIRSPEC
         scope_id = 9 # Keck II
 
-        self.specs[order] = spectrum_query(scope_id,inst_id,
+        self.specs[order] = spectrum_query(self.sid,scope_id,inst_id,
             obs_date=obs_date,order=order)
 
 
