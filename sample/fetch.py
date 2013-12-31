@@ -1,0 +1,43 @@
+# Module to fetch my objects from the database
+# Stephanie Douglas, 31 December 2013
+################################################################################
+
+# Third Party
+import numpy as np
+import asciitable as at
+
+# Mine
+from bdmcmc.config import *
+from bdmcmc.spectra import *
+
+
+class BDList(object):
+    """
+    """
+
+    def __init__(self,infile):
+
+        sample_list = at.read(infile)
+        self.unums = sample_list['unum']
+
+        self.brown_dwarfs = {}
+        for u in self.unums:
+            self.brown_dwarfs[u]= BrownDwarf(u)
+            print u, self.brown_dwarfs[u].sid
+
+        self.fetch_specs()
+
+
+    def fetch_specs(self):
+        for u in self.unums:
+           self.brown_dwarfs[u].get_low()
+           print u, self.brown_dwarfs[u].sid, self.brown_dwarfs[u].specs.keys()
+           for i in range(58,66):
+               self.brown_dwarfs[u].get_order(i)
+
+
+
+
+
+def fetch_12():
+    return BDList('/home/stephanie/ldwarfs/Ldwarf_sample2014.csv')
