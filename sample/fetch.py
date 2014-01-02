@@ -19,10 +19,14 @@ class BDList(object):
 
         sample_list = at.read(infile)
         self.unums = sample_list['unum']
+        self.spts = sample_list['Type']
+        self.obs_dates = sample_list['ObsDate']
 
         self.brown_dwarfs = {}
         for u in self.unums:
-            self.brown_dwarfs[u]= BrownDwarf(u)
+            self.brown_dwarfs[u] = BrownDwarf(u)
+            self.brown_dwarfs[u].spt = self.spts[self.unums==u][0]
+            self.brown_dwarfs[u].obs_date = self.obs_dates[self.unums==u][0]
             print u, self.brown_dwarfs[u].sid
 
         self.fetch_specs()
@@ -33,11 +37,26 @@ class BDList(object):
            self.brown_dwarfs[u].get_low()
            print u, self.brown_dwarfs[u].sid, self.brown_dwarfs[u].specs.keys()
            for i in range(58,66):
-               self.brown_dwarfs[u].get_order(i)
+               self.brown_dwarfs[u].get_order(i,
+                    obs_date=self.brown_dwarfs[u].obs_date)
 
 
 
 
 
 def fetch_12():
-    return BDList('/home/stephanie/ldwarfs/Ldwarf_sample2014.csv')
+    my_bds = BDList('/home/stephanie/ldwarfs/Ldwarf_sample2014.csv')
+
+    # Use Burgasser+08's spectrum from the SpeX Prism Library
+    oldfile = at.read('/home/stephanie/ldwarfs/summerAMNH/LdwarfSpectra/spex_prism_gd165b_090629.txt')
+    old_spectrum = {'wavelength':oldfile['col1'],'flux':oldfile['col2'],
+        'unc':oldfile['col3']}
+    my_bds.brown_dwarfs['U13079'].specs['low'] = old_spectrum
+
+    # select appropriate spectrum for GD 165 B
+    source_id = my_bds.brown_dwarfs['U40039'].sid
+    my_bds.brown_dwarfs['U40039'].specs['low'] = spectrum_query(source_id,
+         '','',filename='spex_prism_G196-3B_U40039.fits')
+
+
+    return my_bds
