@@ -5,6 +5,7 @@
 
 
 import numpy as np
+import astropy.units as u
 
 # config loads database and makes it available as db
 from config import * 
@@ -44,21 +45,41 @@ def spectrum_query(source_id,telescope_id,instrument_id,
             order)
     #print query_add
 
-    base_query = "SELECT wavelength, flux, unc FROM spectra WHERE "
+    base_query = ("SELECT wavelength_units, flux_units,"
+        +" wavelength, flux, unc FROM spectra WHERE ")
     #print base_query
-    end_query = " source_id={} AND telescope_id={} AND instrument_id={}".format(
-        source_id,telescope_id,instrument_id)
+    if telescope_id=='' and instrument_id=='':
+        end_query = " source_id={}".format(source_id)
+    else:
+        end_query = (" source_id={} AND telescope_id={} AND instrument_id={}"
+            ).format(source_id,telescope_id,instrument_id)
     #print end_query
     full_query = base_query+query_add+end_query
     #print full_query
 
     q_result = db.dict.execute(full_query).fetchall()
+    #print q_result
+    #print '0',q_result[0]
 
     try:
-        return q_result[0]
+        q_result = q_result[0]
     except:
         return {'wavelength':[],'flux':[],'unc':[]}
 
+    wave_unit = q_result['wavelength_units']
+    flux_unit = q_result['flux_units']
+    flux_unit = flux_unit.replace('ergs','erg').replace('Wm','W m')
+    flux_unit = u.Unit(flux_unit.replace('normalized',''))
+    wave_unit = u.Unit(wave_unit)
+
+    q_result_out = {'wavelength':q_result['wavelength']*wave_unit,
+         'flux':q_result['flux']*flux_unit}
+    if q_result['unc']==None:
+         q_result_out['unc'] = np.ones(len(q_result['flux']))*flux_unit
+    else:
+         q_result_out['unc'] = q_result['unc']*flux_unit
+
+    return q_result_out
 
 class BrownDwarf(object):
     """
@@ -103,6 +124,12 @@ class BrownDwarf(object):
             print 'Object {} not found!'.format(name)
             self.sid = np.inf
         self.name = name
+
+#        spts = db.query.execute(("SELECT spectral_type, gravity FROM 
+#            spectral_types WHERE source_id = self.sid AND adopted=True")
+#            ).fetchall()
+#        if len(spts)>0:
+          
 
         self.specs = {}
 
