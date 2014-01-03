@@ -5,6 +5,7 @@
 
 
 import numpy as np
+from astropy import units as u
 
 # config loads database and makes it available as db
 from config import * 
@@ -22,10 +23,19 @@ class ModelGrid(object):
 
         self.model = model_dict
         self.mod_keys = model_dict.keys()
+
+        # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
-            print "ERROR! model wavelength must be keyed with 'wsyn'!"
+            print "ERROR! model wavelength array must be keyed with 'wsyn'!"
         if ('fsyn' in self.mod_keys)==False:
             print "ERROR! model flux must be keyed with 'fsyn'!"
+        if ((type(self.model['wsyn'])!=u.quantity.Quantity) |
+            (type(self.model['fsyn'])!=u.quantity.Quantity) |
+            (type(self.wave)!=u.quantity.Quantity) |
+            (type(self.flux)!=u.quantity.Quantity) |
+            (type(self.unc)!=u.quantity.Quantity)):
+            print ("ERROR! model arrays and spectrum arrays must all"
+                + " be of type astropy.units.quantity.Quantity")
 
         self.params = params
         self.ndim = len(self.params)
