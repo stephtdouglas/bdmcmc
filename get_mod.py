@@ -1,64 +1,109 @@
 # Module containing functions for getting and preparing spectra for fitting
 # Stephanie Douglas, 25 November 2013
+# Updated 3 January 2014 to work with astropy.units
 ################################################################################
 
 import numpy as np
-from scipy.io.idl import readsav
+from astropy import units as u
+import matplotlib.pyplot as plt
 import cPickle
 
-
-def falt2(w, f, FWHM):
+def f_smooth(w,f,res):
     """
     Parameters
     ----------
-    w: float array
-         The model wavelength array converted to angstroms
+    w: astropy.units Quantity
+         The model wavelength array 
 
-    f: float array
+    f: float array OR astropy.units Quantity
          The model flux array
     
-    FWHM: float
-         The resolution of the observed spectrum in angstroms
+    res: astropy.units Quantity
+         The resolution of the observed spectrum 
     """
 
-    #Defining the resolution of the observed data
-    res = (np.sqrt(2.0)*FWHM)/2.35482
+    if w.unit!=res.unit:
+        res = res.to(w.unit)
 
-    print w,f
+    #Defining the fwhm of the convolving kernel
+    # This may need to change? Where did I get it in the first place?
+    # I got it from Emily's code, but there's no comment
+    fwhm = (np.sqrt(2.0)*res)/2.35482
+
+    plt.step(w,f,label='input')
+
+    #Defining a convolving kernel
+    wk = np.arange(101)*0.1*fwhm - 5.0*fwhm
+    yk = 1.0/(np.sqrt(3.1415)*fwhm)*np.exp(-(wk/fwhm)**2.0)
+
+    #Convolving input flux with the kernel yk
+    #Scaling each element of fconvol with a scaling factor
+    fconvol = np.convolve(f, yk, 'same')
+    fconvol2 = fconvol/(1.0/(0.1*fwhm))
+    plt.step(w,fconvol2,label='convolved')
+
+    return fconvol2
+
+
+def falt2(w, f, res):
+    """
+    Parameters
+    ----------
+    w: astropy.units Quantity
+         The model wavelength array 
+
+    f: float array OR astropy.units Quantity
+         The model flux array
+    
+    res: astropy.units Quantity
+         The resolution of the observed spectrum 
+    """
+
+    if w.unit!=res.unit:
+        res = res.to(w.unit)
+
+    #Defining the fwhm of the convolving kernel
+    # This may need to change? Where did I get it in the first place?
+    # I got it from Emily's code, but there's no comment
+    fwhm = (np.sqrt(2.0)*res)/2.35482
 
     while len(w)==1:
         w = w[0]
-        print w,f
+        #print w,f
+    #plt.step(w,f,label='input')
 
-    #floor() converts the input to the nearest integer not greater than the input
-    nw = (max(w) - min(w))/(res*0.1)
+    nw = (max(w) - min(w))/(fwhm*0.1)
     nw2 = np.floor(nw) + 1.0
-    print 'nw',nw, nw2-1
+    #print 'nw',nw, nw2-1
 
     #Creating a wavelength grid
-    wtar = np.arange(nw2)*res*0.1 + w[0]
+    wtar = np.arange(nw2)*fwhm*0.1 + w[0]
     #print len(w),len(wtar)
     #print w[0:10],wtar[0:10]
 
-    print wtar
+    #print wtar
     while len(wtar)==1:
         wtar = wtar[0]
 
     #Interpolating to match a flux array to the wavelength grid
     ftar = np.interp(wtar, w, f)
+    #plt.step(wtar,ftar,label='interpolated')
 
     #Defining a convolving kernel
-    wk = np.arange(101)*0.1*res - 5.0*res
-    yk = 1.0/(np.sqrt(3.1415)*res)*np.exp(-(wk/res)**2.0)
+    wk = np.arange(101)*0.1*fwhm - 5.0*fwhm
+    yk = 1.0/(np.sqrt(3.1415)*fwhm)*np.exp(-(wk/fwhm)**2.0)
 
     #Convolving ftar with the kernel yk
     #Scaling each element of fconvol with a scaling factor
     fconvol = np.convolve(ftar, yk, 'same')
-    fconvol2 = fconvol/(1.0/(0.1*res))
+    fconvol2 = fconvol/(1.0/(0.1*fwhm))
+    #plt.step(wtar,fconvol2,label='convolved')
 
-    print len(w), len(wtar), len(fconvol2)
-    ftar2 = np.interp(w, wtar, fconvol2)
+    #print len(w), len(wtar), len(fconvol2)
+    ftar2 = np.interp(w, wtar, fconvol2)*f.unit
     #print ftar2
+    #plt.step(w,ftar2,label='final')
+    #plt.legend(loc=2)
 
     return ftar2
 
@@ -70,7 +115,8 @@ class AtmoModel(object):
     """
 
     def __init__(self,filename,params_to_ignore=None,
-        wave_key='wsyn',flux_key='fsyn'):
+        wave_key='wsyn',flux_key='fsyn',
+        wave_unit=u.um, flux_unit=u.dimensionless_unscaled):
         """
         """
         mfile = open(filename,'rb')
@@ -93,6 +139,9 @@ class AtmoModel(object):
         if ('fsyn' in self.mod_keys)==False:
             print "ERROR! model flux must be keyed with 'fsyn'!"
             print self.mod_keys
+
+        self.model['wsyn'] = self.model['wsyn']*wave_unit
+        self.model['fsyn'] = self.model['fsyn']*flux_unit
 
         temp_mod = dict(self.model)
         temp_mod.pop('wsyn')
