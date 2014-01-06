@@ -5,11 +5,12 @@
 
 
 import numpy as np
+from astropy import units as u
+import matplotlib.pyplot as plt
 
 # config loads database and makes it available as db
 from config import * 
 from get_mod import *
-import matplotlib.pyplot as plt
 
 def calc_chisq(data_flux,data_unc,model_flux):
     return np.sum((data_flux-model_flux)**2/(data_unc**2))
@@ -23,8 +24,9 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params):
     chisq = np.ones(num_models)*(99e15)
 
     for i in range(num_models):
-        mod_flux = falt2(model_dict['wsyn'],model_dict['fsyn'][i],100)
-        mod_flux = np.interp(data_wave*10000,model_dict['wsyn'],mod_flux)
+        #print i, num_models, model_dict['logg'][i], model_dict['teff'][i]
+        mod_flux = falt2(model_dict['wsyn'],model_dict['fsyn'][i],100*u.AA)
+        mod_flux = np.interp(data_wave,model_dict['wsyn'],mod_flux)
         mult1 = data_flux*mod_flux
         bad = np.isnan(mult1)
         mult = np.sum(mult1[~bad])

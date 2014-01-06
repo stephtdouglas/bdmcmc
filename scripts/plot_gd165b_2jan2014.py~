@@ -1,0 +1,49 @@
+# Stephanie Douglas, 2 January 2014
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+import pyfits
+
+from bdmcmc.spectra import BrownDwarf
+
+
+def plot_low(ax,spectrum,offset,label,pcolor='k'):
+
+    wav = spectrum['wavelength']
+    flu = spectrum['flux']
+    unc = spectrum['unc']
+
+    if len(wav)>1:
+        norm_by = np.average(flu[abs(wav-1.27)<0.005])
+        flu = flu/norm_by
+        unc = flu/norm_by
+
+        ax.step(wav,flu+offset,color=pcolor)
+        ax.text(2.2,0.6+offset,label,color=pcolor)
+        ax.set_xlim(0.5,3)
+    else:
+        print 'failed', label
+
+plt.figure()
+ax = subplot(111)
+
+
+bd = BrownDwarf('U40039')
+bd.get_low()
+plot_low(ax,bd.specs['low'],3,'R400, 2002-05-30')
+
+
+bd.get_low(filename='spex_prism_G196-3B_U40039.fits')
+plot_low(ax,bd.specs['low'],1.5,'database, no obs-date')
+
+
+oldfile = at.read('/home/stephanie/ldwarfs/summerAMNH/LdwarfSpectra/spex_prism_gd165b_090629.txt')
+old_spectrum = {'wavelength':oldfile['col1'],'flux':oldfile['col2'],
+    'unc':oldfile['col3']}
+plot_low(ax,old_spectrum,0,'Burgasser Unpub 2009-06-29')
+ax.set_ylim(-0.1,3.2)
+ax.set_ylabel('Wavelength (micron)')
+ax.set_xlabel('Flux (normalized at 1.27 micron)')
+
+

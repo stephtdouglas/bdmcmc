@@ -6,11 +6,11 @@
 
 import numpy as np
 from astropy import units as u
+import matplotlib.pyplot as plt
 
 # config loads database and makes it available as db
 from config import * 
 from get_mod import *
-import matplotlib.pyplot as plt
 
 class ModelGrid(object):
 
@@ -186,7 +186,7 @@ class ModelGrid(object):
 #                print old_spectra.keys()
             else:
                 print 'WTF'
-        mod_flux = old_spectra[()]
+        mod_flux = old_spectra[()][0]
 #        print 'all done!', len(mod_flux), len(self.flux)
 
         #### NEED A FUNCTION TO DO THE RESAMPLING
@@ -195,7 +195,8 @@ class ModelGrid(object):
         # interpolation resampling
 
         # THIS IS WHERE THE CODE TAKES A LONG TIME
-        mod_flux = falt2(self.model['wsyn'],mod_flux,100)
+        #print p, len(mod_flux)
+        mod_flux = falt2(self.model['wsyn'],mod_flux,100*u.AA)
         mod_flux = np.interp(self.wave*10000,self.model['wsyn'],mod_flux)
 
         # Need to normalize (taking below directly from old makemodel code)

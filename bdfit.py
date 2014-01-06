@@ -49,7 +49,7 @@ class BDSampler(object):
         self.name = obj_name
 
         self.model = ModelGrid(spectrum,model,params)
-        print spectrum.keys()
+        #print spectrum.keys()
 
         self.ndim = len(params)
 
@@ -67,7 +67,7 @@ class BDSampler(object):
             then flattens the chain
         """
 
-        nwalkers, nsteps = self.ndim*100, self.ndim*500
+        nwalkers, nsteps = self.ndim*4, self.ndim*10
         p0 = np.zeros((nwalkers,self.ndim))
         for i in range(nwalkers):
              p0[i] = self.start_p + (1e-2*np.random.randn(self.ndim)*
@@ -81,7 +81,7 @@ class BDSampler(object):
 #                 self.model.plims[self.model.params[i]]['max'],
 #                 size=nwalkers)
 
-        print p0.shape, nsteps/10
+        #print p0.shape, nsteps/10
         sampler = emcee.EnsembleSampler(nwalkers,self.ndim,self.model)
         pos, prob, state = sampler.run_mcmc(p0,nsteps/10)
         sampler.reset()
