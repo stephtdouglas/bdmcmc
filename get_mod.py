@@ -58,6 +58,13 @@ def falt2(w, f, res):
     res: astropy.units Quantity
          The resolution of the observed spectrum 
     """
+    #print res, w.unit, f.unit
+
+    output_unit = w.unit
+
+    #w = w.to(u.AA)
+    #res = res.to(u.AA)
+    #print res, w.unit, f.unit
 
     if w.unit!=res.unit:
         res = res.to(w.unit)
@@ -67,14 +74,14 @@ def falt2(w, f, res):
     # I got it from Emily's code, but there's no comment
     fwhm = (np.sqrt(2.0)*res)/2.35482
 
-    while len(w)==1:
+    while len(w.value)==1:
         w = w[0]
-        #print w,f
+        #print 'un-nested w!', len(w.value)
     #plt.step(w,f,label='input')
 
     nw = (max(w) - min(w))/(fwhm*0.1)
     nw2 = np.floor(nw) + 1.0
-    #print 'nw',nw, nw2-1
+    #print 'nw',nw, nw2-1, fwhm, res
 
     #Creating a wavelength grid
     wtar = np.arange(nw2)*fwhm*0.1 + w[0]
@@ -82,9 +89,14 @@ def falt2(w, f, res):
     #print w[0:10],wtar[0:10]
 
     #print wtar
-    while len(wtar)==1:
+    while len(wtar.value)==1:
         wtar = wtar[0]
+        #print 'un-nested wtar!', len(wtar.value)
+    while len(f.value)==1:
+        f = f[0]
+        #print 'un-nested f!', len(f.value)
 
+    #print len(w), len(wtar), len(f)
     #Interpolating to match a flux array to the wavelength grid
     ftar = np.interp(wtar, w, f)
     #plt.step(wtar,ftar,label='interpolated')
