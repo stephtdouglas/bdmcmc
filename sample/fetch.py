@@ -27,7 +27,7 @@ class BDList(object):
             self.brown_dwarfs[u] = BrownDwarf(u)
             self.brown_dwarfs[u].spt = self.spts[self.unums==u][0]
             self.brown_dwarfs[u].obs_date = self.obs_dates[self.unums==u][0]
-            print u, self.brown_dwarfs[u].sid
+            #print u, self.brown_dwarfs[u].sid
 
         self.fetch_specs()
 
@@ -35,7 +35,7 @@ class BDList(object):
     def fetch_specs(self):
         for u in self.unums:
            self.brown_dwarfs[u].get_low()
-           print u, self.brown_dwarfs[u].sid, self.brown_dwarfs[u].specs.keys()
+           #print u, self.brown_dwarfs[u].sid, self.brown_dwarfs[u].specs.keys()
            for i in range(58,66):
                self.brown_dwarfs[u].get_order(i,
                     obs_date=self.brown_dwarfs[u].obs_date)
