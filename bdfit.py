@@ -70,7 +70,7 @@ class BDSampler(object):
             then flattens the chain
         """
 
-        nwalkers, nsteps = self.ndim*100, self.ndim*50
+        nwalkers, nsteps = self.ndim*2, self.ndim*10
         p0 = np.zeros((nwalkers,self.ndim))
         for i in range(nwalkers):
              p0[i] = self.start_p + (1e-2*np.random.randn(self.ndim)*
