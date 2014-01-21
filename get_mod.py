@@ -5,6 +5,8 @@
 
 import numpy as np
 from astropy import units as u
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import cPickle
 

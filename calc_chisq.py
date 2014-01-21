@@ -6,7 +6,6 @@
 
 import numpy as np
 from astropy import units as u
-import matplotlib.pyplot as plt
 
 # config loads database and makes it available as db
 from config import * 

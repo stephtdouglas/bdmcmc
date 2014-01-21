@@ -5,6 +5,9 @@
 import datetime
 
 ## Third-party
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 import numpy as np
 import emcee
 import triangle
@@ -67,7 +70,7 @@ class BDSampler(object):
             then flattens the chain
         """
 
-        nwalkers, nsteps = self.ndim*50, self.ndim*500
+        nwalkers, nsteps = self.ndim*100, self.ndim*50
         p0 = np.zeros((nwalkers,self.ndim))
         for i in range(nwalkers):
              p0[i] = self.start_p + (1e-2*np.random.randn(self.ndim)*
