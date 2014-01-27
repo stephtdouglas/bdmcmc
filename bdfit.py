@@ -3,6 +3,7 @@
 ################################################################################
 
 import datetime
+import logging
 
 ## Third-party
 import matplotlib
@@ -50,7 +51,7 @@ class BDSampler(object):
         # Eventually - Add a timestamp?
 
         self.name = obj_name
-        logging.info('%s',self.obj_name)
+        logging.info('%s',self.name)
 
         self.model = ModelGrid(spectrum,model,params)
         #print spectrum.keys()
