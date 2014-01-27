@@ -43,39 +43,43 @@ def spectrum_query(source_id,telescope_id,instrument_id,
     if order!=None:
         query_add = query_add + " wavelength_order='{}' AND ".format(
             order)
-    #print query_add
+    #logging.debug(query_add)
 
     base_query = ("SELECT wavelength_units, flux_units,"
         +" wavelength, flux, unc FROM spectra WHERE ")
-    #print base_query
+    #logging.debug(base_query)
     if telescope_id=='' and instrument_id=='':
         end_query = " source_id={}".format(source_id)
     else:
         end_query = (" source_id={} AND telescope_id={} AND instrument_id={}"
             ).format(source_id,telescope_id,instrument_id)
-    #print end_query
+    #logging.debug(end_query)
     full_query = base_query+query_add+end_query
-    #print full_query
+    logging.debug(full_query)
 
     q_result = db.dict.execute(full_query).fetchall()
-    #print q_result
+    logging.debug(q_result)
     #print '0',q_result[0]
 
     try:
         q_result = q_result[0]
     except:
         return {'wavelength':[],'flux':[],'unc':[]}
+        logging.info('spectrum not found for %s', full_query)
 
     wave_unit = q_result['wavelength_units']
     flux_unit = q_result['flux_units']
-    flux_unit = flux_unit.replace('ergs','erg').replace('Wm','W m')
+    flux_unit = flux_unit.replace('ergs','erg s').replace('Wm','W m')
     flux_unit = u.Unit(flux_unit.replace('normalized',''))
     wave_unit = u.Unit(wave_unit)
+    logging.info('%s %s', wave_unit.to_string('fits'), 
+        flux_unit.to_string('fits'))
 
     q_result_out = {'wavelength':q_result['wavelength']*wave_unit,
          'flux':q_result['flux']*flux_unit}
     if q_result['unc']==None:
          q_result_out['unc'] = np.ones(len(q_result['flux']))*flux_unit
+         logging.info('no unc array found for %s', full_query)
     else:
          q_result_out['unc'] = q_result['unc']*flux_unit
 
@@ -109,19 +113,22 @@ class BrownDwarf(object):
             query_result = db.query.execute(
                 "SELECT id FROM sources WHERE unum='{}'".format(
                 name)).fetchall()
+            logging.info('using unum %s', name)
         elif ((len(name)==7) & ((name[4]=='+') | (name[4]=='-'))):
             query_result = db.query.execute(
                 "SELECT id FROM sources WHERE shortname='{}'".format(
                 name)).fetchall()
+            logging.info('using shortname %s', name)
         else:
             query_result = db.query.execute(
                 "SELECT id FROM sources WHERE names='{}'".format(
                 name)).fetchall()
-        
+            logging.info('using names %s',name)
         if len(query_result)==1:
             self.sid = query_result[0][0]
+            logging.info('source_id %s',str(self.sid))
         else:
-            print 'Object {} not found!'.format(name)
+            logging.info('Object %s not found!',name)
             self.sid = np.inf
         self.name = name
 
@@ -155,8 +162,7 @@ class BrownDwarf(object):
         irtf_id = 7
 
         self.specs['low'] = spectrum_query(self.sid,
-            irtf_id, spex_id, obs_date, filename)
-        
+            irtf_id, spex_id, obs_date, filename)        
 
 
     def get_order(self,order,obs_date=None):
