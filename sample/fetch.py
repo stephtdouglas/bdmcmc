@@ -5,6 +5,7 @@
 # Third Party
 import numpy as np
 import asciitable as at
+import astropy.units as u
 
 # Mine
 from bdmcmc.config import *
@@ -49,8 +50,9 @@ def fetch_12():
 
     # Use Burgasser+08's spectrum from the SpeX Prism Library
     oldfile = at.read('/home/stephanie/ldwarfs/summerAMNH/LdwarfSpectra/spex_prism_gd165b_090629.txt')
-    old_spectrum = {'wavelength':oldfile['col1'],'flux':oldfile['col2'],
-        'unc':oldfile['col3']}
+    old_spectrum = {'wavelength':oldfile['col1']*u.um,
+        'flux':oldfile['col2']*u.dimensionless_unscaled,
+        'unc':oldfile['col3']*u.dimensionless_unscaled}
     my_bds.brown_dwarfs['U13079'].specs['low'] = old_spectrum
 
     # select appropriate spectrum for GD 165 B
