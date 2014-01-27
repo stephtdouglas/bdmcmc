@@ -3,6 +3,7 @@
 # 2 December 2013, Stephanie Douglas
 ################################################################################
 
+import logging
 
 import numpy as np
 from astropy import units as u
@@ -28,15 +29,15 @@ class ModelGrid(object):
 
         # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
-            print "ERROR! model wavelength array must be keyed with 'wsyn'!"
+            logging.info("ERROR! model wavelength array must be keyed with 'wsyn'!")
         if ('fsyn' in self.mod_keys)==False:
-            print "ERROR! model flux must be keyed with 'fsyn'!"
+            logging.info("ERROR! model flux must be keyed with 'fsyn'!")
         if ((type(self.model['wsyn'])!=u.quantity.Quantity) |
             (type(self.model['fsyn'])!=u.quantity.Quantity) |
             (type(self.wave)!=u.quantity.Quantity) |
             (type(self.flux)!=u.quantity.Quantity) |
             (type(self.unc)!=u.quantity.Quantity)):
-            print ("ERROR! model arrays and spectrum arrays must all"
+            logging.info("ERROR! model arrays and spectrum arrays must all"
                 + " be of type astropy.units.quantity.Quantity")
 
         self.params = params
@@ -45,7 +46,7 @@ class ModelGrid(object):
 
         for p in self.params:
             if (p in self.mod_keys)==False:
-                print 'ERROR! parameter {} not found!'.format(p)
+                logging.info('ERROR! parameter %s not found!',p)
             else:
                 self.plims[p] = {'vals':np.asarray(self.model[p])}
                 self.plims[p]['min'] = min(self.plims[p]['vals'])
@@ -57,14 +58,14 @@ class ModelGrid(object):
     def __call__(self,*args):
 
         p = np.asarray(args)[0]
-#        print "derp",p
+        logging.debug('params %s',str(p))
 
         for i in range(self.ndim):
-#            print p[i]
-#            print self.params[i],self.plims[self.params[i]]['max'],
-#            print self.plims[self.params[i]]['min']
             if ((p[i]>=self.plims[self.params[i]]['max']) or 
                 (p[i]<=self.plims[self.params[i]]['min'])):
+                logging.debug("param %s: %f, min: %f, max: %f", self.params[i]
+                    ,p[i],self.plims[self.params[i]]['min'],
+                    self.plims[self.params[i]]['max'])
                 return -np.inf
 
         grid_edges = {}
@@ -187,7 +188,7 @@ class ModelGrid(object):
                 old_spectra = new_spectra
 #                print old_spectra.keys()
             else:
-                print 'WTF'
+                logging.debug('make_model WTF')
         mod_flux = old_spectra[()][0]
 #        print 'all done!', len(mod_flux), len(self.flux)
 

@@ -3,6 +3,7 @@
 # 2 December 2013, Stephanie Douglas
 ################################################################################
 
+import logging
 
 import numpy as np
 import astropy.units as u

@@ -3,6 +3,8 @@
 # Updated 3 January 2014 to work with astropy.units
 ################################################################################
 
+import logging
+
 import numpy as np
 from astropy import units as u
 import matplotlib
@@ -25,8 +27,9 @@ def f_smooth(w,f,res):
     """
 
     if w.unit!=res.unit:
+        logging.debug('changing units %s to %s',res.unit.to_string('fits'),
+            w.unit.to_string('fits'))
         res = res.to(w.unit)
-
     #Defining the fwhm of the convolving kernel
     # This may need to change? Where did I get it in the first place?
     # I got it from Emily's code, but there's no comment
@@ -133,26 +136,30 @@ class AtmoModel(object):
         wave_unit=u.um, flux_unit=u.dimensionless_unscaled):
         """
         """
+        logging.debug('getting file %s',filename)
         mfile = open(filename,'rb')
         self.model = cPickle.load(mfile)
         mfile.close()
 
         if wave_key!='wsyn':
+            logging.debug('changing wave key from %s',wave_key)
             self.model['wsyn'] = self.model.pop(wave_key)
         if flux_key!='fsyn':
+            logging.debug('changing flux key from %s',flux_key)
             self.model['fsyn'] = self.model.pop(flux_key)
 
         if params_to_ignore!=None:
             for drop in params_to_ignore:
                 junk = self.model.pop(drop)
+                logging.info('ignoring %s',drop)
 
         self.mod_keys = self.model.keys()
         if ('wsyn' in self.mod_keys)==False:
-            print "ERROR! model wavelength must be keyed with 'wsyn'!"
-            print self.mod_keys
+            logging.info("ERROR! model wavelength must be keyed with 'wsyn'!")
+            logging.info(str(self.mod_keys))
         if ('fsyn' in self.mod_keys)==False:
-            print "ERROR! model flux must be keyed with 'fsyn'!"
-            print self.mod_keys
+            logging.info("ERROR! model flux must be keyed with 'fsyn'!")
+            logging.info(str(self.mod_keys))
 
         self.model['wsyn'] = self.model['wsyn']*wave_unit
         self.model['fsyn'] = self.model['fsyn']*flux_unit
