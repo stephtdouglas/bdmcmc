@@ -1,6 +1,8 @@
 # Script to plot spectra for my sample
 # Stephanie Douglas, 31 December 2013
 
+import datetime
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -51,8 +53,8 @@ def plot_high(ax,bd,order,offset,label,pcolor='k'):
         print 'failed', label, order
 
 
-#ldwarfs = fetch.fetch_12()
-#bds = ldwarfs.brown_dwarfs
+ldwarfs = fetch.fetch_12()
+bds = ldwarfs.brown_dwarfs
 unums = bds.keys()
 num_spts = np.zeros(12)
 for i in range(12):
