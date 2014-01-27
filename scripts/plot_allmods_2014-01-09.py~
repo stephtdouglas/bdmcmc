@@ -1,0 +1,82 @@
+# Plot all versions of all the models I have
+# The ORIGINAL versions, not the cropped ones from the pkl files
+# Stephanie Douglas, 9 January 2014
+################################################################################
+
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import date
+
+
+clr = ['maroon','red','orangered','orange','gold','yellow','lime','green','aqua','blue','fuchsia','purple']
+
+
+### Marley low-res
+
+mlowpath = '/Users/Steph/Documents/school/lowmass/summerAMNH/modelSpectra/marley_lowres/'
+#Read all files by cycling through temp, grav, and fsed
+
+temps = numpy.arange(1200,2400,100)
+gravs = [100,300,1000,3000]
+fseds = [1,2,3]
+
+notthere = []
+mod = []
+flu = []
+
+models = {'teff':[],'logg':[],'fsed':[],'wsyn':[],'fsyn':[]}
+
+print 'starting now'
+for t in temps:
+    for g in gravs:
+        for f in fseds:
+            print t,g,f
+            filename = mlowpath+'sp_t'+str(t)+'g'+str(g)+'f'+str(f)
+            if os.path.exists(filename):
+                mod = asciitable.read(filename,data_start=4)
+                wav = sort(mod['col1'])
+                flu1 = reverse(mod['col2'])
+                flu = flu1*(3e7)/wav**2
+                models['teff'].append(t)
+                models['logg'].append(g)
+                models['fsed'].append(f)
+                models['fsyn'].append(flu)
+                if t == 1200:
+                    models['wsyn'] = wav
+            else:
+                models['teff'].append(t)
+                models['logg'].append(g)
+                models['fsed'].append(f)
+                models['fsyn'].append(numpy.ones(28485))
+                notthere.append((t,g,f))
+
+teffs = np.asarray(models['teff'])
+loggs = np.asarray(models['logg'])
+fseds = np.asarray(models['fsed'])
+
+t_vals = np.unique(teffs)
+l_vals = np.unique(loggs)
+f_vals = np.unique(fseds)
+
+pp = PdfPages('marleylowplots_{}.pdf'.format(date.isoformat(date.today)))
+
+plt.figure(figsize=(10,7.5))
+ax = plt.subplot(111)
+
+norm_reg = np.where(abs(models['wsyn'][i]-1.27)<0.05)[0]
+
+# Vary temperatures
+for l in l_vals:
+    for f in f_vals:
+        static_vals = np.where((loggs==l) & (fseds==f))[0]
+        clr_count = 0
+        for i in static_vals:
+            norm_by = np.sum(models['fsyn'][i][norm_reg])
+            ax.plot(models['wsyn'],models['fsyn'][i]/norm_by,
+                     color=clr[clr_count],label=str(int(teffs[i])))
+        ax.legend()
+        ax.set_xlabel('Wavelength (micron)')
+        ax.set_ylabel('Flux (normalized at 1.27 micron)')
+        ax.set_title('logg = {}, fsed = {}'.format(l, f))
+        pp.savefig()
+        ax.cla()
