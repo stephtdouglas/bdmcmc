@@ -49,16 +49,16 @@ def fetch_12():
     my_bds = BDList('/home/stephanie/ldwarfs/Ldwarf_sample2014.csv')
 
     # Use Burgasser+08's spectrum from the SpeX Prism Library
-    oldfile = at.read('/home/stephanie/ldwarfs/summerAMNH/LdwarfSpectra/spex_prism_gd165b_090629.txt')
+    oldfile = at.read('/home/stephanie/ldwarfs/summerAMNH/LdwarfSpectra/2MASSWJ0208+25_spex.dat')
     old_spectrum = {'wavelength':oldfile['col1']*u.um,
         'flux':oldfile['col2']*u.dimensionless_unscaled,
         'unc':oldfile['col3']*u.dimensionless_unscaled}
     my_bds.brown_dwarfs['U13079'].specs['low'] = old_spectrum
 
-    # select appropriate spectrum for GD 165 B
-    source_id = my_bds.brown_dwarfs['U40039'].sid
-    my_bds.brown_dwarfs['U40039'].specs['low'] = spectrum_query(source_id,
-         '','',filename='spex_prism_G196-3B_U40039.fits')
+    # select appropriate spectrum for GD 165 B //Should no longer be needed
+    #source_id = my_bds.brown_dwarfs['U40039'].sid
+    #my_bds.brown_dwarfs['U40039'].specs['low'] = spectrum_query(source_id,
+    #     '','',filename='spex_prism_G196-3B_U40039.fits')
 
 
     return my_bds
