@@ -50,18 +50,21 @@ class BDSampler(object):
         # Eventually - Add a timestamp?
 
         self.name = obj_name
+        logging.info('%s',self.obj_name)
 
         self.model = ModelGrid(spectrum,model,params)
         #print spectrum.keys()
+        logging.info('Set model')
 
         self.ndim = len(params)
 
         self.start_p = test_all(spectrum['wavelength'],spectrum['flux'],
             spectrum['unc'], model, params)
+        logging.info('Set starting params %s', str(self.start_p))
 
 
 
-    def mcmc_go(self):
+    def mcmc_go(self, nwalk_mult=200, nstep_mult = 500):
         """
         Sets up and calls emcee to carry out the MCMC algorithm
 
@@ -70,11 +73,14 @@ class BDSampler(object):
             then flattens the chain
         """
 
-        nwalkers, nsteps = self.ndim*2, self.ndim*10
+        nwalkers, nsteps = self.ndim*nwalk_mult, self.ndim*nstep_mult
+        logging.info('%d walkers, %d steps', nwalkers, nsteps)
         p0 = np.zeros((nwalkers,self.ndim))
+        logging.debug('p0 shape %s',str(np.shape(p0)))
         for i in range(nwalkers):
-             p0[i] = self.start_p + (1e-2*np.random.randn(self.ndim)*
+             p0[i] = self.start_p + (1e-3*np.random.randn(self.ndim)*
                   self.start_p)
+             logging.debug('p0[%s] shape %s',i,str(p0[i]))
 #        p0 = p0.T
 
 #        p0 = np.zeros((nwalkers,self.ndim))
@@ -86,9 +92,15 @@ class BDSampler(object):
 
         #print p0.shape, nsteps/10
         sampler = emcee.EnsembleSampler(nwalkers,self.ndim,self.model)
+        logging.info('sampler set')
         pos, prob, state = sampler.run_mcmc(p0,nsteps/10)
+        logging.debug('pos %s', str(pos))
+        logging.debug('prob %s', str(prob))
+        logging.debug('state %s', str(state))
         sampler.reset()
+        logging.info('sampler reset')
         pos,prob,state = sampler.run_mcmc(pos,nsteps)
+        logging.info('sampler completed')
 
         ## store chains for plotting/analysis
         self.chain = sampler.chain
