@@ -63,8 +63,8 @@ class ModelGrid(object):
         for i in range(self.ndim):
             if ((p[i]>=self.plims[self.params[i]]['max']) or 
                 (p[i]<=self.plims[self.params[i]]['min'])):
-                logging.debug("param %s: %f, min: %f, max: %f", self.params[i]
-                    ,p[i],self.plims[self.params[i]]['min'],
+                logging.debug("bad param %s: %f, min: %f, max: %f", 
+                    self.params[i], p[i], self.plims[self.params[i]]['min'],
                     self.plims[self.params[i]]['max'])
                 return -np.inf
 
@@ -90,7 +90,7 @@ class ModelGrid(object):
                 edge_inds[self.params[i]] = np.array([np.where(
                     self.plims[self.params[i]]['vals']==dn_val)[0],np.where(
                     self.plims[self.params[i]]['vals']==up_val)[0]])
-#        print 'skipping:',single_flags
+        logging.debug('skipping: %s',str(single_flags))
 
         # If all the paramters need to be interpolated (the usual case)
         # then we need 2**ndim spectra (that's how many 'corners' there are)
@@ -99,7 +99,7 @@ class ModelGrid(object):
         # need to interpolate because models at that Teff exist in our grid)
         num_spectra = 2**(self.ndim-len(single_flags))
         to_interp = np.delete(range(self.ndim),single_flags)
-
+        logging.debug('%d spectra', num_spectra)
 
         # Get the "corners" of the model grid - the model values that
         # will be interpolated between.  This creates a bunch of tuples 
@@ -119,7 +119,7 @@ class ModelGrid(object):
             loc2 = np.where(loc==0)[0]
             grid_corners[loc1,i] = grid_edges[self.params[i]][0]
             grid_corners[loc2,i] = grid_edges[self.params[i]][1]
-#        print 'all corners:',grid_corners
+#        logging.debug('all corners: %s',str(grid_corners))
 
         # Get the actual corner spectra to be interpolated
         corner_spectra = {}
@@ -138,12 +138,14 @@ class ModelGrid(object):
 #            print find_i
             corner_spectra[tuple(cpar)] = self.model['fsyn'][find_i]
 
+        logging.debug('finished getting corner spectra')
+
         # Interpolate at all paramters requiring interpolation, skip the rest
         old_corners = np.copy(grid_corners)
         old_spectra = dict(corner_spectra)
 
         for i in range(self.ndim):
-#            print 'now dealing with',i,self.params[i]
+            logging.debug('now dealing with %d %f',i,self.params[i])
             if i in to_interp:
                 # get the values to be interpolated between for this loop
                 interp1 = old_corners[0,0]
@@ -190,7 +192,7 @@ class ModelGrid(object):
             else:
                 logging.debug('make_model WTF')
         mod_flux = old_spectra[()][0]
-#        print 'all done!', len(mod_flux), len(self.flux)
+        logging.debug('all done! %d %d', len(mod_flux), len(self.flux))
 
         #### NEED A FUNCTION TO DO THE RESAMPLING
         # There's a problem in that the model is still higher-res than
@@ -199,8 +201,11 @@ class ModelGrid(object):
 
         # THIS IS WHERE THE CODE TAKES A LONG TIME
         #print p, len(mod_flux)
+        logging.debug('starting smoothing')
         mod_flux = falt2(self.model['wsyn'],mod_flux,100*u.AA)
+        logging.debug('finished smoothing, starting interp')
         mod_flux = np.interp(self.wave*10000,self.model['wsyn'],mod_flux)
+        logging.debug('finished interp, starting renorm')
 
         # Need to normalize (taking below directly from old makemodel code)
 
@@ -222,7 +227,7 @@ class ModelGrid(object):
 
         #Applying scaling factor to rescale model flux array
         mod_flux = mod_flux*ck
-
+        logging.debug('finished renormalization')
 
 #        self.itcount += 1
 #        if np.mod(self.itcount,500)==0:
