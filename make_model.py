@@ -207,6 +207,13 @@ class ModelGrid(object):
         mod_flux = np.interp(self.wave*10000,self.model['wsyn'],mod_flux)
         logging.debug('finished interp, starting renorm')
 
+
+        # Remove H band from fit (see Cushing+2008, p. 1377)
+        uplim = (1.75*u.um).to(self.wave.unit)
+        lolim = (1.58*u.um).to(self.wave.unit)
+        hband = ((self.wave>lolim) & (self.wave<uplim))
+
+
         # Need to normalize (taking below directly from old makemodel code)
 
         #This defines a scaling factor; it expresses the ratio 
@@ -217,10 +224,10 @@ class ModelGrid(object):
         #apparent luminosity as the observed spectrum.
         mult1 = self.flux*mod_flux
         bad = np.isnan(mult1)
-        mult = np.sum(mult1[~bad])
+        mult = np.sum(mult1[(bad==False) & (hband==False)])
         #print 'mult',mult
         sq1 = mod_flux**2
-        square = np.sum(sq1[~bad])
+        square = np.sum(sq1[(bad==False) & (hband==False)])
         #print 'sq',square
         ck = mult/square
         #print 'ck',ck
@@ -238,4 +245,5 @@ class ModelGrid(object):
 #            plt.legend()
 
 
-        return -0.5*(np.sum((self.flux-mod_flux)**2/(self.unc**2)))
+        flux_diff = (self.flux-mod_flux)[hband==False]
+        return -0.5*(np.sum((flux_diff)**2/(self.unc[hband==False]**2)))

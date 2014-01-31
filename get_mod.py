@@ -6,11 +6,13 @@
 import logging
 
 import numpy as np
-from astropy import units as u
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import cPickle
+from astropy import units as u
+from astropy.convolution import convolve, Gaussian1DKernel
+
 
 def f_smooth(w,f,res):
     """
@@ -30,24 +32,24 @@ def f_smooth(w,f,res):
         logging.debug('changing units %s to %s',res.unit.to_string('fits'),
             w.unit.to_string('fits'))
         res = res.to(w.unit)
+
     #Defining the fwhm of the convolving kernel
     # This may need to change? Where did I get it in the first place?
     # I got it from Emily's code, but there's no comment
-    fwhm = (np.sqrt(2.0)*res)/2.35482
+    #fwhm = (np.sqrt(2.0)*res)/2.35482
+    #fwhm = res/(np.average(np.diff(w))*w.unit)
+    fwhm = (np.sqrt(2.0)*res)/(2.35482*np.average(np.diff(w))*w.unit)
 
-    plt.step(w,f,label='input')
+    #fwhm = (np.sqrt(2.0)*res)/2.35482
+    print res, fwhm
 
-    #Defining a convolving kernel
-    wk = np.arange(101)*0.1*fwhm - 5.0*fwhm
-    yk = 1.0/(np.sqrt(3.1415)*fwhm)*np.exp(-(wk/fwhm)**2.0)
+    #plt.step(w,f,label='input')
 
-    #Convolving input flux with the kernel yk
-    #Scaling each element of fconvol with a scaling factor
-    fconvol = np.convolve(f, yk, 'same')
-    fconvol2 = fconvol/(1.0/(0.1*fwhm))
-    plt.step(w,fconvol2,label='convolved')
+    # Convolve input flux with Astropy's Gaussian1DKernel
+    fconvol = convolve(f,Gaussian1DKernel(fwhm.value))
+    #plt.step(w,fconvol,label='convolved')    
 
-    return fconvol2
+    return fconvol
 
 
 def falt2(w, f, res):
@@ -78,6 +80,7 @@ def falt2(w, f, res):
     # This may need to change? Where did I get it in the first place?
     # I got it from Emily's code, but there's no comment
     fwhm = (np.sqrt(2.0)*res)/2.35482
+    #print res, fwhm
 
     while len(w.value)==1:
         w = w[0]
@@ -168,3 +171,48 @@ class AtmoModel(object):
         temp_mod.pop('wsyn')
         temp_mod.pop('fsyn')
         self.params = temp_mod.keys()
+
+"""
+    def plot_all(self, outfile, params=None):
+        Plot all instances of a model
+
+        Inputs:
+             outfile (string) - .pdf filename for output
+             params (optional, dict) - to only print output for a selected
+                    number of paramters, dict should hold arrays keyed by
+                    relevant model paramters 
+                    e.g., to plot all other values for T=1000, 1500, and 1800:
+                    AtmoModel.plot_all({'Teff':np.asarray([1000,1500,1800])})
+
+        Outputs:
+             outfile (pdf file)
+
+        self.plims = {}
+
+        for p in self.params:
+            if (p in self.mod_keys)==False:
+                print 'ERROR! parameter {} not found!'.format(p)
+            else:
+                self.plims[p] = {'vals':np.asarray(self.model[p])}
+                self.plims[p]['min'] = min(self.plims[p]['vals'])
+                self.plims[p]['max'] = max(self.plims[p]['vals'])
+        self.ndim = len(self.params)
+
+        grid_points = np.zeros(len(self.model['fsyn'])*self.ndim).reshape(
+             -1,self.ndim)
+        # Grrr, I can't decide how to do this
+
+        for pvary in self.params:
+            to_cycle = np.delete(self.params,np.where(asarray(
+                 self.params)==pvary)[0])
+            num_needed = 1
+            for pcycle in to_cycle:
+                num_needed = num_needed*len(self.plims[pcycle]['vals'])
+            grid_points = np.zeros(
+            for pcycle in to_cycle:
+            find_i = np.ones(len(self.plims[pvary]['vals']),bool)
+            for i in range(self.ndim):
+                find_i = (find_i & 
+                     (cpar[i]==self.plims[self.params[i]]['vals']))
+            
+"""
