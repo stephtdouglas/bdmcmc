@@ -5,6 +5,9 @@
 
 import logging
 
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
 
@@ -15,7 +18,8 @@ from get_mod import *
 def calc_chisq(data_flux,data_unc,model_flux):
     return np.sum((data_flux-model_flux)**2/(data_unc**2))
 
-def test_all(data_wave, data_flux, data_unc, model_dict, params):
+def test_all(data_wave, data_flux, data_unc, model_dict, params,
+    outfile=None):
 
 #    logging.debug(data_wave.unit.to_string('fits'))
 #    logging.debug(data_unc.unit.to_string('fits'))
@@ -48,6 +52,14 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params):
 
         chisq[i] = calc_chisq(data_flux, data_unc, mod_flux)
 #        logging.debug('chisq %f', chisq[i])
+
+    if outfile!=None:
+        plt.figure()
+        plt.scatter(model_dict['logg'],model_dict['teff'],c=np.log10(chisq),
+            s=45,marker='s',edgecolors='None')
+        plt.colorbar()
+        plt.savefig(outfile)
+        plt.close()
 
     min_loc = np.argmin(chisq)
 #    logging.debug('min_loc %d', min_loc)
