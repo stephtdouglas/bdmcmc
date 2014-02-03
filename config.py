@@ -5,8 +5,8 @@
 
 import BDdb
 
-#base_path = '/vega/astro/users/sd2706/'
-base_path = '/home/stephanie/Dropbox/'
+base_path = '/vega/astro/users/sd2706/'
+#base_path = '/home/stephanie/Dropbox/'
 
 db = BDdb.get_db(base_path+'BDNYCdb/BDNYC.db')
 
