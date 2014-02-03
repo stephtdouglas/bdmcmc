@@ -5,12 +5,15 @@
 # Stephanie Douglas, 6 January 2014
 ################################################################################
 
+import logging
+
 from astropy import units as u
 
 from bdmcmc.bdfit import *
 from bdmcmc.get_mod import AtmoModel
 from bdmcmc.sample import fetch
 
+logging.basicConfig(level=logging.INFO)
 
 ldwarfs = fetch.fetch_12()
 bds = ldwarfs.brown_dwarfs
@@ -19,8 +22,8 @@ unums = bds.keys()
 dusty = AtmoModel('/home/stephanie/ldwarfs/summerAMNH/modelSpectra/dustylow.pkl',wave_unit=u.AA)
 
 for u in unums:
-    print 'initializing {} '.format(u)
+    logging.info('initializing {} '.format(u))
     bdsamp = BDSampler(bds[u].name,bds[u].specs['low'],dusty.model,
         dusty.params)
-    print 'completed {}'.format(u)
+    logging.info('completed {}'.format(u))
 

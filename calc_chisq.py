@@ -35,22 +35,31 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
 
     chisq = np.ones(num_models)*(99e15)
 
+    # Remove H band from fit (see Cushing+2008, p. 1377)
+    uplim = (1.75*u.um).to(data_wave.unit)
+    lolim = (1.58*u.um).to(data_wave.unit)
+    hband = ((data_wave>lolim) & (data_wave<uplim))
+    logging.info('Hband: {} of {}'.format(len(np.where(hband==True)[0]), 
+        len(data_wave)))
+    logging.info('Whole Spectrum: {} to {}'.format(min(data_wave),max(data_wave)))
+
     for i in range(num_models):
 #        logging.debug('%d %d %f %f',i, num_models, model_dict['logg'][i], 
 #            model_dict['teff'][i])
-        mod_flux = falt2(model_dict['wsyn'],model_dict['fsyn'][i],100*u.AA)
+        mod_flux = falt2(model_dict['wsyn'],model_dict['fsyn'][i],120*u.AA)
         mod_flux = np.interp(data_wave,model_dict['wsyn'],mod_flux)
 #        logging.debug(str(mod_flux[100:110]))
 #        logging.debug('stdev %f', np.std(mod_flux))
         mult1 = data_flux*mod_flux
         bad = np.isnan(mult1)
-        mult = np.sum(mult1[~bad])
+        mult = np.sum(mult1[(bad==False) & (hband==False)])
         sq1 = mod_flux**2
-        square = np.sum(sq1[~bad])
+        square = np.sum(sq1[(bad==False) & (hband==False)])
         ck = mult/square
         mod_flux = mod_flux*ck
 
-        chisq[i] = calc_chisq(data_flux, data_unc, mod_flux)
+        chisq[i] = calc_chisq(data_flux[hband==False], data_unc[hband==False],
+            mod_flux[hband==False])
 #        logging.debug('chisq %f', chisq[i])
 
     if outfile!=None:
