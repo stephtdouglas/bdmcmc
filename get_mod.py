@@ -63,7 +63,7 @@ def falt2(w, f, res):
     res: astropy.units Quantity
          The resolution of the observed spectrum 
     """
-    #print res, w.unit, f.unit
+    logging.debug('{} {} {}'.format(res, w.unit, f.unit))
 
     output_unit = w.unit
 
@@ -86,12 +86,12 @@ def falt2(w, f, res):
 
     nw = (max(w) - min(w))/(fwhm*0.1)
     nw2 = np.floor(nw) + 1.0
-    #print 'nw',nw, nw2-1, fwhm, res
+    logging.debug('nw {} {} {} {}'.format(nw, nw2-1, fwhm, res))
 
     #Creating a wavelength grid
     wtar = np.arange(nw2)*fwhm*0.1 + w[0]
-    #print len(w),len(wtar)
-    #print w[0:10],wtar[0:10]
+    logging.debug('len w {} wtar {}'.format(len(w),len(wtar)))
+    logging.debug('{} {}'.format(w[0:10],wtar[0:10]))
 
     #print wtar
     while len(wtar.value)==1:
