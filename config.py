@@ -2,11 +2,13 @@
 # 2 December 2013, Stephanie Douglas
 ################################################################################
 
+import os
 
 import BDdb
 
 base_path = '/vega/astro/users/sd2706/'
-#base_path = '/home/stephanie/Dropbox/'
+if os.path.exists(base_path)==False:
+    base_path = '/home/stephanie/Dropbox/'
 
 db = BDdb.get_db(base_path+'BDNYCdb/BDNYC.db')
 
