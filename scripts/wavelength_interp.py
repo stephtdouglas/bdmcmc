@@ -45,12 +45,12 @@ models['wsyn'] = np.asarray(dl.wsyn)/10000.*u.um
 logging.debug('models retrieved')
 
 
-#teffs = np.arange(1500,2400,50)
-#loggs = np.arange(3.5,5.5,0.1)
+teffs = np.arange(1500,2400,50)
+loggs = np.arange(3.5,5.5,0.1)
 
 x_extent = (0.95,2.3)
-teffs = np.arange(2100,2400,100)
-loggs = np.arange(4.5,5,1.)
+#teffs = np.arange(2100,2400,100)
+#loggs = np.arange(4.5,5,1.)
 
 w_orig = models['wsyn']
 
@@ -66,8 +66,6 @@ for t in teffs:
         logging.debug('{} '.format(t_i))
 
         f_orig = models['fsyn'][t_i]
-        f_orig_up = models['fsyn'][tup_i]
-        f_orig_dn = models['fsyn'][tdn_i]
 
         ## Smooth to R~1000, then interpolate wavelength
         res = 11*u.AA
@@ -95,17 +93,21 @@ for t in teffs:
 
         ax4 = plt.subplot(111)
         ax4.set_title('T={},log(g)={}'.format(t,l))
-        ax4.step(w_orig,data_flux,where='mid',color='k',label='data')
+        ax4.step(data_wave,data_flux,where='mid',color='k',label='data')
 
         ck = np.sum(data_flux*f_1000_int)/np.sum(f_1000_int*f_1000_int)
-        ax4.step(w_orig,f_1000_int*ck,where='mid',color='g',label='R~1000')
+        ax4.step(data_wave,f_1000_int*ck,where='mid',color='g',label='R~1000')
+        logging.debug('1000 '+str(np.average(f_1000_int[abs(data_wave.value-0.95)<0.05]*ck)))
         ck = np.sum(data_flux*f_400_int)/np.sum(f_400_int*f_400_int)
-        ax4.step(w_orig,f_400_int,where='mid',color='b',label='R~400')
+        ax4.step(data_wave,f_400_int*ck,where='mid',color='b',label='R~400',
+            linestyle='--')
         ck = np.sum(data_flux*f_200_int)/np.sum(f_200_int*f_200_int)
-        ax4.step(w_orig,f_200_int,where='mid',color='m',label='R~200')
-        ck = np.sum(data_flux*f_120_new)/np.sum(f_120_new*f_120_new)
-        ax4.step(w_orig,f_120_new*ck,where='mid',color='c',
-            label='R~120')
+        ax4.step(data_wave,f_200_int*ck,where='mid',color='m',label='R~200',
+            linestyle='-.')
+        ck = np.sum(data_flux*f_120_int)/np.sum(f_120_int*f_120_int)
+        ax4.step(data_wave,f_120_int*ck,where='mid',color='c',
+            label='R~120', linestyle=':')
+        logging.debug('120 '+str(np.average(f_120_int[abs(data_wave.value-0.95)<0.5]*ck)))
         ax4.legend(loc=2)
         ax4.set_xlim(x_extent)
 
