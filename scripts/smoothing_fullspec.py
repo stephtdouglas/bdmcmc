@@ -109,7 +109,7 @@ for t in teffs:
             label='interpolated')
         ax1.legend(loc=2)
         ax1.set_xlim(x_extent)
-        ax1.set_ylim(ymax=max(f_orig[abs(w_orig.value-1.09)<0.005])*1.5)
+#        ax1.set_ylim(ymax=max(f_orig[abs(w_orig.value-1.09)<0.005])*1.5)
 
         ax2 = plt.subplot(412)
         ax2.autoscale(axis='y')
@@ -119,7 +119,7 @@ for t in teffs:
             label='interp.')
         ax2.legend(loc=2)
         ax2.set_xlim(x_extent)
-        ax2.set_ylim(ymax=max(f_1000[abs(w_orig.value-1.09)<0.005])*1.5)
+#        ax2.set_ylim(ymax=max(f_1000[abs(w_orig.value-1.09)<0.005])*1.5)
 
         ax3 = plt.subplot(413)
         ax3.autoscale(axis='y')
@@ -129,7 +129,7 @@ for t in teffs:
             label='interp.')
         ax3.legend(loc=2)
         ax3.set_xlim(x_extent)
-        ax3.set_ylim(ymax=max(f_400[abs(w_orig.value-1.09)<0.005])*1.5)
+#        ax3.set_ylim(ymax=max(f_400[abs(w_orig.value-1.09)<0.005])*1.5)
 
         ax4 = plt.subplot(414)
         ax4.autoscale(axis='y')
@@ -145,7 +145,7 @@ for t in teffs:
             label='interp.')
         ax4.legend(loc=2)
         ax4.set_xlim(x_extent)
-        ax4.set_ylim(ymax=max(f_120[abs(w_orig.value-1.09)<0.005])*1.5)
+#        ax4.set_ylim(ymax=max(f_120[abs(w_orig.value-1.09)<0.005])*1.5)
         pp.savefig()
         plt.clf()
 

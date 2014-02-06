@@ -50,6 +50,7 @@ x_extent = (0.95,1.1)
 
 w_orig = models['wsyn']
 
+"""
 pp = PdfPages('smoothing_test_teff_{}.pdf'.format(
     date.isoformat(date.today())))
 match_tol = 0.001
@@ -142,7 +143,7 @@ for t in teffs:
         plt.clf()
 
 pp.close()
-
+"""
 pp = PdfPages('smoothing_test_logg_{}.pdf'.format(
     date.isoformat(date.today())))
 match_tol = 0.001
