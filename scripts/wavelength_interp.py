@@ -45,12 +45,10 @@ models['wsyn'] = np.asarray(dl.wsyn)/10000.*u.um
 logging.debug('models retrieved')
 
 
-teffs = np.arange(1500,2400,50)
-loggs = np.arange(3.5,5.5,0.1)
+teffs = np.arange(1700,2400,100)
+loggs = np.arange(3.5,5.5,0.2)
 
 x_extent = (0.95,2.3)
-#teffs = np.arange(2100,2400,100)
-#loggs = np.arange(4.5,5,1.)
 
 w_orig = models['wsyn']
 
@@ -93,7 +91,7 @@ for t in teffs:
 
         ax4 = plt.subplot(111)
         ax4.set_title('T={},log(g)={}'.format(t,l))
-        ax4.step(data_wave,data_flux,where='mid',color='k',label='data')
+        bd.plot_low(ax=ax4)
 
         ck = np.sum(data_flux*f_1000_int)/np.sum(f_1000_int*f_1000_int)
         ax4.step(data_wave,f_1000_int*ck,where='mid',color='g',label='R~1000')
