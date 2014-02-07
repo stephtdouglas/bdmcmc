@@ -7,6 +7,9 @@ import logging
 
 import numpy as np
 import astropy.units as u
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
 # config loads database and makes it available as db
 from config import * 
@@ -207,3 +210,17 @@ class BrownDwarf(object):
             'flux':np.append(self.specs[65]['flux'],
             self.specs[61]['flux']),
             'unc':np.append(self.specs[65]['unc'],self.specs[61]['unc'])}
+
+    def plot_low(self,ax=None,color='k'):
+        if ('low' in self.specs.keys())==False:
+            self.get_low()
+
+        if ax==None:
+            plt.figure()
+            ax = plt.subplot(111)
+        ax.step(self.specs['low']['wavelength'],self.specs['low']['flux'],
+            where='mid',color=color,linewidth=0.5)
+        ax.errorbar(self.specs['low']['wavelength'].value,
+            self.specs['low']['flux'].value,
+            yerr=self.specs['low']['unc'].value,fmt=None,ecolor=color,
+            capsize=0, elinewidth=0.5)
