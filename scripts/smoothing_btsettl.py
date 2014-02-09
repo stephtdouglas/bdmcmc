@@ -8,6 +8,8 @@ from datetime import date
 
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model, bdmcmc.sample
 from bdmcmc.get_mod import falt2
+from bdmcmc.config import *
+import BDdb
 import numpy as np
 import astropy.units as u
 import matplotlib
@@ -21,12 +23,14 @@ logging.basicConfig(level=logging.DEBUG)
 
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 mods = BDdb.get_db(base_path+'model_atmospheres.db')
+x = mods.dict.execute("SELECT sql from sqlite_master").fetchall()
+print x
 d = len(mods.query.execute("SELECT teff FROM bt_settl").fetchall())
 models = {'teff':np.array([]),'logg':np.array([]),'wsyn':np.array([]),
      'fsyn':[]}
 
 
-
+"""
 teffs = np.arange(1500,2400,50)
 loggs = np.arange(3.5,5.5,0.1)
 
@@ -242,3 +246,4 @@ for l in loggs:
         plt.clf()
 
 pp.close()
+"""
