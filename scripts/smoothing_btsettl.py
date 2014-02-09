@@ -31,8 +31,8 @@ models = {'teff':np.array([]),'logg':np.array([]),'wsyn':np.array([]),
 
 
 
-teffs = np.arange(1500,2400,50)
-loggs = np.arange(3.5,5.5,0.1)
+teffs = np.arange(1500,2400,10)
+loggs = np.arange(3.,6.0,0.5)
 
 x_extent = (0.95,2.3)
 #teffs = np.arange(2100,2400,200)
