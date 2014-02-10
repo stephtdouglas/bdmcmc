@@ -134,15 +134,15 @@ for t in teffs:
         ax4 = plt.subplot(414)
         ax4.autoscale(axis='y')
         ck = np.sum(f_120*f_high_smooth)/np.sum(f_high_smooth*f_high_smooth)
-        ax4.step(w_orig,f_high_smooth*ck,where='mid',color='r')
+        ax4.step(w_orig,f_high_smooth*ck,where='mid',color='r',alpha=0.25)
         ck = np.sum(f_120*f_1000_smooth)/np.sum(f_1000_smooth*f_1000_smooth)
-        ax4.step(w_orig,f_1000_smooth*ck,where='mid',color='g')
+        ax4.step(w_orig,f_1000_smooth*ck,where='mid',color='g',alpha=0.25)
         ck = np.sum(f_120*f_400_smooth)/np.sum(f_400_smooth*f_400_smooth)
-        ax4.step(w_orig,f_400_smooth,where='mid',color='b')
+        ax4.step(w_orig,f_400_smooth*ck,where='mid',color='b',alpha=0.25)
         ck = np.sum(f_120*f_120_new)/np.sum(f_120_new*f_120_new)
-        ax4.step(w_orig,f_120,where='mid',color='k',label='R~120')
+        ax4.step(w_orig,f_120,where='mid',color='k',label='R~120',alpha=0.25)
         ax4.step(w_orig,f_120_new*ck,where='mid',color='c',
-            label='interp.')
+            label='interp.',alpha=0.25)
         ax4.legend(loc=2)
         ax4.set_xlim(x_extent)
 #        ax4.set_ylim(ymax=max(f_120[abs(w_orig.value-1.09)<0.005])*1.5)
@@ -151,7 +151,6 @@ for t in teffs:
 
 pp.close()
 
-"""
 pp = PdfPages('smoothing_test_logg_{}.pdf'.format(
     date.isoformat(date.today())))
 match_tol = 0.001
@@ -201,7 +200,7 @@ for l in loggs:
         f_400_smooth = falt2(w_orig,f_400_new,res)
 
         plt.figure(figsize=(9,12))
-        plt.suptitle('T={},log(g)={}'.format(t,l))
+        plt.suptitle('log(g)={},T={}'.format(l,t))
         ax1 = plt.subplot(411)
         ax1.autoscale(axis='y')
         ax1.step(w_orig,f_orig,where='mid',color='k',label='original')
@@ -209,7 +208,6 @@ for l in loggs:
             label='interpolated')
         ax1.legend(loc=2)
         ax1.set_xlim(x_extent)
-        ax1.set_ylim(ymax=max(f_orig[abs(w_orig.value-1.09)<0.005])*1.5)
 
         ax2 = plt.subplot(412)
         ax2.autoscale(axis='y')
@@ -218,7 +216,6 @@ for l in loggs:
             label='interp.')
         ax2.legend(loc=2)
         ax2.set_xlim(x_extent)
-        ax2.set_ylim(ymax=max(f_1000[abs(w_orig.value-1.09)<0.005])*1.5)
 
         ax3 = plt.subplot(413)
         ax3.autoscale(axis='y')
@@ -227,21 +224,22 @@ for l in loggs:
             label='interp.')
         ax3.legend(loc=2)
         ax3.set_xlim(x_extent)
-        ax3.set_ylim(ymax=max(f_400[abs(w_orig.value-1.09)<0.005])*1.5)
 
         ax4 = plt.subplot(414)
         ax4.autoscale(axis='y')
-        ax4.step(w_orig,f_high_smooth,where='mid',color='r')
-        ax4.step(w_orig,f_1000_smooth,where='mid',color='g')
-        ax4.step(w_orig,f_400_smooth,where='mid',color='b')
-        ax4.step(w_orig,f_120,where='mid',color='k',label='R~120')
-        ax4.step(w_orig,f_120_new,where='mid',color='c',
-            label='interp.')
+        ck = np.sum(f_120*f_high_smooth)/np.sum(f_high_smooth*f_high_smooth)
+        ax4.step(w_orig,f_high_smooth*ck,where='mid',color='r',alpha=0.25)
+        ck = np.sum(f_120*f_1000_smooth)/np.sum(f_1000_smooth*f_1000_smooth)
+        ax4.step(w_orig,f_1000_smooth*ck,where='mid',color='g',alpha=0.25)
+        ck = np.sum(f_120*f_400_smooth)/np.sum(f_400_smooth*f_400_smooth)
+        ax4.step(w_orig,f_400_smooth*ck,where='mid',color='b',alpha=0.25)
+        ck = np.sum(f_120*f_120_new)/np.sum(f_120_new*f_120_new)
+        ax4.step(w_orig,f_120,where='mid',color='k',label='R~120',alpha=0.25)
+        ax4.step(w_orig,f_120_new*ck,where='mid',color='c',
+            label='interp.',alpha=0.25)
         ax4.legend(loc=2)
         ax4.set_xlim(x_extent)
-        ax4.set_ylim(ymax=max(f_120[abs(w_orig.value-1.09)<0.005])*1.5)
         pp.savefig()
         plt.clf()
 
 pp.close()
-"""
