@@ -68,12 +68,19 @@ for t in teffs:
             & (l_loc==True))[0]
         logging.debug('{} {} {}'.format(t_i,tup_i,tdn_i))
 
-        w_orig = models['wsyn'][t_i]
-        f_orig = models['fsyn'][t_i]
-        f_orig_up = models['fsyn'][tup_i]
-        f_orig_dn = models['fsyn'][tdn_i]
+        if (len(t_i)>0) and (len(tup_i)>0) and (len(tdn_i)>0):
+            w_orig = models['wsyn'][t_i]
+            w_orig_up = models['wsyn'][tup_i]
+            w_orig_dn = models['wsyn'][tdn_i]
+            f_orig = models['fsyn'][t_i]
+            f_orig_up = models['fsyn'][tup_i]
+            f_orig_dn = models['fsyn'][tdn_i]
+        else:
+            logging.debug('grid points not found')
+            f_orig_up = np.asarray([])
+            f_orig_dn = np.asarray([0,0,0])
 
-        if len(f_orig_up)==len(f_orig_up):
+        if len(f_orig_up)==len(f_orig_dn):
 
             logging.debug('w_orig {} f_orig {}'.format(
                 len(w_orig),len(f_orig)))
@@ -81,27 +88,35 @@ for t in teffs:
             ## Interpolate at High-Res
             coeff = 0.5 # (new-down)/(up-down) = 100/200 for all here
             f_high_new = f_orig_dn + (f_orig_up-f_orig_dn)*coeff
+            if len(f_orig_up)!=len(f_orig):
+                f_high_new = np.interp(w_orig,w_orig_up,f_high_new)
     
             ## Smooth to R~1000, then interpolate
             res = 11*u.AA
             f_1000 = falt2(w_orig,f_orig,res)
-            f_1000_up = falt2(w_orig,f_orig_up,res)
-            f_1000_dn = falt2(w_orig,f_orig_dn,res)
+            f_1000_up = falt2(w_orig_up,f_orig_up,res)
+            f_1000_dn = falt2(w_orig_dn,f_orig_dn,res)
             f_1000_new = f_1000_dn + (f_1000_up-f_1000_dn)*coeff
+            if len(f_orig_up)!=len(f_orig):
+                f_1000_new = np.interp(w_orig,w_orig_up,f_1000_new)
 
             ## Smooth to R~400, then interpolate
             res = 28*u.AA
             f_400 = falt2(w_orig,f_orig,res)
-            f_400_up = falt2(w_orig,f_orig_up,res)
-            f_400_dn = falt2(w_orig,f_orig_dn,res)
+            f_400_up = falt2(w_orig_up,f_orig_up,res)
+            f_400_dn = falt2(w_orig_dn,f_orig_dn,res)
             f_400_new = f_400_dn + (f_400_up-f_400_dn)*coeff
+            if len(f_orig_up)!=len(f_orig):
+                f_400_new = np.interp(w_orig,w_orig_up,f_400_new)
 
             ## Smooth to R~120, then interpolate
             res = 91*u.AA
             f_120 = falt2(w_orig,f_orig,res)
-            f_120_up = falt2(w_orig,f_orig_up,res)
-            f_120_dn = falt2(w_orig,f_orig_dn,res)
+            f_120_up = falt2(w_orig_up,f_orig_up,res)
+            f_120_dn = falt2(w_orig_up,f_orig_dn,res)
             f_120_new = f_120_dn + (f_120_up-f_120_dn)*coeff
+            if len(f_orig_up)!=len(f_orig):
+                f_120_new = np.interp(w_orig,w_orig_up,f_120_new)
     
             ## Compare all of those, smoothed to R~120
             f_high_smooth = falt2(w_orig,f_high_new,res)
