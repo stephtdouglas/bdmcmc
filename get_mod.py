@@ -101,7 +101,7 @@ def falt2(w, f, res):
         f = f[0]
         #print 'un-nested f!', len(f.value)
 
-    #print len(w), len(wtar), len(f)
+    logging.debug('w {} wtar {} f {}'.format(len(w), len(wtar), len(f)))
     #Interpolating to match a flux array to the wavelength grid
     ftar = np.interp(wtar, w, f)
     #plt.step(wtar,ftar,label='interpolated')
