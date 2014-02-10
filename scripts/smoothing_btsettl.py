@@ -89,7 +89,7 @@ for t in teffs:
             coeff = 0.5 # (new-down)/(up-down) = 100/200 for all here
             f_high_new = f_orig_dn + (f_orig_up-f_orig_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_high_new = np.interp(w_orig,w_orig_up,f_high_new)
+                f_high_new = np.interp(w_orig,w_orig_up,f_high_new)*f_orig.unit
     
             ## Smooth to R~1000, then interpolate
             res = 11*u.AA
@@ -98,7 +98,7 @@ for t in teffs:
             f_1000_dn = falt2(w_orig_dn,f_orig_dn,res)
             f_1000_new = f_1000_dn + (f_1000_up-f_1000_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_1000_new = np.interp(w_orig,w_orig_up,f_1000_new)
+                f_1000_new = np.interp(w_orig,w_orig_up,f_1000_new)*f_orig.unit
 
             ## Smooth to R~400, then interpolate
             res = 28*u.AA
@@ -107,7 +107,7 @@ for t in teffs:
             f_400_dn = falt2(w_orig_dn,f_orig_dn,res)
             f_400_new = f_400_dn + (f_400_up-f_400_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_400_new = np.interp(w_orig,w_orig_up,f_400_new)
+                f_400_new = np.interp(w_orig,w_orig_up,f_400_new)*f_orig.unit
 
             ## Smooth to R~120, then interpolate
             res = 91*u.AA
@@ -116,7 +116,7 @@ for t in teffs:
             f_120_dn = falt2(w_orig_up,f_orig_dn,res)
             f_120_new = f_120_dn + (f_120_up-f_120_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_120_new = np.interp(w_orig,w_orig_up,f_120_new)
+                f_120_new = np.interp(w_orig,w_orig_up,f_120_new)*f_orig.unit
     
             ## Compare all of those, smoothed to R~120
             f_high_smooth = falt2(w_orig,f_high_new,res)
@@ -210,7 +210,7 @@ for l in loggs:
             coeff = 0.5 # (new-down)/(up-down) = 0.5/1.0
             f_high_new = f_orig_dn + (f_orig_up-f_orig_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_high_new = np.interp(w_orig,w_orig_up,f_high_new)
+                f_high_new = np.interp(w_orig,w_orig_up,f_high_new)*f_orig.unit
 
             ## Smooth to R~1000, then interpolate
             res = 11*u.AA
@@ -219,7 +219,7 @@ for l in loggs:
             f_1000_dn = falt2(w_orig_dn,f_orig_dn,res)
             f_1000_new = f_1000_dn + (f_1000_up-f_1000_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_1000_new = np.interp(w_orig,w_orig_up,f_1000_new)
+                f_1000_new = np.interp(w_orig,w_orig_up,f_1000_new)*f_orig.unit
 
             ## Smooth to R~400, then interpolate
             res = 28*u.AA
@@ -228,7 +228,7 @@ for l in loggs:
             f_400_dn = falt2(w_orig_dn,f_orig_dn,res)
             f_400_new = f_400_dn + (f_400_up-f_400_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_400_new = np.interp(w_orig,w_orig_up,f_400_new)
+                f_400_new = np.interp(w_orig,w_orig_up,f_400_new)*f_orig.unit
 
             ## Smooth to R~120, then interpolate
             res = 91*u.AA
@@ -237,7 +237,7 @@ for l in loggs:
             f_120_dn = falt2(w_orig_up,f_orig_dn,res)
             f_120_new = f_120_dn + (f_120_up-f_120_dn)*coeff
             if len(f_orig_up)!=len(f_orig):
-                f_120_new = np.interp(w_orig,w_orig_up,f_120_new)
+                f_120_new = np.interp(w_orig,w_orig_up,f_120_new)*f_orig.unit
 
             ## Compare all of those, smoothed to R~120
             f_high_smooth = falt2(w_orig,f_high_new,res)
