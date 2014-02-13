@@ -198,12 +198,14 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1):
     """
 
     # make a copy of the model
-
+    model_new = copy(model_dict)
+    mlen = len(model_dict['fsyn'])
 
     # for each grid point, call variable_smooth to get the smoothed model
-
+    for i in range(mlen):
+        new_flux = variable_smooth(model_dict['wsyn'],model_dict['fsyn'],
+            data_wave,delta_pixels=delta_pixels,res_scale=res_scale)
+        model_new['fsyn'][i] = new_flux
 
     # return model_new
-
-
-
+    return model_new
