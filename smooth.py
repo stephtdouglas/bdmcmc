@@ -25,6 +25,12 @@ def falt2(w, f, res):
     
     res: astropy.units Quantity
          The resolution of the observed spectrum 
+
+    Returns
+    -------
+    ftar2: float array OR astropy.units Quanity
+        smoothed model flux array, matched to input w
+
     """
     logging.debug('{} {} {}'.format(res, w.unit, f.unit))
 
@@ -115,26 +121,41 @@ def variable_smooth(w, f, data_wave, delta_pixels=2, res_scale=1):
 
     Returns
     -------
-
     new_flux: astropy.units Quantity
         smoothed and interpolated flux array, matching data_wave
 
     """
 
-    # Calculate resolution array
+    dlen = len(data_wave)
 
+    # new empty flux array
+    new_flux = np.zeros(dlen)
+
+    # Calculate resolution array
+    res = np.zeros(dlen)
+    res[2:] = wav[2:]/(wav[2:]-wav[:-2])
+    # need to fill in first 2 elements so keep same array length
+    # the end elements are very noisy anyway so it shouldn't be an issue
+    res[:2] = res[2:4] 
+    logging.debug(str(res[:10]))
 
     # For each resolution in the array, smooth the model to the correct
     # resolution and interpolate onto the wavelength grid
+    for i in range(dlen):
+
+        # crop w, f to a shorter length to reduce calculation time
 
         # pass to falt2
+        smoothed_flux = falt2(w, f, 2.35482*res[i]/np.sqrt(2.0))
+        logging.debug('{} w {} f {} smoothed {}'.format(i, len(w),len(f),
+            len(smoothed_flux)))
 
         # interpolate
+        new_flux[i] = np.interp(data_wave[i],w,smoothed_flux)
 
-
-
+    logging.debug(str(new_flux))
     # Return calculated array
-
+    return new_flux
 
 def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1):
     """
