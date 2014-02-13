@@ -85,7 +85,7 @@ def falt2(w, f, res):
     fconvol2 = fconvol/(1.0/(0.1*fwhm))
     #plt.step(wtar,fconvol2,label='convolved')
 
-    #print len(w), len(wtar), len(fconvol2)
+    logging.debug('w {} wtar {} fconvol2 {}'.format(len(w), len(wtar), len(fconvol2)))
     ftar2 = np.interp(w, wtar, fconvol2)*f.unit
     #print ftar2
     #plt.step(w,ftar2,label='final')
@@ -126,14 +126,17 @@ def variable_smooth(w, f, data_wave, delta_pixels=2, res_scale=1):
 
     """
 
+    model_res = w[1]-w[0]
+
     dlen = len(data_wave)
+    print data_wave.unit
 
     # new empty flux array
     new_flux = np.zeros(dlen)
 
     # Calculate resolution array
     res = np.zeros(dlen)
-    res[2:] = wav[2:]/(wav[2:]-wav[:-2])
+    res[2:] = data_wave[2:]/(data_wave[2:]-data_wave[:-2])
     # need to fill in first 2 elements so keep same array length
     # the end elements are very noisy anyway so it shouldn't be an issue
     res[:2] = res[2:4] 
@@ -144,14 +147,19 @@ def variable_smooth(w, f, data_wave, delta_pixels=2, res_scale=1):
     for i in range(dlen):
 
         # crop w, f to a shorter length to reduce calculation time
+        #good = np.where(abs(w-data_wave[i].to(w.unit))<(model_res*1000))[0]
+        #logging.debug('good {} {}'.format(len(good),good))
 
         # pass to falt2
-        smoothed_flux = falt2(w, f, 2.35482*res[i]/np.sqrt(2.0))
+        #res_i = (2.35482*res[i]/np.sqrt(2.0))*data_wave.unit
+        res_i = data_wave[i]/res[i]
+        print res_i.unit
+        smoothed_flux = falt2(w, f, res_i)
         logging.debug('{} w {} f {} smoothed {}'.format(i, len(w),len(f),
             len(smoothed_flux)))
 
         # interpolate
-        new_flux[i] = np.interp(data_wave[i],w,smoothed_flux)
+        new_flux[i] = np.interp(np.asarray(data_wave[i]),w,smoothed_flux)
 
     logging.debug(str(new_flux))
     # Return calculated array
