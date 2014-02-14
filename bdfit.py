@@ -30,16 +30,56 @@ class BDSampler(object):
     Call as:
        from bdmcmc import bdfit
        x = bdfit.BDSampler(obj_name,spectrum,model,params)
-      where obj_name (string) gives an identifier for the object
-            spectrum (dict) contains 'wavelength','flux','unc'
-            model (dict) keyed by params, 'wsyn', 'fsyn'
-            params (list of strings) parameters to vary in fit, 
-              must be keys of model
+
+    Parameters for __init__
+    -----------------------
+    obj_name: string
+        gives an identifier for the object
+
+    spectrum: dictionary 
+        contains 'wavelength','flux','unc' arrays
+        (all much be astropy.units Quantities)
+
+    model: dictionary 
+        keys 'wsyn' and 'fsyn' should correspond to model wavelength and 
+        flux arrays, and those should be astropy.units Quantities
+        other keys should correspond to params
+
+    params: list of strings
+        parameters to vary in fit, must be keys of model
+
+    smooth: boolean (default=True)
+        whether or not to smooth the model spectra before interpolation 
+        onto the data wavelength grid 
+
     """
 
-    def __init__(self,obj_name,spectrum,model,params):
+    def __init__(self,obj_name,spectrum,model,params,smooth=False):
         """
-        Creates the variables:
+        Parameters 
+        ----------
+        obj_name: string
+            gives an identifier for the object
+    
+        spectrum: dictionary 
+            contains 'wavelength','flux','unc' arrays
+            (all much be astropy.units Quantities)
+    
+        model: dictionary 
+            keys 'wsyn' and 'fsyn' should correspond to model wavelength and 
+            flux arrays, and those should be astropy.units Quantities
+            other keys should correspond to params
+        
+        params: list of strings
+            parameters to vary in fit, must be keys of model
+
+        smooth: boolean (default=True)
+            whether or not to smooth the model spectra before interpolation 
+            onto the data wavelength grid 
+
+
+        Creates
+        -------
             date (string)
             name (string)
             model (dict)
@@ -65,13 +105,23 @@ class BDSampler(object):
 
 
 
-    def mcmc_go(self, nwalk_mult=200, nstep_mult = 500):
+    def mcmc_go(self, nwalk_mult=20, nstep_mult=50):
         """
         Sets up and calls emcee to carry out the MCMC algorithm
 
-        Stores the output in self.chain 
-        self.cropchain cuts out the first 10% of the steps, 
-            then flattens the chain
+        Parameters
+        ----------
+        nwalk_mult: integer (default=20)
+            multiplied by ndim to get the number of walkers
+
+        nstep_mult: integer (default=50)
+            multiplied by ndim to get the number of steps
+
+        Creates
+        -------
+        self.chain (output of all chains)
+        self.cropchain (cuts out the first 10% of the steps, 
+            then flattens the chain)
         """
 
         nwalkers, nsteps = self.ndim*nwalk_mult, self.ndim*nstep_mult
