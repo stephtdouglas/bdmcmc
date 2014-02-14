@@ -93,7 +93,7 @@ class BDSampler(object):
         self.name = obj_name
         logging.info('%s',self.name)
 
-        self.model = ModelGrid(spectrum,model,params)
+        self.model = ModelGrid(spectrum,model,params,smooth=smooth)
         #print spectrum.keys()
         logging.info('Set model')
 
