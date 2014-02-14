@@ -17,8 +17,32 @@ from smooth import *
 
 class ModelGrid(object):
 
-    def __init__(self,spectrum,model_dict,params):
+    def __init__(self,spectrum,model_dict,params,smooth=False):
         """
+        NOTE: at this point I have not accounted for model parameters
+        that are NOT being used for the fit - this means there will be 
+        duplicate spectra and the interpolation will fail/be incorrect!
+
+        Parameters
+        ----------
+        spectrum: dictionary of astropy.units Quantities
+            keys of 'wavelength', 'flux', and 'unc' give the relevant arrays
+
+        model_dict: dictionary
+            keys 'wsyn' and 'fsyn' should correspond to model wavelength and 
+            flux arrays, and those should be astropy.units Quantities
+            other keys should correspond to params
+
+        params: array of strings
+            the model parameters to be interpolated over.  These should 
+            correspond to keys of model_dict
+
+        smooth: boolean (default=True)
+            whether or not to smooth the model spectra before interpolation 
+            onto the data wavelength grid 
+            (a check will be performed before interpolation to see if it's
+            it's necessary)
+
         """
         self.wave = spectrum['wavelength']
         self.flux = spectrum['flux']
@@ -54,8 +78,37 @@ class ModelGrid(object):
 
         self.itcount = 0
 
+        self.smooth = smooth
+
+        if ((len(self.model['wsyn'])==len(self.wave)) and 
+            (np.sum(self.model['wsyn']-self.wave.to(
+            self.model['wsyn'].unit))<(self.model['wsyn'].unit*10^-12))):
+            self.interp = False
+            logging.debug('NO INTERPOLATION')
+        else:
+            self.interp = True
+            logging.debug('INTERPOLATION NEEDED')
+
+
+
 
     def __call__(self,*args):
+        """
+        NOTE: at this point I have not accounted for model parameters
+        that are NOT being used for the fit - this means there will be 
+        duplicate spectra and the interpolation will fail/be incorrect!
+
+        Parameters
+        ----------
+        *args: array or list
+             new parameters. Order and number must correspond to params
+        
+        Returns
+        -------
+        new_model: flux array for new model spectrum, matched to data 
+            wavelength grid given at initialization
+        
+        """
 
         p = np.asarray(args)[0]
         logging.debug('params %s',str(p))
@@ -200,12 +253,17 @@ class ModelGrid(object):
         # interpolation resampling
 
         # THIS IS WHERE THE CODE TAKES A LONG TIME
-        #print p, len(mod_flux)
-        logging.debug('starting smoothing')
-        mod_flux = falt2(self.model['wsyn'],mod_flux,100*u.AA)
-        logging.debug('finished smoothing, starting interp')
-        mod_flux = np.interp(self.wave*10000,self.model['wsyn'],mod_flux)
-        logging.debug('finished interp, starting renorm')
+        if self.smooth:
+            logging.debug('starting smoothing')
+            mod_flux = falt2(self.model['wsyn'],mod_flux,100*u.AA)
+            logging.debug('finished smoothing')
+        else:
+            logging.debug('no smoothing')
+        if self.interp:
+            logging.debug('starting interp')
+            mod_flux = np.interp(self.wave.to(self.model['wsyn'].unit),
+                self.model['wsyn'],mod_flux)
+            logging.debug('finished interp')
 
         # Need to normalize (taking below directly from old makemodel code)
 
