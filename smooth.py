@@ -146,13 +146,10 @@ def variable_smooth(w, f, data_wave, delta_pixels=2, res_scale=1):
     # resolution and interpolate onto the wavelength grid
     for i in range(dlen):
 
-        # crop w, f to a shorter length to reduce calculation time
-        #good = np.where(abs(w-data_wave[i].to(w.unit))<(model_res*1000))[0]
-        #logging.debug('good {} {}'.format(len(good),good))
-
         # pass to falt2
         #res_i = (2.35482*res[i]/np.sqrt(2.0))*data_wave.unit
         res_i = data_wave[i]/res[i]
+        logging.debug(str(res_i))
         print res_i.unit
         smoothed_flux = falt2(w, f, res_i)
         logging.debug('{} w {} f {} smoothed {}'.format(i, len(w),len(f),
