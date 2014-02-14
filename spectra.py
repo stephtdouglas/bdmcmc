@@ -91,7 +91,6 @@ class BrownDwarf(object):
     Creates a brown dwarf object, containing its db id number
     plus spectra if desired.
 
-
     Call as x = spectra.BrownDwarf(<name>) where <name> is
         a U-number, a short name, or another name
         that can be used to find the object in the database
@@ -110,6 +109,27 @@ class BrownDwarf(object):
 
 
     def __init__(self,name):
+        """
+        Parameters
+        ----------
+        name: string
+            identifier from the database
+            -if the first character is 'U', assumes it's a u-number
+            -if it is 7 characters long with a + or - at the 5th
+                spot, assumes it's a shortname
+            -otherwise, it will search under names
+
+        Creates
+        -------
+        self.name: string
+            equals the input name
+
+        self.sid: integer
+            source_id for further database queries
+
+        self.specs: dictionary
+            initializes an empty dictionary to hold spectra
+        """
         if name[0]=='U':
             query_result = db.query.execute(
                 "SELECT id FROM sources WHERE unum='{}'".format(
@@ -148,15 +168,21 @@ class BrownDwarf(object):
         Get low-resolution (SpeX) observation from database;
         calls spectra.spectrum_query
 
-        Inputs:
-            obs_date (optional) (required if there are more than 2)
-                format as 'YYYY-MM-DD'
-            filename (optional if there are more than 2 w/ same obs_date)
-                IF THERE ARE TWO OBSERVATIONS WITH THE SAME DATE IT WILL 
-                PICK THE FIRST BY DEFAULT.
+        Parameters
+        ----------
+        obs_date: string (default=None) 
+            (required if there are 2 or more possibilities)
+            format as 'YYYY-MM-DD'
+        filename: string (default=None) 
+            (required if there are more than 2 w/ same obs_date)
+            IF THERE ARE TWO OBSERVATIONS WITH THE SAME DATE IT WILL 
+            PICK THE FIRST BY DEFAULT.
 
-        Stores wavelength, flux, and unc as arrays in the dictionary
-        self.specs, e.g. self.specs['low']['wavelength']
+        Creates
+        -------
+        self.specs['low']: dictionary
+            'wavelength', 'flux', and 'unc' as arrays in a nested dictionary
+            access as, e.g., self.specs['low']['wavelength']
         """
 
         spex_id = 6
@@ -171,13 +197,21 @@ class BrownDwarf(object):
         Get one order of a high_resolution spectrum (NIRSPEC) 
         from the database; calls spectra.spectrum_query
 
-        Inputs: 
-            order (int) number in range 58-65 for NIRSPEC
-            obs_date (optional) in format 'DDmmmYY', e.g. '04dec08'
+        Parameters
+        ----------
+        order: integer 
+            number in range 58-65 for desired NIRSPEC order
+        obs_date: string (default=None) 
+            (required if there are 2 or more possibilities)
+            format as 'DDmmmYY', e.g. '04dec08'
 
-        Stores wavelength, flux, and unc as arrays in the dictionary
-        self.specs, keyed by the order number
-        e.g. self.specs[61]['wavelength']
+        Creates
+        -------
+        self.specs[##]: dictionary
+            'wavelength', 'flux', and 'unc' as arrays in a nested dictionary
+            within self.specs, keyed by the order number
+            access as, e.g., self.specs[61]['wavelength']
+
         """
 
         inst_id = 9 # NIRSPEC
@@ -192,11 +226,17 @@ class BrownDwarf(object):
         Get orders 61 and 65 from the database, which adds them to
         self.specs, then join them into one spectrum
 
-        Inputs:
-            obs_date (optional) in format 'DDmmmYY', e.g. '04dec08'
+        Parameters
+        ----------
+        obs_date: string (default=None) 
+            (required if there are 2 or more possibilities)
+            format as  'DDmmmYY', e.g. '04dec08'
 
-        Stores wavelength, flux, and unc as arrays in the dictionary
-        self.specs, e.g. self.specs[6165]['wavelength']
+        Creates
+        -------
+        self.specs[6165]: dictionary
+            'wavelength', 'flux', and 'unc' as arrays in a nested dictionary
+            access as, e.g., self.specs[6165]['wavelength']
         """
 
         self.get_order(61,obs_date)

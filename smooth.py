@@ -51,7 +51,7 @@ def falt2(w, f, res):
     while len(w.value)==1:
         w = w[0]
         #print 'un-nested w!', len(w.value)
-    plt.step(w,f,label='input')
+    #plt.step(w,f,label='input')
 
     nw = (max(w) - min(w))/(fwhm*0.1)
     nw2 = np.floor(nw) + 1.0
@@ -73,7 +73,7 @@ def falt2(w, f, res):
     #print len(w), len(wtar), len(f)
     #Interpolating to match a flux array to the wavelength grid
     ftar = np.interp(wtar, w, f)
-    plt.step(wtar,ftar,label='interpolated')
+    #plt.step(wtar,ftar,label='interpolated')
 
     #Defining a convolving kernel
     wk = np.arange(101)*0.1*fwhm - 5.0*fwhm
@@ -83,12 +83,12 @@ def falt2(w, f, res):
     #Scaling each element of fconvol with a scaling factor
     fconvol = np.convolve(ftar, yk, 'same')
     fconvol2 = fconvol/(1.0/(0.1*fwhm))
-    plt.step(wtar,fconvol2,label='convolved')
+    #plt.step(wtar,fconvol2,label='convolved')
 
     logging.debug('w {} wtar {} fconvol2 {}'.format(len(w), len(wtar), len(fconvol2)))
     ftar2 = np.interp(w, wtar, fconvol2)*f.unit
     #print ftar2
-    plt.step(w,ftar2,label='final')
+    #plt.step(w,ftar2,label='final')
     #plt.legend(loc=2)
 
     return ftar2
