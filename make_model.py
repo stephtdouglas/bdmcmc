@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 # config loads database and makes it available as db
 from config import * 
-from get_mod import *
+from smooth import *
 
 class ModelGrid(object):
 

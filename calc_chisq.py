@@ -10,7 +10,7 @@ from astropy import units as u
 
 # config loads database and makes it available as db
 from config import * 
-from get_mod import *
+from smooth import *
 
 def calc_chisq(data_flux,data_unc,model_flux):
     return np.sum((data_flux-model_flux)**2/(data_unc**2))
