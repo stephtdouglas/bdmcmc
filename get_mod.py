@@ -60,6 +60,9 @@ class AtmoModel(object):
         wave_key='wsyn',flux_key='fsyn',
         wave_unit=u.um, flux_unit=u.dimensionless_unscaled):
         """
+
+        if the model already has units associated with it,
+        call with wave_unit=None, flux_unit=None
         """
         logging.debug('getting file %s',filename)
         mfile = open(filename,'rb')
@@ -86,8 +89,10 @@ class AtmoModel(object):
             logging.info("ERROR! model flux must be keyed with 'fsyn'!")
             logging.info(str(self.mod_keys))
 
-        self.model['wsyn'] = self.model['wsyn']*wave_unit
-        self.model['fsyn'] = self.model['fsyn']*flux_unit
+        if wave_unit!=None:
+            self.model['wsyn'] = self.model['wsyn']*wave_unit
+        if flux_unit!=None:
+            self.model['fsyn'] = self.model['fsyn']*flux_unit
 
         temp_mod = dict(self.model)
         temp_mod.pop('wsyn')
