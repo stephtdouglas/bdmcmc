@@ -7,7 +7,7 @@ import logging
 from datetime import date
 
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model, bdmcmc.sample
-from bdmcmc.get_mod import falt2
+from bdmcmc.smooth import falt2
 import numpy as np
 import astropy.units as u
 from scipy.io.idl import readsav
