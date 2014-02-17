@@ -11,11 +11,12 @@ from bdmcmc.smooth import falt2
 import numpy as np
 import astropy.units as u
 from scipy.io.idl import readsav
+import cPickle
 
 logging.basicConfig(level=logging.DEBUG)
 
-modelpath = '/vega/astro/users/sd2706/modelSpectra/'
-#modelpath = '/home/stephanie/ldwarfs/summerAMNH/modelSpectra/'
+#modelpath = '/vega/astro/users/sd2706/modelSpectra/'
+modelpath = '/home/stephanie/ldwarfs/summerAMNH/modelSpectra/'
 dustylowfile = modelpath+'modelspeclowresldwarfs.save'
 dl = readsav(dustylowfile)
 d = len(dl.modelspec.teff)
@@ -32,5 +33,5 @@ logging.debug('models retrieved')
 
 
 output = open(modelpath+'dusty_highres.pkl','wb')
-cPickle.dump(modband, output)
+cPickle.dump(models, output)
 output.close()
