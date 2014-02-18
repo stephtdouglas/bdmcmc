@@ -92,12 +92,11 @@ class AtmoModel(object):
             logging.info("ERROR! model flux must be keyed with 'fsyn'!")
             logging.info(str(self.mod_keys))
 
-        if wave_unit!=None:
+        if type(self.model['wsyn'])!=u.quantity.Quantity:
             self.model['wsyn'] = self.model['wsyn']*wave_unit
 
-        logging.debug('is flux unit none? '+str(flux_unit))
-#        if flux_unit!=None:
-        self.model['fsyn'] = self.model['fsyn']*flux_unit
+        if type(self.model['fsyn'][0])!=u.quantity.Quantity:
+            self.model['fsyn'] = self.model['fsyn']*flux_unit
 
         temp_mod = dict(self.model)
         temp_mod.pop('wsyn')
