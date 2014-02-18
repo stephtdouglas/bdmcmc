@@ -76,6 +76,9 @@ class AtmoModel(object):
             logging.debug('changing flux key from %s',flux_key)
             self.model['fsyn'] = self.model.pop(flux_key)
 
+        logging.debug(str(type(self.model['fsyn'][0])))
+        logging.debug(str(self.model['fsyn'][0]))
+
         if params_to_ignore!=None:
             for drop in params_to_ignore:
                 junk = self.model.pop(drop)
@@ -91,8 +94,10 @@ class AtmoModel(object):
 
         if wave_unit!=None:
             self.model['wsyn'] = self.model['wsyn']*wave_unit
-        if flux_unit!=None:
-            self.model['fsyn'] = self.model['fsyn']*flux_unit
+
+        logging.debug('is flux unit none? '+str(flux_unit))
+#        if flux_unit!=None:
+        self.model['fsyn'] = self.model['fsyn']*flux_unit
 
         temp_mod = dict(self.model)
         temp_mod.pop('wsyn')

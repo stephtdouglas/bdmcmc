@@ -69,9 +69,17 @@ def falt2(w, f, res):
         #print 'un-nested wtar!', len(wtar.value)
     while len(f.value)==1:
         f = f[0]
-        #print 'un-nested f!', len(f.value)
+        logging.debug('un-nested f! {}'.format(len(f)))
 
-    #print len(w), len(wtar), len(f)
+    try:
+        ftest = f[0]
+        if len(ftest)>1:
+            f = ftest
+    except:
+        logging.debug('WTF')
+
+    logging.debug('len w {} wtar {} f {}'.format(len(w), len(wtar), len(f)))
+    logging.debug('0th w {} wtar {} f {}'.format(w[0],wtar[0],f[0]))
     #Interpolating to match a flux array to the wavelength grid
     ftar = np.interp(wtar, w, f)
 #    plt.step(wtar,ftar,label='interpolated')
@@ -151,13 +159,14 @@ def variable_smooth(w, f, data_wave, delta_pixels=2, res_scale=1):
         #res_i = (2.35482*res[i]/np.sqrt(2.0))*data_wave.unit
         res_i = data_wave[i]/res[i]
         logging.debug(str(res_i))
+        logging.debug('units w {} f {} res_i {}'.format(w.unit,f.unit,res_i.unit))
         smoothed_flux = falt2(w, f, res_i)
         logging.debug('{} w {} f {} smoothed {}'.format(i, len(w),len(f),
             len(smoothed_flux)))
 
         # interpolate
         new_flux[i] = np.interp(np.asarray(data_wave[i]),w,smoothed_flux)
-        check_flux = np.interp(np.asarray(data_wave[i]),w,f)
+        check_flux = np.interp(np.asarray(data_wave[i]),w,f[0])
         logging.debug('{} lambda {} newflux {} checkflux {}'.format(
             i,data_wave[i],new_flux[i],check_flux))
 
@@ -198,7 +207,7 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1):
     """
 
     # make a copy of the model
-    model_new = copy(model_dict)
+    model_new = np.copy(model_dict)
     mlen = len(model_dict['fsyn'])
 
     # for each grid point, call variable_smooth to get the smoothed model

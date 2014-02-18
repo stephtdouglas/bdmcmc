@@ -10,12 +10,13 @@ import astropy.units as u
 from scipy.io.idl import readsav
 import cPickle
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 #modelpath = '/home/stephanie/ldwarfs/summerAMNH/modelSpectra/'
-am = bdmcmc.get_mod.AtmoModel(modelpath+'dusty_highres.pkl',wave_unit=None,
-    flux_unit=None)
+am = bdmcmc.get_mod.AtmoModel(modelpath+'dusty_highres.pkl',wave_unit=None)
+
+logging.debug(str(am.model['fsyn'][0]))
 
 bd = bdmcmc.spectra.BrownDwarf('U20165')
 bd.get_low()
