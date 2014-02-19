@@ -199,7 +199,7 @@ class BrownDwarf(object):
             irtf_id, spex_id, True, obs_date, filename)
 
         header = self.specs['low'].pop('header')
-        self.specs['slit_width'] = header['SLTW_ARC']*u.arcsec
+        self.specs['low']['slit_width'] = header['SLTW_ARC']*u.arcsec
 
 
     def get_order(self,order,obs_date=None):
