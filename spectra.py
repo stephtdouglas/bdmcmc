@@ -11,7 +11,7 @@ import astropy.units as u
 # config loads database and makes it available as db
 from config import * 
 
-def spectrum_query(source_id,telescope_id,instrument_id,
+def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
     obs_date=None,filename=None,order=None):
     """
     Inputs:
@@ -25,6 +25,8 @@ def spectrum_query(source_id,telescope_id,instrument_id,
           [(1, 'R-C Spec'),(2, 'GMOS-N'),(3, 'GMOS-S'),(4, 'FORS'),
           (5, 'LRIS'),(6, 'SPeX, IRTF Spectrograph'),(7, 'LDSS3-Two'),
           (8, 'FOCAS'),(9, 'NIRSPEC')]
+
+        header (bool; default=False) whether to return the header
 
         obs_date (optional) (required if there are more than 2)
             format as 'YYYY-MM-DD'
@@ -47,7 +49,7 @@ def spectrum_query(source_id,telescope_id,instrument_id,
     #logging.debug(query_add)
 
     base_query = ("SELECT wavelength_units, flux_units,"
-        +" wavelength, flux, unc FROM spectra WHERE ")
+        +" wavelength, flux, unc, header FROM spectra WHERE ")
     #logging.debug(base_query)
     if telescope_id=='' and instrument_id=='':
         end_query = " source_id={}".format(source_id)
@@ -84,6 +86,10 @@ def spectrum_query(source_id,telescope_id,instrument_id,
     else:
          q_result_out['unc'] = q_result['unc']*flux_unit
 
+    if return_header:
+        q_result_out['header'] = q_result['header']
+
+    logging.debug(str(q_result_out.keys()))
     return q_result_out
 
 class BrownDwarf(object):
@@ -181,7 +187,8 @@ class BrownDwarf(object):
         Creates
         -------
         self.specs['low']: dictionary
-            'wavelength', 'flux', and 'unc' as arrays in a nested dictionary
+            'wavelength', 'flux', and 'unc' as arrays,
+            and 'slit_width' as a float, all in a nested dictionary
             access as, e.g., self.specs['low']['wavelength']
         """
 
@@ -189,7 +196,10 @@ class BrownDwarf(object):
         irtf_id = 7
 
         self.specs['low'] = spectrum_query(self.sid,
-            irtf_id, spex_id, obs_date, filename)        
+            irtf_id, spex_id, True, obs_date, filename)
+
+        header = self.specs['low'].pop('header')
+        self.specs['slit_width'] = header['SLTW_ARC']*u.arcsec
 
 
     def get_order(self,order,obs_date=None):
