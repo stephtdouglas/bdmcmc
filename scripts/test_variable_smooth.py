@@ -23,7 +23,10 @@ bd.get_low()
 data_wave = bd.specs['low']['wavelength']
 data_flux = bd.specs['low']['flux']
 
-new_grid = bdmcmc.smooth.smooth_grid(am.model,data_wave)
+# SpeX R array should be scaled by 0.3/slit_width
+r_scale = 0.3/bd.specs['low']['slit_width'].value
+
+new_grid = bdmcmc.smooth.smooth_grid(am.model,data_wave,res_scale=r_scale)
 
 output = open('U20165_dusty_highres.pkl','wb')
 cPickle.dump(new_grid,output)
