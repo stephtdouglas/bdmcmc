@@ -10,7 +10,7 @@ import astropy.units as u
 from scipy.io.idl import readsav
 import cPickle
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 #modelpath = '/home/stephanie/ldwarfs/summerAMNH/modelSpectra/'
