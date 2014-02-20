@@ -198,8 +198,13 @@ class BrownDwarf(object):
         self.specs['low'] = spectrum_query(self.sid,
             irtf_id, spex_id, True, obs_date, filename)
 
-        header = self.specs['low'].pop('header')
-        self.specs['low']['slit_width'] = header['SLTW_ARC']*u.arcsec
+        if 'header' in self.specs['low'].keys():
+            header = self.specs['low'].pop('header')
+            self.specs['low']['slit_width'] = header['SLTW_ARC']*u.arcsec
+        else:
+            self.specs['low']['slit_width'] = -9.
+            logging.info('no header available; no slit_width information')
+
 
 
     def get_order(self,order,obs_date=None):
