@@ -168,7 +168,8 @@ def variable_smooth(w, f, data_wave, delta_pixels=2, res_scale=1):
     # Return calculated array
     return new_flux
 
-def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1):
+def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1,
+    incremental_outfile='none'):
     """
     Computes a new grid of model spectra, where all calculated models
     in the grid are matched to the wavelength grid from the data
@@ -191,6 +192,11 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1):
          multiply delta_lambda/lambda by this factor 
          (useful when changing slit width)
 
+    incremental_outfile: string (default='none')
+        output file to save the model file to, to prevent losing everything
+        if the job breaks down; should end in '.pkl'
+        (progress will be saved every 10 models)
+
     Returns
     -------
 
@@ -212,6 +218,11 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1):
             data_wave,delta_pixels=delta_pixels,res_scale=res_scale)
         logging.debug('{} {}'.format(i,str(model_new.keys())))
         model_new['fsyn'][i] = new_flux
+        if (mod(i,10))==0 and (incremental_outfile!='none'):
+            open_outfile = open('incremental_outfile'.replace(
+                '.',str(i/10)+'.','wb')
+            cPickle.dump(model_new,open_outfile)
+            open_outfile.close()
 
     # return model_new
     return model_new
