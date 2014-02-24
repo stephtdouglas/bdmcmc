@@ -216,11 +216,11 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1,
     for i in range(mlen):
         new_flux = variable_smooth(model_dict['wsyn'],model_dict['fsyn'][i],
             data_wave,delta_pixels=delta_pixels,res_scale=res_scale)
-        logging.debug('{} {}'.format(i,str(model_new.keys())))
+        logging.info('{} {}'.format(i,str(model_new.keys())))
         model_new['fsyn'][i] = new_flux
-        if (mod(i,10))==0 and (incremental_outfile!='none'):
+        if (np.mod(i,10))==0 and (incremental_outfile!='none'):
             open_outfile = open('incremental_outfile'.replace(
-                '.',str(i/10)+'.','wb')
+                '.',str(i/10))+'.','wb')
             cPickle.dump(model_new,open_outfile)
             open_outfile.close()
 
