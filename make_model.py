@@ -1,6 +1,10 @@
 # Function that interpolates a model
 # Includes the ModelGrid class, which 
 # 2 December 2013, Stephanie Douglas
+#
+# 24 February 2014 - need to adjust for the model grid being uneven 
+# if we're on the edge, there's nothing to do
+# but if we're in a middle region, it should be possible.
 ################################################################################
 
 import logging
