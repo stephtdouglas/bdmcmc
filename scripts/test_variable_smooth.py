@@ -10,7 +10,7 @@ import astropy.units as u
 from scipy.io.idl import readsav
 import cPickle
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 #modelpath = '/home/stephanie/ldwarfs/summerAMNH/modelSpectra/'
@@ -22,11 +22,14 @@ bd = bdmcmc.spectra.BrownDwarf('U20165')
 bd.get_low()
 data_wave = bd.specs['low']['wavelength']
 data_flux = bd.specs['low']['flux']
+logging.info('got bd')
 
 # SpeX R array should be scaled by 0.3/slit_width
 r_scale = 0.3/bd.specs['low']['slit_width'].value
+logging.info(str(r_scale))
 
-new_grid = bdmcmc.smooth.smooth_grid(am.model,data_wave,res_scale=r_scale)
+new_grid = bdmcmc.smooth.smooth_grid(am.model,data_wave,res_scale=r_scale,
+    incremental_outfile='spex_dusty_backup.pkl')
 
 output = open('SpeX_dusty.pkl','wb')
 cPickle.dump(new_grid,output)
