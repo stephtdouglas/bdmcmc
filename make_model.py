@@ -82,7 +82,7 @@ class ModelGrid(object):
 
         if ((len(self.model['wsyn'])==len(self.wave)) and 
             (np.sum(self.model['wsyn']-self.wave.to(
-            self.model['wsyn'].unit))<(self.model['wsyn'].unit*10^-12))):
+            self.model['wsyn'].unit))<(self.model['wsyn'].unit*10**-12))):
             self.interp = False
             logging.debug('NO INTERPOLATION')
         else:

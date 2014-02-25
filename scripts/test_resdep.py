@@ -18,6 +18,10 @@ am = bdmcmc.get_mod.AtmoModel('/vega/astro/users/sd2706/modelSpectra/SpeX_dusty.
 
 am.model['wsyn'] = bd.specs['low']['wavelength']
 
+logging.debug('script lengths dw {} mw {} mf {}'.format(
+    len(bd.specs['low']['wavelength']),len(am.model['wsyn']),
+    len(am.model['fsyn'][2])))
+
 bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smooth=False)
 
 bdsamp.mcmc_go(nstep_mult=200)

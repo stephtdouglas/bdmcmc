@@ -56,7 +56,7 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
 
     if ((len(model_dict['wsyn'])==len(data_wave)) and 
         (np.sum(model_dict['wsyn']-data_wave.to(
-        model_dict['wsyn'].unit))<(model_dict['wsyn'].unit*10^-12))):
+        model_dict['wsyn'].unit))<(model_dict['wsyn'].unit*10**-12))):
         interp = False
         logging.info('calc_chisq.test_all: NO INTERPOLATION')
     else:
