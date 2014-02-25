@@ -54,8 +54,8 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
          data_wave = data_wave.to(model_dict['wsyn'].unit)
     #logging.debug(data_wave.unit.to_string('fits'))
 
-    if ((len(model_dict['wsyn'])==len(self.wave)) and 
-        (np.sum(model_dict['wsyn']-self.wave.to(
+    if ((len(model_dict['wsyn'])==len(data_wave)) and 
+        (np.sum(model_dict['wsyn']-data_wave.to(
         model_dict['wsyn'].unit))<(model_dict['wsyn'].unit*10^-12))):
         interp = False
         logging.info('calc_chisq.test_all: NO INTERPOLATION')
@@ -78,6 +78,8 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
         else:
             mod_flux = model_dict['fsyn'][i]
 
+        logging.debug('lengths dw {} modw {} modf {}'.format(
+            len(data_wave),len(model_dict['wsyn']),len(mod_flux)))
         if interp:
             mod_flux = np.interp(data_wave,model_dict['wsyn'],mod_flux)
 
