@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 bd = bdmcmc.spectra.BrownDwarf('U20165')
 bd.get_low()
@@ -24,7 +24,7 @@ logging.debug('script lengths dw {} mw {} mf {}'.format(
 
 bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smooth=False)
 
-bdsamp.mcmc_go(nstep_mult=200)
+bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=5000)
 
 bdsamp.plot_chains()
 plt.savefig('test_resdep_ch_{}.png'.format(date.isoformat(date.today())))
