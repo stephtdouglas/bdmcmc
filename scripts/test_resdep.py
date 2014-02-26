@@ -27,13 +27,13 @@ bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smoot
 bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=500)
 
 bdsamp.plot_chains()
-plt.savefig('test_resdep_ch_{}.png'.format(date.isoformat(date.today())))
+plt.savefig('test_newTc_ch_{}.png'.format(date.isoformat(date.today())))
 
 bdsamp.plot_triangle()
-plt.savefig('test_resdep_tri_{}.png'.format(date.isoformat(date.today())))
+plt.savefig('test_newTc_tri_{}.png'.format(date.isoformat(date.today())))
 
 bdsamp.plot_random()
-plt.savefig('test_resdep_random_{}.png'.format(date.isoformat(date.today()))) 
+plt.savefig('test_newTc_random_{}.png'.format(date.isoformat(date.today()))) 
 
 bdsamp.plot_quantiles()
-plt.savefig('test_resdep_quantiles_{}.png'.format(date.isoformat(date.today())))
+plt.savefig('test_newTc_quantiles_{}.png'.format(date.isoformat(date.today())))

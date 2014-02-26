@@ -230,7 +230,10 @@ class ModelGrid(object):
 
                 # coeff expresses how close the new value is to the lower value 
                 # relative to the distance between the upper and lower values
-                coeff  = (p[i] - interp1)*1.0/(interp2 - interp1)
+                if self.params[i]=='teff':
+                    coeff = (p[i]**4 - interp1**4)*1.0/(interp2**4 - interp1**4)
+                else:
+                    coeff = (p[i] - interp1)*1.0/(interp2 - interp1)
 #                print 'coeff',self.params[i],coeff
 
                 # There will be half as many spectra after this.  
