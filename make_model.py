@@ -105,9 +105,32 @@ class ModelGrid(object):
         
         Returns
         -------
-        new_model: flux array for new model spectrum, matched to data 
-            wavelength grid given at initialization
+        lnprob: log of posterior probability for this model + data
+
+        """
+        logging.debug(str(args))
+        mod_flux = self.interp_models(*args)
+
+        lnprob = -0.5*(np.sum((self.flux-mod_flux)**2/(self.unc**2)))
+        return lnprob
         
+
+    def interp_models(self,*args):
+        """
+        NOTE: at this point I have not accounted for model parameters
+        that are NOT being used for the fit - this means there will be 
+        duplicate spectra and the interpolation will fail/be incorrect!
+
+        Parameters
+        ----------
+        *args: array or list
+             new parameters. Order and number must correspond to params
+        
+        Returns
+        -------
+        mod_flux: array
+             model flux corresponding to input parameters
+
         """
 
         p = np.asarray(args)[0]
@@ -198,7 +221,7 @@ class ModelGrid(object):
         old_spectra = dict(corner_spectra)
 
         for i in range(self.ndim):
-            logging.debug('now dealing with %d %f',i,self.params[i])
+            logging.debug('now dealing with %d %s',i,self.params[i])
             if i in to_interp:
                 # get the values to be interpolated between for this loop
                 interp1 = old_corners[0,0]
@@ -296,4 +319,5 @@ class ModelGrid(object):
 #            plt.legend()
 
 
-        return -0.5*(np.sum((self.flux-mod_flux)**2/(self.unc**2)))
+
+        return mod_flux
