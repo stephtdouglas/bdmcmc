@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 bd = bdmcmc.spectra.BrownDwarf('U20165')
 bd.get_low()

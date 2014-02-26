@@ -231,6 +231,7 @@ class ModelGrid(object):
                 # coeff expresses how close the new value is to the lower value 
                 # relative to the distance between the upper and lower values
                 if self.params[i]=='teff':
+                    logging.debug('NEW TEFF COEFF')
                     coeff = (p[i]**4 - interp1**4)*1.0/(interp2**4 - interp1**4)
                 else:
                     coeff = (p[i] - interp1)*1.0/(interp2 - interp1)
