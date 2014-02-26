@@ -233,7 +233,6 @@ class BDSampler(object):
         pp.close()
 
 
-""" still thinking about this part
     def plot_quantiles(self):
         """
         Plot the models associated with the 16th, 50th, and 84th quantiles
@@ -249,8 +248,32 @@ class BDSampler(object):
         ax = subplot(111)
 
         param_quantiles = [quantile(self.cropchain[:,i],[.16,.5,.84]) for 
-            i in range(ndim)]
+            i in range(self.ndim)]
 
-#        for i in range(ndim):
-                
-"""
+        # match up the 16th and 84th quantiles for all params 
+        # (will give 2^ndim models to plot)
+        quantile_corners = np.zeros(2**self.ndim).reshape((-1,self.ndim))
+
+        for i in range(ndim):
+            logging.debug(self.model.params[i])
+            div_by = 2**(self.ndim - i - 1)
+            loc = ((np.arange(num_spectra)/div_by) % 2)
+            loc1 = np.where(loc)[0]
+            loc2 = np.where(loc==0)[0]
+            logging.debug(str(loc1))
+            quantile_corners[loc1,i] = param_quantiles[i][0][1]
+            quantile_corners[loc2,i] = param_quantiles[i][2][1]
+
+        for p in quantile_corners:
+            new_flux = self.model(p)
+            ax.step(self.model.wave,new_flux,ls=':',label=str(p))
+
+        ax.legend(loc=4,title=str(self.model.params))
+            
+        # plot the model corresponding to the 50th quantiles of all params
+        best_fit = [param_quantiles[i][1][1] for i in range(self.ndim)]
+        best_fit_flux = self.model(best_fit)
+        ax.step(self.model.wave,best_fit_flux,color='r')
+
+        # plot the data
+        ax.step(self.model.wave,self.model.flux,color='k')
