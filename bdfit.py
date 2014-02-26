@@ -9,6 +9,7 @@ import logging
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import emcee
 import triangle
@@ -169,6 +170,7 @@ class BDSampler(object):
         self.corner_fig = triangle.corner(self.cropchain,
             labels=self.model.params)#,
 #            truths=np.ones(3))
+        plt.suptitle('{}  {}'.format(self.name,self.date)
 
 
     def plot_chains(self):
@@ -177,6 +179,7 @@ class BDSampler(object):
         as well as 1D histograms of the results
         """
         self.chain_fig = emcee_plot(self.chain,labels=self.model.params)
+        plt.suptitle('{}  {}'.format(self.name,self.date)
 
 
     def plot_random(self):
@@ -187,7 +190,7 @@ class BDSampler(object):
         rand_samp = self.cropchain[np.random.randint(len(self.cropchain),
             size=200)]
 
-        plt.figure()
+        plt.figure(figsize=(9,12))
         ax = subplot(111)
 
         for p in rand_samp:
@@ -199,3 +202,47 @@ class BDSampler(object):
         ax.step(self.model.wave,self.model.flux,color='k')
         ax.errorbar(self.model.wave,self.model.flux,self.model.unc,
             fmt='None',linewidth='None',barsabove=True,ecolor='k',color='k')
+        ax.title('{}  {}'.format(self.name,self.date)
+
+
+    def plot_all(self,outfile=None):
+        """
+        Plot all possible plots in a single pdf file
+        """
+        if outfile==None:
+            outfile='{}_fit_{}.pdf'.format(self.name,self.date)
+        pp = PdfPages(outfile)
+
+        self.plot_triangle()
+        pp.savefig()
+        plt.close()
+        self.plot_random()
+        pp.savefig()
+        plt.close()
+        self.plot_chains()
+        pp.savefig()
+        plt.close()
+        pp.close()
+
+
+""" still thinking about this part
+    def plot_quantiles(self):
+        """
+        Plot the models associated with the 16th, 50th, and 84th quantiles
+        """
+
+        def quantile(x,quantiles):
+            # From DFM's triangle code
+            xsorted = sorted(x)
+            qvalues = [xsorted[int(q * len(xsorted))] for q in quantiles]
+            return zip(quantiles,qvalues)
+
+        plt.figure(figsize=(9,12))
+        ax = subplot(111)
+
+        param_quantiles = [quantile(self.cropchain[:,i],[.16,.5,.84]) for 
+            i in range(ndim)]
+
+#        for i in range(ndim):
+                
+"""
