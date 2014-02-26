@@ -24,10 +24,16 @@ logging.debug('script lengths dw {} mw {} mf {}'.format(
 
 bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smooth=False)
 
-bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=5000)
+bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=500)
 
 bdsamp.plot_chains()
 plt.savefig('test_resdep_ch_{}.png'.format(date.isoformat(date.today())))
 
 bdsamp.plot_triangle()
 plt.savefig('test_resdep_tri_{}.png'.format(date.isoformat(date.today())))
+
+bdsamp.plot_random()
+plt.savefig('test_resdep_random_{}.png'.format(date.isoformat(date.today()))) 
+
+bdsamp.plot_quantiles()
+plt.savefig('test_resdep_quantiles_{}.png'.format(date.isoformat(date.today())))
