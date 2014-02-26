@@ -106,7 +106,7 @@ class BDSampler(object):
 
 
 
-    def mcmc_go(self, nwalk_mult=20, nstep_mult=50):
+    def mcmc_go(self, nwalk_mult=20, nstep_mult=50, outfile=None):
         """
         Sets up and calls emcee to carry out the MCMC algorithm
 
@@ -157,11 +157,19 @@ class BDSampler(object):
         ## store chains for plotting/analysis
         self.chain = sampler.chain
 
+        ## Save the chains to a pkl file for any diagnostics
+        if outfile==None:
+            outfile='{}_chains_{}.pkl'.format(self.name,self.date)
+        open_outfile = open(outfile,'wb')
+        cPickle.dump(self.chain,open_outfile)
+        open_outfile.close()
+
+
         ## cut out the burn-in samples (first 10%, for now)
         burn_in = np.floor(nsteps*0.1)
         self.cropchain = sampler.chain[:,burn_in:,:].reshape(
             (-1,self.ndim))
-    
+
 
     def plot_triangle(self):
         """
