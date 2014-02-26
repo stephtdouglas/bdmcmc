@@ -178,7 +178,7 @@ class BDSampler(object):
         self.corner_fig = triangle.corner(self.cropchain,
             labels=self.model.params)#,
 #            truths=np.ones(3))
-        plt.suptitle('{}  {}'.format(self.name,self.date)
+        plt.suptitle('{}  {}'.format(self.name,self.date))
 
 
     def plot_chains(self):
@@ -187,7 +187,7 @@ class BDSampler(object):
         as well as 1D histograms of the results
         """
         self.chain_fig = emcee_plot(self.chain,labels=self.model.params)
-        plt.suptitle('{}  {}'.format(self.name,self.date)
+        plt.suptitle('{}  {}'.format(self.name,self.date))
 
 
     def plot_random(self):
@@ -198,19 +198,23 @@ class BDSampler(object):
         rand_samp = self.cropchain[np.random.randint(len(self.cropchain),
             size=200)]
 
-        plt.figure(figsize=(9,12))
-        ax = subplot(111)
+        logging.debug('random sample '+str(rand_samp))
+
+        plt.figure(figsize=(12,9))
+        ax = plt.subplot(111)
 
         for p in rand_samp:
-            new_flux = self.model(p)
+            logging.debug('random params '+str(p))
+            new_flux = self.model.interp_models(p)
+            #logging.debug('new flux '+str(new_flux))
             ax.step(self.model.wave,new_flux,color='r',alpha=0.05)
         ax.set_xlabel(r'Wavelength ($\AA$)',fontsize='xx-large')
         ax.set_ylabel('Flux (normalized)',fontsize='x-large')
         ax.tick_params(labelsize='large')
         ax.step(self.model.wave,self.model.flux,color='k')
-        ax.errorbar(self.model.wave,self.model.flux,self.model.unc,
-            fmt='None',linewidth='None',barsabove=True,ecolor='k',color='k')
-        ax.title('{}  {}'.format(self.name,self.date)
+        #ax.errorbar(self.model.wave,self.model.flux,self.model.unc,
+        #    fmt=None,linewidth=0,barsabove=True,ecolor='k',color='k')
+        ax.set_title('{}  {}'.format(self.name,self.date))
 
 
     def plot_all(self,outfile=None):
@@ -225,6 +229,9 @@ class BDSampler(object):
         pp.savefig()
         plt.close()
         self.plot_random()
+        pp.savefig()
+        plt.close()
+        self.plot_quantiles()
         pp.savefig()
         plt.close()
         self.plot_chains()
@@ -244,36 +251,43 @@ class BDSampler(object):
             qvalues = [xsorted[int(q * len(xsorted))] for q in quantiles]
             return zip(quantiles,qvalues)
 
-        plt.figure(figsize=(9,12))
-        ax = subplot(111)
+        plt.figure(figsize=(12,9))
+        ax = plt.subplot(111)
 
         param_quantiles = [quantile(self.cropchain[:,i],[.16,.5,.84]) for 
             i in range(self.ndim)]
 
+        logging.debug(str(param_quantiles))
+
         # match up the 16th and 84th quantiles for all params 
         # (will give 2^ndim models to plot)
-        quantile_corners = np.zeros(2**self.ndim).reshape((-1,self.ndim))
+        num_spectra = 2**self.ndim
+        quantile_corners = np.zeros(num_spectra*self.ndim).reshape((-1,self.ndim))
+        logging.debug(str(quantile_corners))
 
-        for i in range(ndim):
+        for i in range(self.ndim):
             logging.debug(self.model.params[i])
             div_by = 2**(self.ndim - i - 1)
-            loc = ((np.arange(num_spectra)/div_by) % 2)
+            loc = ((np.arange(2**self.ndim)/div_by) % 2)
             loc1 = np.where(loc)[0]
             loc2 = np.where(loc==0)[0]
-            logging.debug(str(loc1))
+
             quantile_corners[loc1,i] = param_quantiles[i][0][1]
             quantile_corners[loc2,i] = param_quantiles[i][2][1]
 
+        logging.info(str(quantile_corners))
+
         for p in quantile_corners:
-            new_flux = self.model(p)
+            new_flux = self.model.interp_models(p)
             ax.step(self.model.wave,new_flux,ls=':',label=str(p))
 
         ax.legend(loc=4,title=str(self.model.params))
             
         # plot the model corresponding to the 50th quantiles of all params
         best_fit = [param_quantiles[i][1][1] for i in range(self.ndim)]
-        best_fit_flux = self.model(best_fit)
+        best_fit_flux = self.model.interp_models(best_fit)
         ax.step(self.model.wave,best_fit_flux,color='r')
 
         # plot the data
         ax.step(self.model.wave,self.model.flux,color='k')
+        ax.set_title('{}  {}'.format(self.name,self.date))
