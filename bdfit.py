@@ -179,4 +179,23 @@ class BDSampler(object):
         self.chain_fig = emcee_plot(self.chain,labels=self.model.params)
 
 
+    def plot_random(self):
+        """
+        Plots a random sample of models from chains
+        """
 
+        rand_samp = self.cropchain[np.random.randint(len(self.cropchain),
+            size=200)]
+
+        plt.figure()
+        ax = subplot(111)
+
+        for p in rand_samp:
+            new_flux = self.model(p)
+            ax.step(self.model.wave,new_flux,color='r',alpha=0.05)
+        ax.set_xlabel(r'Wavelength ($\AA$)',fontsize='xx-large')
+        ax.set_ylabel('Flux (normalized)',fontsize='x-large')
+        ax.tick_params(labelsize='large')
+        ax.step(self.model.wave,self.model.flux,color='k')
+        ax.errorbar(self.model.wave,self.model.flux,self.model.unc,
+            fmt='None',linewidth='None',barsabove=True,ecolor='k',color='k')
