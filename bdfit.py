@@ -153,6 +153,8 @@ class BDSampler(object):
         logging.info('sampler reset')
         pos,prob,state = sampler.run_mcmc(pos,nsteps)
         logging.info('sampler completed')
+        logging.info("avg accept {}".format(np.average(
+            sampler.acceptance_fraction)))
 
         ## store chains for plotting/analysis
         self.chain = sampler.chain

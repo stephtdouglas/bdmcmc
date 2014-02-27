@@ -11,16 +11,21 @@ from astropy import units as u
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod
 from bdmcmc.sample import fetch
 
+logging.basicConfig(level=logging.INFO)
 
 ldwarfs = fetch.fetch_12()
 bds = ldwarfs.brown_dwarfs
 unums = bds.keys()
+
+bd = bds['U20165']
 
 am = bdmcmc.get_mod.AtmoModel('/vega/astro/users/sd2706/modelSpectra/SpeX_dusty.pkl')
 am.model['wsyn'] = bd.specs['low']['wavelength']
 
 
 for u in unums:
+    bd = bds[u]
+
     bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],
         am.model,am.params,smooth=False)
 

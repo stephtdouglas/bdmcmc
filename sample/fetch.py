@@ -46,10 +46,10 @@ class BDList(object):
 
 
 def fetch_12():
-    my_bds = BDList('/home/stephanie/ldwarfs/Ldwarf_sample2014.csv')
+    my_bds = BDList('/vega/astro/users/sd2706/Ldwarf_sample2014.csv')
 
     # Use Burgasser+08's spectrum from the SpeX Prism Library
-    oldfile = at.read('/home/stephanie/ldwarfs/summerAMNH/LdwarfSpectra/2MASSWJ0208+25_spex.dat')
+    oldfile = at.read('/vega/astro/users/sd2706/2MASSWJ0208+25_spex.dat')
     old_spectrum = {'wavelength':oldfile['col1']*u.um,
         'flux':oldfile['col2']*u.dimensionless_unscaled,
         'unc':oldfile['col3']*u.dimensionless_unscaled}
