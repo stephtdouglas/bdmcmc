@@ -80,14 +80,15 @@ class ModelGrid(object):
 
         self.smooth = smooth
 
+        check_diff = self.model['wsyn']-self.wave.to(self.model['wsyn'].unit)
+
         if ((len(self.model['wsyn'])==len(self.wave)) and 
-            (np.sum(self.model['wsyn']-self.wave.to(
-            self.model['wsyn'].unit))<(self.model['wsyn'].unit*10**-12))):
+            (abs(check_diff[0].value)<1e-3)):
             self.interp = False
-            logging.debug('NO INTERPOLATION')
+            logging.info('NO INTERPOLATION')
         else:
             self.interp = True
-            logging.debug('INTERPOLATION NEEDED')
+            logging.info('INTERPOLATION NEEDED')
 
 
 
