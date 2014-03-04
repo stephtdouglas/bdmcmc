@@ -80,10 +80,11 @@ class ModelGrid(object):
 
         self.smooth = smooth
 
-        check_diff = self.model['wsyn']-self.wave.to(self.model['wsyn'].unit)
+        check_diff = self.model['wsyn'][0]-self.wave.to(
+            self.model['wsyn'].unit)[0]
 
         if ((len(self.model['wsyn'])==len(self.wave)) and 
-            (abs(check_diff[0].value)<1e-3)):
+            (abs(check_diff.value)<1e-3)):
             self.interp = False
             logging.info('NO INTERPOLATION')
         else:
@@ -110,9 +111,20 @@ class ModelGrid(object):
 
         """
         logging.debug(str(args))
+
+        p = np.asarray(args)[0]
+        for i in range(self.ndim):
+            if ((p[i]>=self.plims[self.params[i]]['max']) or 
+                (p[i]<=self.plims[self.params[i]]['min'])):
+                logging.debug("bad param %s: %f, min: %f, max: %f", 
+                    self.params[i], p[i], self.plims[self.params[i]]['min'],
+                    self.plims[self.params[i]]['max'])
+                return -np.inf
+
         mod_flux = self.interp_models(*args)
 
         lnprob = -0.5*(np.sum((self.flux-mod_flux)**2/(self.unc**2)))
+        logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
         return lnprob
         
 
@@ -136,14 +148,6 @@ class ModelGrid(object):
 
         p = np.asarray(args)[0]
         logging.debug('params %s',str(p))
-
-        for i in range(self.ndim):
-            if ((p[i]>=self.plims[self.params[i]]['max']) or 
-                (p[i]<=self.plims[self.params[i]]['min'])):
-                logging.debug("bad param %s: %f, min: %f, max: %f", 
-                    self.params[i], p[i], self.plims[self.params[i]]['min'],
-                    self.plims[self.params[i]]['max'])
-                return -np.inf
 
         grid_edges = {}
         edge_inds = {}
