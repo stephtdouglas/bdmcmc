@@ -22,6 +22,11 @@ bd = bds['U20165']
 am = bdmcmc.get_mod.AtmoModel('/vega/astro/users/sd2706/modelSpectra/SpeX_dusty.pkl')
 am.model['wsyn'] = bd.specs['low']['wavelength']
 
+high_grav = np.where(am.model['logg']>5.55)[0]
+for i in high_grav:
+    am.model['logg'] = np.delete(am.model['logg'],i)
+    am.model['teff'] = np.delete(am.model['teff'],i)
+    am.model['fsyn'] = np.delete(am.model['fsyn'],i)
 
 for u in unums:
     bd = bds[u]
