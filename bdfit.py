@@ -130,7 +130,7 @@ class BDSampler(object):
         p0 = np.zeros((nwalkers,self.ndim))
         logging.debug('p0 shape %s',str(np.shape(p0)))
         for i in range(nwalkers):
-             p0[i] = self.start_p + (1e-3*np.random.randn(self.ndim)*
+             p0[i] = self.start_p + (1e-2*np.random.randn(self.ndim)*
                   self.start_p)
              logging.debug('p0[%s] shape %s',i,str(p0[i]))
 #        p0 = p0.T
@@ -149,7 +149,7 @@ class BDSampler(object):
         logging.debug('pos %s', str(pos))
         logging.debug('prob %s', str(prob))
         logging.debug('state %s', str(state))
-        sampler.reset()
+#        sampler.reset()
         logging.info('sampler reset')
         pos,prob,state = sampler.run_mcmc(pos,nsteps)
         logging.info('sampler completed')
