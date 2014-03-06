@@ -167,6 +167,7 @@ class ModelGrid(object):
                      self.plims[self.params[i]]['vals']<p[i]])
                 dn_val = min(self.plims[self.params[i]]['vals'][
                      self.plims[self.params[i]]['vals']>p[i]])
+                logging.debug('up {} down {}'.format(up_val,dn_val))
                 grid_edges[self.params[i]] = np.array([dn_val,up_val])
                 edge_inds[self.params[i]] = np.array([np.where(
                     self.plims[self.params[i]]['vals']==dn_val)[0],np.where(
@@ -200,12 +201,11 @@ class ModelGrid(object):
             loc2 = np.where(loc==0)[0]
             grid_corners[loc1,i] = grid_edges[self.params[i]][0]
             grid_corners[loc2,i] = grid_edges[self.params[i]][1]
-#        logging.debug('all corners: %s',str(grid_corners))
+        logging.debug('all corners: %s',str(grid_corners))
 
         # Get the actual corner spectra to be interpolated
         corner_spectra = {}
         for cpar in grid_corners:
-#            print cpar
             # cpar contains all the model parameters for a particular spectrum
             # find_i is the location of that spectrum in the dictionary
             find_i = np.ones(len(self.plims[self.params[0]]['vals']),bool)
@@ -213,8 +213,9 @@ class ModelGrid(object):
                 find_i = (find_i & 
                      (cpar[i]==self.plims[self.params[i]]['vals']))
             find_i = np.where(find_i)[0]
+            logging.debug(str(cpar))
             if len(find_i)!=1:
-                print 'ERROR: Multi/No model',cpar,find_i
+                logging.info('ERROR: Multi/No model {} {}'.format(cpar,find_i))
                 return -np.inf
 #            print find_i
             corner_spectra[tuple(cpar)] = self.model['fsyn'][find_i]
@@ -231,7 +232,7 @@ class ModelGrid(object):
                 # get the values to be interpolated between for this loop
                 interp1 = old_corners[0,0]
                 interp2 = old_corners[len(old_corners)/2,0]
-#                print 'lower & upper',interp1,interp2
+                logging.debug('lower {}  upper {}'.format(interp1,interp2))
 
                 # coeff expresses how close the new value is to the lower value 
                 # relative to the distance between the upper and lower values
@@ -240,14 +241,14 @@ class ModelGrid(object):
                     coeff = (p[i]**4 - interp1**4)*1.0/(interp2**4 - interp1**4)
                 else:
                     coeff = (p[i] - interp1)*1.0/(interp2 - interp1)
-#                print 'coeff',self.params[i],coeff
+                logging.debug('{} coeff {}'.format(self.params[i],coeff))
 
                 # There will be half as many spectra after this.  
                 new_corners = old_corners[:len(old_corners)/2,1:]
 #                print 'new corners',new_corners
                 new_spectra = {}
                 for cpar in new_corners:
-#                    print 'new params',cpar, type(cpar)
+                    logging.debug('new params {} {}'.format(cpar, type(cpar)))
                     ns1 = old_spectra[tuple(np.append(interp1,cpar))]
                     ns2 = old_spectra[tuple(np.append(interp2,cpar))]
 
@@ -256,9 +257,10 @@ class ModelGrid(object):
 
                     new_spectra[tuple(cpar)] = new_flux
 
+                logging.debug(str(new_spectra.keys()))
                 old_corners = new_corners
                 old_spectra = new_spectra
-#                print 'remaining to interp', old_spectra.keys()
+                logging.debug('remaining to interp {}'.format(old_spectra.keys()))
 
             elif i in single_flags:
                 # No need to interpolate this variable, so skip it and
