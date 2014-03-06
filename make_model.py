@@ -163,16 +163,16 @@ class ModelGrid(object):
                     self.plims[self.params[i]]['vals']==[p[i]])[0]
                 single_flags = np.append(single_flags,i)
             else:
-                up_val = max(self.plims[self.params[i]]['vals'][
+                dn_val = max(self.plims[self.params[i]]['vals'][
                      self.plims[self.params[i]]['vals']<p[i]])
-                dn_val = min(self.plims[self.params[i]]['vals'][
+                up_val = min(self.plims[self.params[i]]['vals'][
                      self.plims[self.params[i]]['vals']>p[i]])
                 logging.debug('up {} down {}'.format(up_val,dn_val))
                 grid_edges[self.params[i]] = np.array([dn_val,up_val])
                 edge_inds[self.params[i]] = np.array([np.where(
                     self.plims[self.params[i]]['vals']==dn_val)[0],np.where(
                     self.plims[self.params[i]]['vals']==up_val)[0]])
-        logging.debug('skipping: %s',str(single_flags))
+        logging.debug('skipping: {}'.format(single_flags))
 
         # If all the paramters need to be interpolated (the usual case)
         # then we need 2**ndim spectra (that's how many 'corners' there are)
@@ -181,7 +181,7 @@ class ModelGrid(object):
         # need to interpolate because models at that Teff exist in our grid)
         num_spectra = 2**(self.ndim-len(single_flags))
         to_interp = np.delete(range(self.ndim),single_flags)
-        logging.debug('%d spectra', num_spectra)
+#        logging.debug('%d spectra', num_spectra)
 
         # Get the "corners" of the model grid - the model values that
         # will be interpolated between.  This creates a bunch of tuples 
@@ -195,13 +195,17 @@ class ModelGrid(object):
         for i in single_flags:
             grid_corners[:,i] = grid_edges[self.params[i]][0]
         for i in to_interp:  
-            div_by = 2**(self.ndim-len(single_flags) - i - 1)
+            if num_spectra==2:
+                div_by = 1
+            else:
+                div_by = 2**(self.ndim-len(single_flags) - i - 1)
             loc = ((np.arange(num_spectra)/div_by) % 2)
-            loc1 = np.where(loc)[0]
-            loc2 = np.where(loc==0)[0]
+            loc1 = np.where(loc==0)[0]
+            loc2 = np.where(loc)[0]
+            logging.debug('div_by {} loc1 {} loc2 {}'.format(div_by,loc1,loc2))
             grid_corners[loc1,i] = grid_edges[self.params[i]][0]
             grid_corners[loc2,i] = grid_edges[self.params[i]][1]
-        logging.debug('all corners: %s',str(grid_corners))
+#        logging.debug('all corners: %s',str(grid_corners))
 
         # Get the actual corner spectra to be interpolated
         corner_spectra = {}
@@ -220,7 +224,7 @@ class ModelGrid(object):
 #            print find_i
             corner_spectra[tuple(cpar)] = self.model['fsyn'][find_i]
 
-        logging.debug('finished getting corner spectra')
+#        logging.debug('finished getting corner spectra')
 
         # Interpolate at all paramters requiring interpolation, skip the rest
         old_corners = np.copy(grid_corners)
@@ -232,12 +236,12 @@ class ModelGrid(object):
                 # get the values to be interpolated between for this loop
                 interp1 = old_corners[0,0]
                 interp2 = old_corners[len(old_corners)/2,0]
-                logging.debug('lower {}  upper {}'.format(interp1,interp2))
+#                logging.debug('lower {}  upper {}'.format(interp1,interp2))
 
                 # coeff expresses how close the new value is to the lower value 
                 # relative to the distance between the upper and lower values
                 if self.params[i]=='teff':
-                    logging.debug('NEW TEFF COEFF')
+#                    logging.debug('NEW TEFF COEFF')
                     coeff = (p[i]**4 - interp1**4)*1.0/(interp2**4 - interp1**4)
                 else:
                     coeff = (p[i] - interp1)*1.0/(interp2 - interp1)
@@ -248,7 +252,7 @@ class ModelGrid(object):
 #                print 'new corners',new_corners
                 new_spectra = {}
                 for cpar in new_corners:
-                    logging.debug('new params {} {}'.format(cpar, type(cpar)))
+#                    logging.debug('new params {} {}'.format(cpar, type(cpar)))
                     ns1 = old_spectra[tuple(np.append(interp1,cpar))]
                     ns2 = old_spectra[tuple(np.append(interp2,cpar))]
 
@@ -260,7 +264,7 @@ class ModelGrid(object):
                 logging.debug(str(new_spectra.keys()))
                 old_corners = new_corners
                 old_spectra = new_spectra
-                logging.debug('remaining to interp {}'.format(old_spectra.keys()))
+#                logging.debug('remaining to interp {}'.format(old_spectra.keys()))
 
             elif i in single_flags:
                 # No need to interpolate this variable, so skip it and
@@ -279,7 +283,7 @@ class ModelGrid(object):
             else:
                 logging.debug('make_model WTF')
         mod_flux = old_spectra[()][0]
-        logging.debug('all done! %d %d', len(mod_flux), len(self.flux))
+#        logging.debug('all done! %d %d', len(mod_flux), len(self.flux))
 
         #### NEED A FUNCTION TO DO THE RESAMPLING
         # There's a problem in that the model is still higher-res than
@@ -288,16 +292,16 @@ class ModelGrid(object):
 
         # THIS IS WHERE THE CODE TAKES A LONG TIME
         if self.smooth:
-            logging.debug('starting smoothing')
+#            logging.debug('starting smoothing')
             mod_flux = falt2(self.model['wsyn'],mod_flux,100*u.AA)
-            logging.debug('finished smoothing')
+#            logging.debug('finished smoothing')
         else:
             logging.debug('no smoothing')
         if self.interp:
             logging.debug('starting interp')
             mod_flux = np.interp(self.wave.to(self.model['wsyn'].unit),
                 self.model['wsyn'],mod_flux)
-            logging.debug('finished interp')
+#            logging.debug('finished interp')
 
         # Need to normalize (taking below directly from old makemodel code)
 
@@ -319,7 +323,7 @@ class ModelGrid(object):
 
         #Applying scaling factor to rescale model flux array
         mod_flux = mod_flux*ck
-        logging.debug('finished renormalization')
+#        logging.debug('finished renormalization')
 
 #        self.itcount += 1
 #        if np.mod(self.itcount,500)==0:
