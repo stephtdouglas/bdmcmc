@@ -12,7 +12,7 @@ from astropy import units as u
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod
 from bdmcmc.sample import fetch
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 ldwarfs = fetch.fetch_12()
 bds = ldwarfs.brown_dwarfs
