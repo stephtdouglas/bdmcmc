@@ -6,6 +6,7 @@
 import logging
 from datetime import date
 
+import numpy as np
 from astropy import units as u
 
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod
@@ -22,6 +23,16 @@ bd = bds['U20165']
 am = bdmcmc.get_mod.AtmoModel('/vega/astro/users/sd2706/modelSpectra/SpeX_dusty.pkl')
 am.model['wsyn'] = bd.specs['low']['wavelength']
 
+high_grav = np.where(am.model['logg']>5.55)[0]
+while len(high_grav)>0:
+    i = high_grav[0]
+    am.model['logg'] = np.delete(am.model['logg'],i)
+    am.model['teff'] = np.delete(am.model['teff'],i)
+    am.model['fsyn'] = np.delete(am.model['fsyn'],i,0)
+    high_grav = np.where(am.model['logg']>5.55)[0]
+
+logging.info('logg '+str(am.model['logg']))
+logging.info(str(len(am.model['fsyn'])))
 
 for u in unums:
     bd = bds[u]
