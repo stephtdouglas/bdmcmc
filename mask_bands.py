@@ -29,6 +29,9 @@ class BandMask(object):
 
         self.wave_mask = np.array([])
 
+        if wavelength_grid!=None:
+            self.wave = wavelength_grid
+
     def mask_Hband(self):
         self.wave_mask = np.append(self.wave_mask,[1.58,1.75]).reshape((-1,2))
 
@@ -47,3 +50,9 @@ class BandMask(object):
             ax.add_patch(Rectangle((wave_range[0],ylims[0]),(wave_range[1]-
                 wave_range[0]),(ylims[1]-ylims[0]),
                 fc='#DCDCDC',ec='none',fill=True))
+
+    def make_pixel_mask(self):
+        self.pixel_mask = np.array([],int)
+        for region in self.wave_mask:
+            new_pixels = np.where((self.wave>=region[0]*u.um) & (self.wave<=region[1]*u.um))[0]
+            self.pixel_mask = np.append(self.pixel_mask,new_pixels)
