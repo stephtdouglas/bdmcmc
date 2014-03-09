@@ -112,6 +112,8 @@ class ModelGrid(object):
         """
         logging.debug(str(args))
 
+        # The first arguments correspond to the parameters of the model
+        # the next two, if present, correspond to vsini and rv
         p = np.asarray(args)[0]
         for i in range(self.ndim):
             if ((p[i]>=self.plims[self.params[i]]['max']) or 
@@ -121,7 +123,7 @@ class ModelGrid(object):
                     self.plims[self.params[i]]['max'])
                 return -np.inf
 
-        mod_flux = self.interp_models(*args)
+        mod_flux = self.interp_models(p)
 
         lnprob = -0.5*(np.sum((self.flux-mod_flux)**2/(self.unc**2)))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
