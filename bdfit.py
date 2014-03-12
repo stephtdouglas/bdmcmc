@@ -104,6 +104,13 @@ class BDSampler(object):
             spectrum['unc'], model, params,smooth=smooth)
         logging.info('Set starting params %s', str(self.start_p))
 
+        start_flux = self.model(self.start_p)*spectrum['flux'].unit
+        logging.debug('mod {} dat {} '.format(start_flux.unit,spectrum['flux'].unit))
+        diff = np.median(abs(spectrum['flux']-start_flux))
+        logging.info('median diff {}'.format(diff))
+        logging.debug('unc {} diff {} '.format(spectrum['unc'].unit,diff.unit))
+        spectrum['unc'] = np.sqrt(spectrum['unc']**2 + diff**2)
+        self.model = ModelGrid(spectrum,model,params,smooth=smooth)
 
 
     def mcmc_go(self, nwalk_mult=20, nstep_mult=50, outfile=None):

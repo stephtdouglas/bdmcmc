@@ -34,7 +34,7 @@ while len(high_grav)>0:
 
 
 mask = bdmcmc.mask_bands.BandMask(bd.specs['low']['wavelength'])
-mask.mask_FeH()
+mask.mask_Hband()
 mask.make_pixel_mask()
 
 logging.info(mask.pixel_mask)
@@ -48,6 +48,6 @@ bd.specs['low']['unc'] = bd.specs['low']['unc'][mask.pixel_mask]
 
 bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smooth=False)
 
-bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
+bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=200)
 
-bdsamp.plot_all(outfile='test_noFeH_{}.pdf'.format(date.isoformat(date.today())))
+bdsamp.plot_all(outfile='test_mask_{}.pdf'.format(date.isoformat(date.today())))
