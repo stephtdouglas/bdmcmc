@@ -55,7 +55,8 @@ class BDSampler(object):
 
     """
 
-    def __init__(self,obj_name,spectrum,model,params,smooth=False):
+    def __init__(self,obj_name,spectrum,model,params,smooth=False,
+        add_uncertainty=True):
         """
         Parameters 
         ----------
@@ -104,17 +105,18 @@ class BDSampler(object):
             spectrum['unc'], model, params,smooth=smooth)
         logging.info('Set starting params %s', str(self.start_p))
 
-        start_flux = self.model.interp_models(self.start_p)
-        logging.info('units mod {} dat {} '.format(start_flux.unit,
-            spectrum['flux'].unit))
-        logging.info(' avg mod {} dat {}'.format(np.average(spectrum['flux']),
-            np.average(start_flux)))
-        diff = np.max(abs(spectrum['flux']-start_flux))
-        logging.info('median diff {}'.format(diff))
-        logging.debug('unc {} '.format(spectrum['unc'].unit))
-        logging.debug('diff {} '.format(diff.unit))
-        spectrum['unc'] = np.sqrt(spectrum['unc']**2 + diff**2)
-        self.model = ModelGrid(spectrum,model,params,smooth=smooth)
+        if add_uncertainty:
+            start_flux = self.model.interp_models(self.start_p)
+            logging.info('units mod {} dat {} '.format(start_flux.unit,
+                spectrum['flux'].unit))
+            logging.info(' avg mod {} dat {}'.format(np.average(
+                spectrum['flux']),np.average(start_flux)))
+            diff = np.max(abs(spectrum['flux']-start_flux))
+            logging.info('median diff {}'.format(diff))
+            logging.debug('unc {} '.format(spectrum['unc'].unit))
+            logging.debug('diff {} '.format(diff.unit))
+            spectrum['unc'] = np.sqrt(spectrum['unc']**2 + diff**2)
+            self.model = ModelGrid(spectrum,model,params,smooth=smooth)
 
 
     def mcmc_go(self, nwalk_mult=20, nstep_mult=50, outfile=None):
