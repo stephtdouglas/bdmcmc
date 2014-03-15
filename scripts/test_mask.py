@@ -48,6 +48,6 @@ bd.specs['low']['unc'] = bd.specs['low']['unc'][mask.pixel_mask]
 
 bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smooth=False)
 
-bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=200)
+bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=500)
 
-bdsamp.plot_all(outfile='test_mask_{}.pdf'.format(date.isoformat(date.today())))
+bdsamp.plot_all(outfile='test_add_max_{}.pdf'.format(date.isoformat(date.today())))
