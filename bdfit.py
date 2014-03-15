@@ -104,11 +104,15 @@ class BDSampler(object):
             spectrum['unc'], model, params,smooth=smooth)
         logging.info('Set starting params %s', str(self.start_p))
 
-        start_flux = self.model(self.start_p)*spectrum['flux'].unit
-        logging.debug('mod {} dat {} '.format(start_flux.unit,spectrum['flux'].unit))
-        diff = np.median(abs(spectrum['flux']-start_flux))
+        start_flux = self.model.interp_models(self.start_p)
+        logging.info('units mod {} dat {} '.format(start_flux.unit,
+            spectrum['flux'].unit))
+        logging.info(' avg mod {} dat {}'.format(np.average(spectrum['flux']),
+            np.average(start_flux)))
+        diff = np.max(abs(spectrum['flux']-start_flux))
         logging.info('median diff {}'.format(diff))
-        logging.debug('unc {} diff {} '.format(spectrum['unc'].unit,diff.unit))
+        logging.debug('unc {} '.format(spectrum['unc'].unit))
+        logging.debug('diff {} '.format(diff.unit))
         spectrum['unc'] = np.sqrt(spectrum['unc']**2 + diff**2)
         self.model = ModelGrid(spectrum,model,params,smooth=smooth)
 
@@ -221,6 +225,9 @@ class BDSampler(object):
         ax.set_ylabel('Flux (normalized)',fontsize='x-large')
         ax.tick_params(labelsize='large')
         ax.step(self.model.wave,self.model.flux,color='k')
+        ax.step(self.model.wave,self.model.flux+self.model.unc,color='k',alpha=0.5)
+        ax.step(self.model.wave,self.model.flux-self.model.unc,color='k',alpha=0.5)
+
         #ax.errorbar(self.model.wave,self.model.flux,self.model.unc,
         #    fmt=None,linewidth=0,barsabove=True,ecolor='k',color='k')
         ax.set_title('{}  {}'.format(self.name,self.date))
