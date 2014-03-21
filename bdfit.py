@@ -103,6 +103,12 @@ class BDSampler(object):
 
         self.start_p = test_all(spectrum['wavelength'],spectrum['flux'],
             spectrum['unc'], model, params,smooth=smooth)
+        for i in range(self.ndim):
+            if (self.start_p[i]>=self.model.plims[params[i]]['max']):
+                self.start_p[i] = self.start_p[i]*0.95
+            elif (self.start_p[i]<=self.model.plims[params[i]]['min']):
+                self.start_p[i] = self.start_p[i]*1.05
+
         logging.info('Set starting params %s', str(self.start_p))
 
         if add_uncertainty:
