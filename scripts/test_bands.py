@@ -32,9 +32,11 @@ while len(high_grav)>0:
     am.model['fsyn'] = np.delete(am.model['fsyn'],i,0)
     high_grav = np.where(am.model['logg']>5.55)[0]
 
-Jband = np.where(abs(bd.specs['low']['wavelength']-1.235*u.um)<0.162*u.um)[0]
-Hband = np.where(abs(bd.specs['low']['wavelength']-1.662*u.um)<0.251*u.um)[0]
-Kband = np.where(abs(bd.specs['low']['wavelength']-2.159*u.um)<0.262*u.um)[0]
+
+wav = bd.specs['low']['wavelength']
+Jband = np.where((wav>0.75*u.um) & (wav<1.35*u.um))[0]
+Hband = np.where((wav>1.45*u.um) & (wav<1.85*u.um))[0]
+Kband = np.where((wav>1.95*u.um) & (wav<2.5*u.um))[0]
 
 bands = {'J':Jband,'H':Hband,'K':Kband}
 
@@ -53,7 +55,7 @@ for b in band_names:
     bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,
         am.params,smooth=False)
 
-    bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=500)
+    bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=1000)
 
     bdsamp.plot_all(outfile='test_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))
