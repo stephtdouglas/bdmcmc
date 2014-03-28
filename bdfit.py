@@ -99,30 +99,24 @@ class BDSampler(object):
         #print spectrum.keys()
         logging.info('Set model')
 
-        self.ndim = len(params)
+        self.model_ndim = len(params)
 
         self.start_p = test_all(spectrum['wavelength'],spectrum['flux'],
             spectrum['unc'], model, params,smooth=smooth)
-        for i in range(self.ndim):
+        for i in range(self.model_ndim):
             if (self.start_p[i]>=self.model.plims[params[i]]['max']):
                 self.start_p[i] = self.start_p[i]*0.95
             elif (self.start_p[i]<=self.model.plims[params[i]]['min']):
                 self.start_p[i] = self.start_p[i]*1.05
 
+        self.all_params = np.append(params,'ln(s)')
+        logging.info('All params: {}'.format(str(self.all_params)))
+
+        start_lns = 2.0*np.average(self.unc)
+        self.start_p = np.append(self.start_p,start_lns)
         logging.info('Set starting params %s', str(self.start_p))
 
-        if add_uncertainty:
-            start_flux = self.model.interp_models(self.start_p)
-            logging.info('units mod {} dat {} '.format(start_flux.unit,
-                spectrum['flux'].unit))
-            logging.info(' avg mod {} dat {}'.format(np.average(
-                spectrum['flux']),np.average(start_flux)))
-            diff = np.max(abs(spectrum['flux']-start_flux))
-            logging.info('median diff {}'.format(diff))
-            logging.debug('unc {} '.format(spectrum['unc'].unit))
-            logging.debug('diff {} '.format(diff.unit))
-            spectrum['unc'] = np.sqrt(spectrum['unc']**2 + diff**2)
-            self.model = ModelGrid(spectrum,model,params,smooth=smooth)
+        self.ndim = len(self.all_params)
 
 
     def mcmc_go(self, nwalk_mult=20, nstep_mult=50, outfile=None):
