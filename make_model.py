@@ -134,7 +134,8 @@ class ModelGrid(object):
         # On the advice of Dan Foreman-Mackey, I'm changing the calculation
         # of lnprob.  The additional uncertainty needs to be included
         # in the definition of the gaussian used for chi^squared
-        unc_sq = self.unc**2 + np.exp(lns)**2
+        s = np.exp(lns)*self.unc.unit
+        unc_sq = self.unc**2 + s**2
         flux_pts = (self.flux-mod_flux)**2/unc_sq
         width_term = np.log(2*np.pi*unc_sq)
         lnprob = -0.5*(np.sum(flux_pts + width_term))
