@@ -113,8 +113,14 @@ class ModelGrid(object):
         logging.debug(str(args))
 
         # The first arguments correspond to the parameters of the model
-        # the next two, if present, correspond to vsini and rv
+        # the next two, if present, correspond to vsini and rv 
+        # ^ vsini/rv are NOT IMPLEMENTED YET
+        # the last, always, corresponds to the additional uncertainty
         p = np.asarray(args)[0]
+        lns = p[-1]
+        p = p[:-1]
+        logging.debug('params {} ln(s) {}'.format(str(p),lns))
+
         for i in range(self.ndim):
             if ((p[i]>=self.plims[self.params[i]]['max']) or 
                 (p[i]<=self.plims[self.params[i]]['min'])):
@@ -125,7 +131,13 @@ class ModelGrid(object):
 
         mod_flux = self.interp_models(p)
 
-        lnprob = -0.5*(np.sum((self.flux-mod_flux)**2/(self.unc**2)))
+        # On the advice of Dan Foreman-Mackey, I'm changing the calculation
+        # of lnprob.  The additional uncertainty needs to be included
+        # in the definition of the gaussian used for chi^squared
+        unc_sq = self.unc**2 + np.exp(lns)**2
+        flux_pts = (self.flux-mod_flux)**2/unc_sq
+        width_term = np.log(2*np.pi*unc_sq)
+        lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
         return lnprob
         
