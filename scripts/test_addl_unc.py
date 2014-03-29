@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 bd = bdmcmc.spectra.BrownDwarf('U20165')
 bd.get_low()
@@ -32,6 +32,6 @@ while len(high_grav)>0:
 
 bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smooth=False)
 
-bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=200)
+bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=400)
 
 bdsamp.plot_all(outfile='test_addl_unc_{}.pdf'.format(date.isoformat(date.today())))

@@ -55,7 +55,7 @@ for b in band_names:
     bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,
         am.params,smooth=False)
 
-    bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=1000)
+    bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=500)
 
-    bdsamp.plot_all(outfile='test_{}band_{}.pdf'.format(b,
+    bdsamp.plot_all(outfile='test_addl_unc_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))

@@ -50,4 +50,4 @@ bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,am.params,smoot
 
 bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=500)
 
-bdsamp.plot_all(outfile='test_add_max_{}.pdf'.format(date.isoformat(date.today())))
+bdsamp.plot_all(outfile='test_addl_unc_mask_{}.pdf'.format(date.isoformat(date.today())))
