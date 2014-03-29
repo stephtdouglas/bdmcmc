@@ -78,8 +78,8 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
         else:
             mod_flux = model_dict['fsyn'][i]
 
-        logging.debug('lengths dw {} modw {} modf {}'.format(
-            len(data_wave),len(model_dict['wsyn']),len(mod_flux)))
+        #logging.debug('lengths dw {} modw {} modf {}'.format(
+        #    len(data_wave),len(model_dict['wsyn']),len(mod_flux)))
         if interp:
             mod_flux = np.interp(data_wave,model_dict['wsyn'],mod_flux)
 
