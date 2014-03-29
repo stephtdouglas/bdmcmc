@@ -164,7 +164,7 @@ class BDSampler(object):
         logging.debug('pos %s', str(pos))
         logging.debug('prob %s', str(prob))
         logging.debug('state %s', str(state))
-#        sampler.reset()
+        sampler.reset()
         logging.info('sampler reset')
         pos,prob,state = sampler.run_mcmc(pos,nsteps)
         logging.info('sampler completed')
