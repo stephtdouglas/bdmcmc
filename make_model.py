@@ -137,7 +137,7 @@ class ModelGrid(object):
         s = np.exp(lns)*self.unc.unit
         unc_sq = self.unc**2 + s**2
         flux_pts = (self.flux-mod_flux)**2/unc_sq
-        width_term = np.log(2*np.pi*unc_sq)
+        width_term = np.log(2*np.pi*unc_sq.value)
         lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
         return lnprob
@@ -187,7 +187,7 @@ class ModelGrid(object):
                 edge_inds[self.params[i]] = np.array([np.where(
                     self.plims[self.params[i]]['vals']==dn_val)[0],np.where(
                     self.plims[self.params[i]]['vals']==up_val)[0]])
-        logging.debug('skipping: {}'.format(single_flags))
+#        logging.debug('skipping: {}'.format(single_flags))
 
         # If all the paramters need to be interpolated (the usual case)
         # then we need 2**ndim spectra (that's how many 'corners' there are)
@@ -217,7 +217,7 @@ class ModelGrid(object):
             loc = ((np.arange(num_spectra)/div_by) % 2)
             loc1 = np.where(loc==0)[0]
             loc2 = np.where(loc)[0]
-            logging.debug('div_by {} loc1 {} loc2 {}'.format(div_by,loc1,loc2))
+#            logging.debug('div_by {} loc1 {} loc2 {}'.format(div_by,loc1,loc2))
             grid_corners[loc1,i] = grid_edges[self.params[i]][0]
             grid_corners[loc2,i] = grid_edges[self.params[i]][1]
 #        logging.debug('all corners: %s',str(grid_corners))
@@ -232,7 +232,7 @@ class ModelGrid(object):
                 find_i = (find_i & 
                      (cpar[i]==self.plims[self.params[i]]['vals']))
             find_i = np.where(find_i)[0]
-            logging.debug(str(cpar))
+#            logging.debug(str(cpar))
             if len(find_i)!=1:
                 logging.info('ERROR: Multi/No model {} {}'.format(cpar,find_i))
                 return -np.inf
@@ -246,7 +246,7 @@ class ModelGrid(object):
         old_spectra = dict(corner_spectra)
 
         for i in range(self.ndim):
-            logging.debug('now dealing with %d %s',i,self.params[i])
+#            logging.debug('now dealing with %d %s',i,self.params[i])
             if i in to_interp:
                 # get the values to be interpolated between for this loop
                 interp1 = old_corners[0,0]
@@ -260,7 +260,7 @@ class ModelGrid(object):
                     coeff = (p[i]**4 - interp1**4)*1.0/(interp2**4 - interp1**4)
                 else:
                     coeff = (p[i] - interp1)*1.0/(interp2 - interp1)
-                logging.debug('{} coeff {}'.format(self.params[i],coeff))
+#                logging.debug('{} coeff {}'.format(self.params[i],coeff))
 
                 # There will be half as many spectra after this.  
                 new_corners = old_corners[:len(old_corners)/2,1:]
@@ -276,7 +276,7 @@ class ModelGrid(object):
 
                     new_spectra[tuple(cpar)] = new_flux
 
-                logging.debug(str(new_spectra.keys()))
+#                logging.debug(str(new_spectra.keys()))
                 old_corners = new_corners
                 old_spectra = new_spectra
 #                logging.debug('remaining to interp {}'.format(old_spectra.keys()))
@@ -313,7 +313,7 @@ class ModelGrid(object):
         else:
             logging.debug('no smoothing')
         if self.interp:
-            logging.debug('starting interp')
+#            logging.debug('starting interp')
             mod_flux = np.interp(self.wave.to(self.model['wsyn'].unit),
                 self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
