@@ -109,10 +109,12 @@ class BDSampler(object):
             elif (self.start_p[i]<=self.model.plims[params[i]]['min']):
                 self.start_p[i] = self.start_p[i]*1.05
 
-        self.all_params = np.append(params,'ln(s)')
+        self.all_params = params
+        self.all_params.append('ln(s)')
         logging.info('All params: {}'.format(str(self.all_params)))
+        logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
 
-        start_lns = 2.0*np.average(self.unc)
+        start_lns = np.log(2.0*np.average(self.model.unc))
         self.start_p = np.append(self.start_p,start_lns)
         logging.info('Set starting params %s', str(self.start_p))
 
@@ -191,7 +193,7 @@ class BDSampler(object):
         Calls triangle module to create a corner-plot of the results
         """
         self.corner_fig = triangle.corner(self.cropchain,
-            labels=self.model.params)#,
+            labels=self.all_params)#,
 #            truths=np.ones(3))
         plt.suptitle('{}  {}'.format(self.name,self.date))
 
@@ -201,7 +203,7 @@ class BDSampler(object):
         Calls Adrian's code to plot the development of the chains
         as well as 1D histograms of the results
         """
-        self.chain_fig = emcee_plot(self.chain,labels=self.model.params)
+        self.chain_fig = emcee_plot(self.chain,labels=self.all_params)
         plt.suptitle('{}  {}'.format(self.name,self.date))
 
 
@@ -223,14 +225,25 @@ class BDSampler(object):
             new_flux = self.model.interp_models(p)
             #logging.debug('new flux '+str(new_flux))
             ax.step(self.model.wave,new_flux,color='r',alpha=0.05)
+
+            best_s = np.exp(p[-1])*self.model.unc.unit
+            new_unc = np.sqrt(self.model.unc**2 + best_s**2)
+
+            logging.debug('len w {} f {} new u {}'.format(
+                len(self.model.wave),len(new_flux),len(new_unc)))
+            ax.errorbar(self.model.wave.value,new_flux.value,new_unc.value,
+                fmt=None,linewidth=0,barsabove=True,ecolor='r',color='r',
+                alpha=0.01,capsize=0,elinewidth=1)
         ax.set_xlabel(r'Wavelength ($\AA$)',fontsize='xx-large')
         ax.set_ylabel('Flux (normalized)',fontsize='x-large')
         ax.tick_params(labelsize='large')
         ax.step(self.model.wave,self.model.flux,color='k')
-        ax.step(self.model.wave,self.model.flux+self.model.unc,color='k',alpha=0.5)
-        ax.step(self.model.wave,self.model.flux-self.model.unc,color='k',alpha=0.5)
+        #ax.step(self.model.wave,self.model.flux+self.model.unc,color='k',
+        #     alpha=0.5)
+        #ax.step(self.model.wave,self.model.flux-self.model.unc,color='k',
+        #     alpha=0.5)
 
-        #ax.errorbar(self.model.wave,self.model.flux,self.model.unc,
+        #ax.errorbar(self.model.wave,self.model.flux,
         #    fmt=None,linewidth=0,barsabove=True,ecolor='k',color='k')
         ax.set_title('{}  {}'.format(self.name,self.date))
 
@@ -249,9 +262,9 @@ class BDSampler(object):
         self.plot_random()
         pp.savefig()
         plt.close()
-        self.plot_quantiles()
-        pp.savefig()
-        plt.close()
+        #self.plot_quantiles()
+        #pp.savefig()
+        #plt.close()
         self.plot_chains()
         pp.savefig()
         plt.close()
@@ -261,6 +274,8 @@ class BDSampler(object):
     def plot_quantiles(self):
         """
         Plot the models associated with the 16th, 50th, and 84th quantiles
+
+        Need to adjust this to deal with ln(s)
         """
 
         def quantile(x,quantiles):
@@ -284,7 +299,7 @@ class BDSampler(object):
         logging.debug(str(quantile_corners))
 
         for i in range(self.ndim):
-            logging.debug(self.model.params[i])
+            logging.debug(self.params[i])
             div_by = 2**(self.ndim - i - 1)
             loc = ((np.arange(2**self.ndim)/div_by) % 2)
             loc1 = np.where(loc)[0]
