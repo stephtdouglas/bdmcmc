@@ -34,9 +34,9 @@ while len(high_grav)>0:
 
 
 wav = bd.specs['low']['wavelength']
-Jband = np.where((wav>0.75*u.um) & (wav<1.35*u.um))[0]
-Hband = np.where((wav>1.45*u.um) & (wav<1.85*u.um))[0]
-Kband = np.where((wav>1.95*u.um) & (wav<2.5*u.um))[0]
+Jband = np.where((wav>0.9*u.um) & (wav<1.4*u.um))[0]
+Hband = np.where((wav>=1.4*u.um) & (wav<1.9*u.um))[0]
+Kband = np.where((wav>=1.9*u.um) & (wav<2.5*u.um))[0]
 
 bands = {'J':Jband,'H':Hband,'K':Kband}
 
