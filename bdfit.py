@@ -1,4 +1,5 @@
 # Module containing functions for working with emcee and running mcmc
+# and plotting the output
 # Stephanie Douglas, 25 November 2013
 ################################################################################
 
@@ -225,15 +226,15 @@ class BDSampler(object):
             new_flux = self.model.interp_models(p)
             #logging.debug('new flux '+str(new_flux))
             ax.step(self.model.wave,new_flux,color='r',alpha=0.05)
-
-            best_s = np.exp(p[-1])*self.model.unc.unit
-            new_unc = np.sqrt(self.model.unc**2 + best_s**2)
-
             logging.debug('len w {} f {} new u {}'.format(
                 len(self.model.wave),len(new_flux),len(new_unc)))
-            ax.errorbar(self.model.wave.value,new_flux.value,new_unc.value,
-                fmt=None,linewidth=0,barsabove=True,ecolor='r',color='r',
-                alpha=0.01,capsize=0,elinewidth=1)
+
+        best_lns = self.quantile(self.cropchain[:,-1],[.5])[0][1]
+        best_s = np.exp(best_lns)*self.model.unc.unit
+        new_unc = np.sqrt(self.model.unc**2 + best_s**2)*self.model.unc.unit
+        ax.errorbar(self.model.wave,self.model.flux,new_unc,
+            fmt=None,linewidth=0,barsabove=True,ecolor='r',color='r',
+            capsize=0,elinewidth=1)
         ax.set_xlabel(r'Wavelength ($\AA$)',fontsize='xx-large')
         ax.set_ylabel('Flux (normalized)',fontsize='x-large')
         ax.tick_params(labelsize='large')
@@ -271,6 +272,13 @@ class BDSampler(object):
         pp.close()
 
 
+    def quantile(x,quantiles):
+        # From DFM's triangle code
+        xsorted = sorted(x)
+        qvalues = [xsorted[int(q * len(xsorted))] for q in quantiles]
+        return zip(quantiles,qvalues)
+
+
     def plot_quantiles(self):
         """
         Plot the models associated with the 16th, 50th, and 84th quantiles
@@ -278,16 +286,11 @@ class BDSampler(object):
         Need to adjust this to deal with ln(s)
         """
 
-        def quantile(x,quantiles):
-            # From DFM's triangle code
-            xsorted = sorted(x)
-            qvalues = [xsorted[int(q * len(xsorted))] for q in quantiles]
-            return zip(quantiles,qvalues)
 
         plt.figure(figsize=(12,9))
         ax = plt.subplot(111)
 
-        param_quantiles = [quantile(self.cropchain[:,i],[.16,.5,.84]) for 
+        param_quantiles = [self.quantile(self.cropchain[:,i],[.16,.5,.84]) for 
             i in range(self.ndim)]
 
         logging.debug(str(param_quantiles))
