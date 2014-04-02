@@ -52,10 +52,13 @@ for b in band_names:
     bd.specs['low']['flux'] = flux_orig[bands[b]]
     bd.specs['low']['unc'] = unc_orig[bands[b]]
 
+    if 'ln(s)' in am.params:
+        am.params = list(np.delete(am.params,-1))
+
     bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,
         am.params,smooth=False)
 
-    bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=500)
+    bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=400)
 
     bdsamp.plot_all(outfile='test_addl_unc_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))

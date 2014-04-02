@@ -100,6 +100,8 @@ class BDSampler(object):
         logging.info('Set model')
 
         self.model_ndim = len(params)
+        logging.info('{} params {}'.format(self.model_ndim,
+            str(params)))
 
         self.start_p = test_all(spectrum['wavelength'],spectrum['flux'],
             spectrum['unc'], model, params,smooth=smooth)
