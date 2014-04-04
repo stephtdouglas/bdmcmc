@@ -237,7 +237,7 @@ class BDSampler(object):
         ax.errorbar(self.model.wave,self.model.flux,new_unc,
             fmt=None,linewidth=0,barsabove=True,ecolor='r',color='r',
             capsize=0,elinewidth=1)
-        ax.set_xlabel(r'Wavelength ($\AA$)',fontsize='xx-large')
+        ax.set_xlabel(r'Wavelength ($\mu$m)',fontsize='xx-large')
         ax.set_ylabel('Flux (normalized)',fontsize='x-large')
         ax.tick_params(labelsize='large')
         ax.step(self.model.wave,self.model.flux,color='k')
@@ -320,6 +320,8 @@ class BDSampler(object):
             ax.step(self.model.wave,new_flux,ls=':',label=str(p))
 
         ax.legend(loc=4,title=str(self.model.params))
+        ax.set_xlabel(r'Wavelength ($\mu$m)',fontsize='xx-large')
+        ax.set_ylabel('Flux (normalized)',fontsize='x-large')
             
         # plot the model corresponding to the 50th quantiles of all params
         best_fit = [param_quantiles[i][1][1] for i in range(self.ndim)]
