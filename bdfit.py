@@ -196,7 +196,7 @@ class BDSampler(object):
         Calls triangle module to create a corner-plot of the results
         """
         self.corner_fig = triangle.corner(self.cropchain,
-            labels=self.all_params)#,
+            labels=self.all_params,quantiles=[.16,.5,.84])#,
 #            truths=np.ones(3))
         plt.suptitle('{}  {}'.format(self.name,self.date))
 
@@ -215,7 +215,7 @@ class BDSampler(object):
         Plots a random sample of models from chains
         """
 
-        rand_samp = self.cropchain[np.random.randint(len(self.cropchain),
+        random_sample = self.cropchain[np.random.randint(len(self.cropchain),
             size=200)]
 
         logging.debug('random sample '+str(rand_samp))
@@ -223,7 +223,7 @@ class BDSampler(object):
         plt.figure(figsize=(12,9))
         ax = plt.subplot(111)
 
-        for p in rand_samp:
+        for p in random_sample:
             logging.debug('random params '+str(p))
             new_flux = self.model.interp_models(p)
             #logging.debug('new flux '+str(new_flux))
@@ -231,23 +231,15 @@ class BDSampler(object):
             logging.debug('len w {} f {} new u {}'.format(
                 len(self.model.wave),len(new_flux),len(new_unc)))
 
-        best_lns = self.quantile(self.cropchain[:,-1],[.5])[0][1]
-        best_s = np.exp(best_lns)*self.model.unc.unit
-        new_unc = np.sqrt(self.model.unc**2 + best_s**2)*self.model.unc.unit
-        ax.errorbar(self.model.wave,self.model.flux,new_unc,
-            fmt=None,linewidth=0,barsabove=True,ecolor='r',color='r',
-            capsize=0,elinewidth=1)
+            new_lns = p[-1]
+            new_s = np.exp(new_lns)*self.model.unc.unit
+            new_unc = np.sqrt(self.model.unc**2 + best_s**2)*self.model.unc.unit
+            ax.step(self.model.wave,new_unc,color='DarkOrange',alpha=0.05)
         ax.set_xlabel(r'Wavelength ($\mu$m)',fontsize='xx-large')
         ax.set_ylabel('Flux (normalized)',fontsize='x-large')
         ax.tick_params(labelsize='large')
         ax.step(self.model.wave,self.model.flux,color='k')
-        #ax.step(self.model.wave,self.model.flux+self.model.unc,color='k',
-        #     alpha=0.5)
-        #ax.step(self.model.wave,self.model.flux-self.model.unc,color='k',
-        #     alpha=0.5)
-
-        #ax.errorbar(self.model.wave,self.model.flux,
-        #    fmt=None,linewidth=0,barsabove=True,ecolor='k',color='k')
+        ax.step(self.model.wave,self.model.unc,color='DarkGrey')
         ax.set_title('{}  {}'.format(self.name,self.date))
 
 
