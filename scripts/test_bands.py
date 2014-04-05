@@ -60,12 +60,12 @@ for b in band_names:
     bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,
         am.params,smooth=False)
 
-    bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=400)
+    bdsamp.mcmc_go(nwalk_mult=10,nstep_mult=10)
 
     bdsamp.plot_all(outfile='test_addl_unc_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))
 
-    fp.page_plot(bdsamp.chains,bdsamp.model)
+    fp.page_plot(bdsamp.chain,bdsamp.model)
     plt.savefig('test_fp_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))
     plt.close()
