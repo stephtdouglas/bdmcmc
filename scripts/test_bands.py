@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model, bdmcmc.sample, bdmcmc.mask_bands
 import bdmcmc.plotting.full_page as fp
+import bdmcmc.plotting.emcee_plot as ep
 
 logging.basicConfig(level=logging.INFO)
 
@@ -67,5 +68,10 @@ for b in band_names:
 
     fp.page_plot(bdsamp.chain,bdsamp.model)
     plt.savefig('test_fp_{}band_{}.pdf'.format(b,
+        date.isoformat(date.today())))
+    plt.close()
+
+    ep.emcee_plot(bdsamp.chain,labels=bdsamp.all_params)
+    plt.savefig('test_ep_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))
     plt.close()
