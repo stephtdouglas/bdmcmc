@@ -118,6 +118,8 @@ class BDSampler(object):
         logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
 
         start_lns = np.log(2.0*np.average(self.model.unc))
+        logging.info('starting ln(s)={} s={}'.format(start_lns,
+            np.exp(start_lns)))
         self.start_p = np.append(self.start_p,start_lns)
         logging.info('Set starting params %s', str(self.start_p))
 
@@ -218,7 +220,7 @@ class BDSampler(object):
         random_sample = self.cropchain[np.random.randint(len(self.cropchain),
             size=200)]
 
-        logging.debug('random sample '+str(rand_samp))
+        logging.debug('random sample '+str(random_sample))
 
         plt.figure(figsize=(12,9))
         ax = plt.subplot(111)
@@ -228,12 +230,12 @@ class BDSampler(object):
             new_flux = self.model.interp_models(p)
             #logging.debug('new flux '+str(new_flux))
             ax.step(self.model.wave,new_flux,color='r',alpha=0.05)
+            new_lns = p[-1]
+            new_s = np.exp(new_lns)*self.model.unc.unit
+            new_unc = np.sqrt(self.model.unc**2 + new_s**2)*self.model.unc.unit
             logging.debug('len w {} f {} new u {}'.format(
                 len(self.model.wave),len(new_flux),len(new_unc)))
 
-            new_lns = p[-1]
-            new_s = np.exp(new_lns)*self.model.unc.unit
-            new_unc = np.sqrt(self.model.unc**2 + best_s**2)*self.model.unc.unit
             ax.step(self.model.wave,new_unc,color='DarkOrange',alpha=0.05)
         ax.set_xlabel(r'Wavelength ($\mu$m)',fontsize='xx-large')
         ax.set_ylabel('Flux (normalized)',fontsize='x-large')
