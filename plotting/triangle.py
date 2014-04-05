@@ -203,7 +203,7 @@ def corner(xs, labels=None, extents=None, truths=None, truth_color="#4682b4",
                     ax.set_ylabel(labels[i])
                     ax.yaxis.set_label_coords(-0.3, 0.5)
 
-    return fig
+    return fig, axes
 
 
 def error_ellipse(mu, cov, ax=None, factor=1.0, **kwargs):
