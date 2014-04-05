@@ -104,13 +104,15 @@ def corner(xs, labels=None, extents=None, truths=None, truth_color="#4682b4",
     if spec_grid is None:
         fig = pl.figure()
         spec_grid = gridspec.GridSpec(K,K)
-    setup_axes = [[plt.subplot(spec_grid[i,j]) for i in np.arange(j,K)] 
-                  for j in np.arange(K)]
+
+    #set up a full grid for ease; unused spots will be set to invisible later
+    setup_axes = [[pl.subplot(spec_grid[i,j]) for j in np.arange(K)] 
+                  for i in np.arange(K)]
     axes = np.array(setup_axes).reshape((K,K))
 
     lb = lbdim / dim
     tr = (lbdim + plotdim) / dim
-    fig.subplots_adjust(left=lb, bottom=lb, right=tr, top=tr,
+    spec_grid.update(left=lb, bottom=lb, right=tr, top=tr,
                         wspace=whspace, hspace=whspace)
 
     if extents is None:
