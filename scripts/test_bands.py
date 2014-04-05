@@ -5,11 +5,13 @@ import logging
 from datetime import date
 
 import numpy as np
-import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model, bdmcmc.sample, bdmcmc.mask_bands
 import astropy.units as u
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+
+import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model, bdmcmc.sample, bdmcmc.mask_bands
+import bdmcmc.plotting.full_page as fp
 
 logging.basicConfig(level=logging.INFO)
 
@@ -62,3 +64,8 @@ for b in band_names:
 
     bdsamp.plot_all(outfile='test_addl_unc_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))
+
+    fp.page_plot(bdsamp.chains,bdsamp.model)
+    plt.savefig('test_fp_{}band_{}.pdf'.format(b,
+        date.isoformat(date.today())))
+    plt.close()
