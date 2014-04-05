@@ -1,4 +1,5 @@
 # coding: utf-8
+# edited by Stephanie Douglas
 
 """ Plotting functions for visualizing emcee output. """
 
@@ -54,15 +55,14 @@ def emcee_plot(xs, labels=None, truths=None, extents=None, fig=None):
                      drawstyle="steps", color="#555555", alpha=0.5)
         
         if labels:
-            ax1.set_ylabel(labels[ii], fontsize=36, labelpad=18,
-                           rotation="horizontal", color="k")
+            ax1.set_ylabel(labels[ii], fontsize=36, color="k")
         
         # Don't show ticks on the y-axis
         ax1.yaxis.set_ticks([])
         
         # For the plot on the bottom, add an x-axis label. Hide all others
         if ii == ndim-1:
-            ax1.set_xlabel("step number", fontsize=24, labelpad=18, color="k")
+            ax1.set_xlabel("step number", fontsize=24, color="k")
         else:
             ax1.xaxis.set_visible(False)
         
