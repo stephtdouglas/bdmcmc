@@ -14,7 +14,7 @@ import numpy as np
 
 
 
-def plot_random(cropchain,model):
+def plot_random(cropchain,model,ax=None):
     """
     Plots a random sample of models from chains
 
@@ -31,14 +31,15 @@ def plot_random(cropchain,model):
 
     """
 
-    random_sample = cropchain[np.random.randint(len(cropchain),size=200)]
+    random_samp = cropchain[np.random.randint(len(cropchain),size=200)]
 
-    logging.debug('random sample '+str(random_sample))
+    logging.debug('random sample '+str(random_samp))
 
-    plt.figure(figsize=(12,9))
-    ax = plt.subplot(111)
+    if ax==None:
+        plt.figure(figsize=(12,9))
+        ax = plt.subplot(111)
 
-    for p in random_sample:
+    for p in random_samp:
         logging.debug('random params '+str(p))
         new_flux = model.interp_models(p[:-1])
         #logging.debug('new flux '+str(new_flux))
@@ -50,10 +51,11 @@ def plot_random(cropchain,model):
             len(model.wave),len(new_flux),len(new_unc)))
 
         ax.step(model.wave,new_unc,color='DarkOrange',alpha=0.05)
-    ax.set_xlabel(r'Wavelength ($\mu$m)',fontsize='xx-large')
-    ax.set_ylabel('Flux (normalized)',fontsize='x-large')
-    ax.tick_params(labelsize='large')
+    ax.set_xlabel(r'$\lambda (\mu m)$',fontsize='x-large')
+    ax.set_ylabel('Flux (normalized)',fontsize='large')
+    ax.tick_params(labelsize='medium')
     ax.step(model.wave,model.flux,color='k')
     ax.step(model.wave,model.unc,color='DarkGrey')
 #    ax.set_title('{}  {}'.format(self.name,self.date))
 
+    return random_samp
