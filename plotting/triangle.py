@@ -104,6 +104,8 @@ def corner(xs, labels=None, extents=None, truths=None, truth_color="#4682b4",
     if spec_grid is None:
         fig = pl.figure()
         spec_grid = gridspec.GridSpec(K,K)
+    else:
+        fig=pl.gcf()
 
     #set up a full grid for ease; unused spots will be set to invisible later
     setup_axes = [[pl.subplot(spec_grid[i,j]) for j in np.arange(K)] 
@@ -112,8 +114,8 @@ def corner(xs, labels=None, extents=None, truths=None, truth_color="#4682b4",
 
     lb = lbdim / dim
     tr = (lbdim + plotdim) / dim
-    spec_grid.update(left=lb, bottom=lb, right=tr, top=tr,
-                        wspace=whspace, hspace=whspace)
+    #pl.subplots_adjust(left=lb, bottom=lb, right=tr, top=tr,
+    #                    wspace=whspace, hspace=whspace)
 
     if extents is None:
         extents = [[x.min(), x.max()] for x in xs]
