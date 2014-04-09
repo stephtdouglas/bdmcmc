@@ -101,7 +101,7 @@ class BDSampler(object):
         logging.info('%s',self.name)
 
         if plot_title=='None':
-            self.plot_title = '{}_{}'.format(self.name,self.date)
+            self.plot_title = '{} {}'.format(self.name,self.date)
         else:
             self.plot_title = plot_title
 
@@ -209,7 +209,7 @@ class BDSampler(object):
         self.corner_fig = triangle.corner(self.cropchain,
             labels=self.all_params,quantiles=[.16,.5,.84])#,
 #            truths=np.ones(3))
-        plt.suptitle('{}  {}'.format(self.name,self.date))
+        plt.suptitle(self.plot_title)
 
 
     def plot_chains(self):
@@ -218,7 +218,7 @@ class BDSampler(object):
         as well as 1D histograms of the results
         """
         self.chain_fig = emcee_plot(self.chain,labels=self.all_params)
-        plt.suptitle('{}  {}'.format(self.name,self.date))
+        plt.suptitle(self.plot_title)
 
 
     def plot_random(self):
@@ -251,7 +251,7 @@ class BDSampler(object):
         ax.tick_params(labelsize='large')
         ax.step(self.model.wave,self.model.flux,color='k')
         ax.step(self.model.wave,self.model.unc,color='DarkGrey')
-        ax.set_title('{}  {}'.format(self.name,self.date))
+        ax.set_title(self.plot_title)
 
 
     def plot_all(self,outfile=None):
@@ -333,4 +333,4 @@ class BDSampler(object):
 
         # plot the data
         ax.step(self.model.wave,self.model.flux,color='k')
-        ax.set_title('{}  {}'.format(self.name,self.date))
+        ax.set_title(self.plot_title)
