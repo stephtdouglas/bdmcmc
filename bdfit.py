@@ -54,10 +54,12 @@ class BDSampler(object):
         whether or not to smooth the model spectra before interpolation 
         onto the data wavelength grid 
 
+    plot_title (string,default='None')
+
     """
 
     def __init__(self,obj_name,spectrum,model,params,smooth=False,
-        add_uncertainty=True):
+        plot_title='None'):
         """
         Parameters 
         ----------
@@ -80,6 +82,8 @@ class BDSampler(object):
             whether or not to smooth the model spectra before interpolation 
             onto the data wavelength grid 
 
+        plot_title (string,default='None')
+
 
         Creates
         -------
@@ -95,6 +99,11 @@ class BDSampler(object):
 
         self.name = obj_name
         logging.info('%s',self.name)
+
+        if plot_title=='None':
+            self.plot_title = '{}_{}'.format(self.name,self.date)
+        else:
+            self.plot_title = plot_title
 
         self.model = ModelGrid(spectrum,model,params,smooth=smooth)
         #print spectrum.keys()
