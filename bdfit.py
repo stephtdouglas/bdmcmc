@@ -190,7 +190,7 @@ class BDSampler(object):
 
         ## Save the chains to a pkl file for any diagnostics
         if outfile==None:
-            outfile='{}_chains_{}.pkl'.format(self.name,self.date)
+            outfile='{}_chains.pkl'.format(self.plot_title)
         open_outfile = open(outfile,'wb')
         cPickle.dump(self.chain,open_outfile)
         open_outfile.close()
@@ -221,10 +221,22 @@ class BDSampler(object):
         plt.suptitle(self.plot_title)
 
 
-    def quantile(x,quantiles):
+    def quantile(self,x,quantiles):
         # From DFM's triangle code
         xsorted = sorted(x)
         qvalues = [xsorted[int(q * len(xsorted))] for q in quantiles]
         return zip(quantiles,qvalues)
+
+
+    def get_quantiles(self):
+        self.all_quantiles = np.ones((self.ndim,3))*-99.
+        for i in range(len(self.ndim)):
+            quant_array = self.quantile(self.cropchain[:,i],[.16,.5,.84])
+            self.all_quantiles[i] = [quant_array[j][1] for j in range(3)]
+
+    def get_error_and_unc(self):
+        self.means = self.all_quantiles[:,1]
+        self.lower_lims = self.all_quantiles[:,2]-self.all_quantiles[:,1]
+        self.upper_lims = self.all_quantiles[:,1]-self.all_quantiles[:,0]
 
 
