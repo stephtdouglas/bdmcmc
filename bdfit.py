@@ -235,8 +235,17 @@ class BDSampler(object):
             self.all_quantiles[i] = [quant_array[j][1] for j in range(3)]
 
     def get_error_and_unc(self):
+        self.get_quantiles()
+
         self.means = self.all_quantiles[:,1]
         self.lower_lims = self.all_quantiles[:,2]-self.all_quantiles[:,1]
         self.upper_lims = self.all_quantiles[:,1]-self.all_quantiles[:,0]
 
+        self.error_and_unc = np.ones((self.ndim,3))*-99.
+        self.error_and_unc[:,1] = self.all_quantiles[:,1]
+        self.error_and_unc[:,0] = (self.all_quantiles[:,2]-
+            self.all_quantiles[:,1])
+        self.error_and_unc[:,2] = (self.all_quantiles[:,1]
+            -self.all_quantiles[:,0])
 
+        return self.error_and_unc
