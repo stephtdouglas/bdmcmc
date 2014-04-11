@@ -32,8 +32,8 @@ import matplotlib.gridspec as gridspec
 import matplotlib.cm as cm
 
 
-def corner(medians, errors, spt, labels, extents=None, truths=None, 
-           truth_color="#4682b4",
+def corner(medians, errors, spt, param_labels, run_labels,
+           extents=None, truths=None, truth_color="#4682b4",
            scale_hist=False, quantiles=[], verbose=True, 
            spec_grid=None, **kwargs):
     """
@@ -54,7 +54,7 @@ def corner(medians, errors, spt, labels, extents=None, truths=None,
     spts: array_like (num_samples)
         spectral type of input object
 
-    labels : iterable (ndim,) 
+    param_labels : iterable (ndim,) 
         A list of names for the dimensions.
 
     extents : iterable (ndim,) (optional)
@@ -110,9 +110,9 @@ def corner(medians, errors, spt, labels, extents=None, truths=None,
     if extents is None:
         extents = [[x.min(), x.max()] for x in medians]
         for i in range(K):
-            if labels[i]=='teff':
+            if param_labels[i]=='teff':
                 extents[i]= [1400,2400]
-            elif labels[i]=='logg':
+            elif param_labels[i]=='logg':
                 extents[i] = [3.0,5.8]
 
         # Check for parameters that never change.
@@ -129,10 +129,12 @@ def corner(medians, errors, spt, labels, extents=None, truths=None,
         ax = axes[i, i]
 
         # Plot ith quantity vs. SpT, with comparison as needed
-        single_plot_setup(labels[i],ax)
+        single_plot_setup(param_labels[i],ax)
         spt_array = np.ones(len(medians[i]))*spt+np.arange(len(medians[i]))*0.1
         spt_errors = np.zeros(len(medians[i])*2).reshape((-1,2))
-        plot_two(medians[i],spt_array,spt_errors,errors[i],ax=ax)
+        plot_two(medians[i],spt_array,spt_errors,errors[i],run_labels,ax=ax)
+        if i==0:
+            ax.legend(loc=4,numpoints=1)
 
 
         #if truths is not None:
@@ -146,9 +148,9 @@ def corner(medians, errors, spt, labels, extents=None, truths=None,
             ax.set_xticklabels([]) 
         else:
             [l.set_rotation(45) for l in ax.get_xticklabels()]
-            if labels is not None:
-                ax.set_xlabel(labels[i])
-                ax.xaxis.set_label_coords(0.5, -0.3)
+            if param_labels is not None:
+                ax.set_xlabel(param_labels[i])
+#                ax.xaxis.set_label_coords(0.5, -0.3)
 
         for j in range(K):
             print 'j',j
@@ -161,8 +163,8 @@ def corner(medians, errors, spt, labels, extents=None, truths=None,
                 continue
 
             # call plot_two
-            print i, labels[i], j, labels[j]
-            plot_two(medians[j],medians[i],errors[i],errors[j],ax=ax)
+            print i, param_labels[i], j, param_labels[j]
+            plot_two(medians[j],medians[i],errors[i],errors[j],run_labels,ax=ax)
             ax.set_xlim(extents[j])
             ax.set_ylim(extents[i])
 
@@ -179,21 +181,21 @@ def corner(medians, errors, spt, labels, extents=None, truths=None,
                 ax.set_xticklabels([])
             else:
                 [l.set_rotation(45) for l in ax.get_xticklabels()]
-                if labels is not None:
-                    ax.set_xlabel(labels[j])
-                    ax.xaxis.set_label_coords(0.5, -0.3)
+                if param_labels is not None:
+                    ax.set_xlabel(param_labels[j])
+#                    ax.xaxis.set_label_coords(0.5, -0.3)
 
             if j > 0:
                 ax.set_yticklabels([])
             else:
                 [l.set_rotation(45) for l in ax.get_yticklabels()]
-                if labels is not None:
-                    ax.set_ylabel(labels[i])
-                    ax.yaxis.set_label_coords(-0.3, 0.5)
+                if param_labels is not None:
+                    ax.set_ylabel(param_labels[i])
+#                    ax.yaxis.set_label_coords(-0.3, 0.5)
 
     return fig, axes
 
-def plot_two(x,y,yerr,xerr,*args,**kwargs):
+def plot_two(x,y,yerr,xerr,run_labels,*args,**kwargs):
     """
     Plot a set of discrete values
 
@@ -208,6 +210,9 @@ def plot_two(x,y,yerr,xerr,*args,**kwargs):
 
     xerr : arraylike (1D or 2D)
         if 2D, shape must be (num_samples,2)
+
+    run_labels : array of strings
+        names of individual runs to be compared
 
     """
     ax = kwargs.pop("ax", pl.gca())
@@ -227,7 +232,8 @@ def plot_two(x,y,yerr,xerr,*args,**kwargs):
         plot_color = scalar_map.to_rgba(i)
         ax.errorbar(x[i],y[i],yerr[i].reshape((-1,1)),xerr[i].reshape((-1,1)),
             marker=markers[i],color=plot_color,ms=12,mec='None',elinewidth=2,
-            capsize=5,ecolor=plot_color,barsabove=True,mew=2)
+            capsize=5,ecolor=plot_color,barsabove=True,mew=2,
+            label=run_labels[i],linewidth=0)
 
 
 def single_plot_setup(param_name,ax):
@@ -249,7 +255,7 @@ def single_plot_setup(param_name,ax):
 #    else:
 #        print "unknown parameter name; not plotting"
 
-    new_yticks = np.arange(6,24,4)
+    new_yticks = np.arange(6,24,2)
     ax.set_yticks(new_yticks)
     new_ylabels = np.empty(len(new_yticks),'S2')
     m_loc = (new_yticks<10)
@@ -261,3 +267,4 @@ def single_plot_setup(param_name,ax):
     new_ylabels[t_loc] = ['T{}'.format(s) for s in (new_yticks[t_loc]-20)]
     ax.set_yticklabels(new_ylabels)
     ax.tick_params(labelleft=False,labelright=True)
+    ax.set_ylim(20,9)
