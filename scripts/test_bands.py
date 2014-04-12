@@ -9,6 +9,7 @@ import astropy.units as u
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model, bdmcmc.sample, bdmcmc.mask_bands
 import bdmcmc.plotting.full_page as fp
@@ -61,17 +62,20 @@ for b in band_names:
     bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,
         am.params,smooth=False)
 
-    bdsamp.mcmc_go(nwalk_mult=10,nstep_mult=10)
+    bdsamp.mcmc_go(nwalk_mult=300,nstep_mult=500)
 
-    bdsamp.plot_all(outfile='test_addl_unc_{}band_{}.pdf'.format(b,
+    #bdsamp.plot_all(outfile='test_addl_unc_{}band_{}.pdf'.format(b,
+    #    date.isoformat(date.today())))
+
+    pp = PdfPages('test_newplots_{}band_{}.pdf'.format(b,
         date.isoformat(date.today())))
 
     fp.page_plot(bdsamp.chain,bdsamp.model)
-    plt.savefig('test_fp_{}band_{}.pdf'.format(b,
-        date.isoformat(date.today())))
+    pp.savefig()
     plt.close()
 
     ep.emcee_plot(bdsamp.chain,labels=bdsamp.all_params)
-    plt.savefig('test_ep_{}band_{}.pdf'.format(b,
-        date.isoformat(date.today())))
+    pp.savefig()
     plt.close()
+
+    pp.close()
