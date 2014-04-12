@@ -138,25 +138,30 @@ class BrownDwarf(object):
         """
         if name[0]=='U':
             query_result = db.query.execute(
-                "SELECT id FROM sources WHERE unum='{}'".format(
-                name)).fetchall()
+                "SELECT id, unum, shortname FROM sources WHERE unum='{}'"
+                .format(name)).fetchall()
             logging.info('using unum %s', name)
-        elif ((len(name)==7) & ((name[4]=='+') | (name[4]=='-'))):
+        elif ((len(name)==9) & ((name[4]=='+') | (name[4]=='-'))):
             query_result = db.query.execute(
-                "SELECT id FROM sources WHERE shortname='{}'".format(
+                "SELECT id, unum, shortname FROM sources WHERE shortname='{}'"
+                .format(
                 name)).fetchall()
             logging.info('using shortname %s', name)
         else:
             query_result = db.query.execute(
-                "SELECT id FROM sources WHERE names='{}'".format(
-                name)).fetchall()
+                "SELECT id, unum, shortname FROM sources WHERE names='{}'"
+                .format(name)).fetchall()
             logging.info('using names %s',name)
         if len(query_result)==1:
             self.sid = query_result[0][0]
+            self.unum = query_result[0][1]
+            self.shortname = query_result[0][2]
             logging.info('source_id %s',str(self.sid))
         else:
             logging.info('Object %s not found!',name)
             self.sid = np.inf
+            self.unum = ''
+            self.shortname = ''
         self.name = name
 
 #        spts = db.query.execute(("SELECT spectral_type, gravity FROM 

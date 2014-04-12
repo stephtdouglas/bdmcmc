@@ -54,10 +54,12 @@ class BDSampler(object):
         whether or not to smooth the model spectra before interpolation 
         onto the data wavelength grid 
 
+    plot_title (string,default='None')
+
     """
 
     def __init__(self,obj_name,spectrum,model,params,smooth=False,
-        add_uncertainty=True):
+        plot_title='None'):
         """
         Parameters 
         ----------
@@ -80,6 +82,8 @@ class BDSampler(object):
             whether or not to smooth the model spectra before interpolation 
             onto the data wavelength grid 
 
+        plot_title (string,default='None')
+
 
         Creates
         -------
@@ -95,6 +99,11 @@ class BDSampler(object):
 
         self.name = obj_name
         logging.info('%s',self.name)
+
+        if plot_title=='None':
+            self.plot_title = '{} {}'.format(self.name,self.date)
+        else:
+            self.plot_title = plot_title
 
         self.model = ModelGrid(spectrum,model,params,smooth=smooth)
         #print spectrum.keys()
@@ -181,7 +190,7 @@ class BDSampler(object):
 
         ## Save the chains to a pkl file for any diagnostics
         if outfile==None:
-            outfile='{}_chains_{}.pkl'.format(self.name,self.date)
+            outfile='{}_chains.pkl'.format(self.plot_title)
         open_outfile = open(outfile,'wb')
         cPickle.dump(self.chain,open_outfile)
         open_outfile.close()
@@ -200,7 +209,7 @@ class BDSampler(object):
         self.corner_fig = triangle.corner(self.cropchain,
             labels=self.all_params,quantiles=[.16,.5,.84])#,
 #            truths=np.ones(3))
-        plt.suptitle('{}  {}'.format(self.name,self.date))
+        plt.suptitle(self.plot_title)
 
 
     def plot_chains(self):
@@ -209,119 +218,34 @@ class BDSampler(object):
         as well as 1D histograms of the results
         """
         self.chain_fig = emcee_plot(self.chain,labels=self.all_params)
-        plt.suptitle('{}  {}'.format(self.name,self.date))
+        plt.suptitle(self.plot_title)
 
 
-    def plot_random(self):
-        """
-        Plots a random sample of models from chains
-        """
-
-        random_sample = self.cropchain[np.random.randint(len(self.cropchain),
-            size=200)]
-
-        logging.debug('random sample '+str(random_sample))
-
-        plt.figure(figsize=(12,9))
-        ax = plt.subplot(111)
-
-        for p in random_sample:
-            logging.debug('random params '+str(p))
-            new_flux = self.model.interp_models(p)
-            #logging.debug('new flux '+str(new_flux))
-            ax.step(self.model.wave,new_flux,color='r',alpha=0.05)
-            new_lns = p[-1]
-            new_s = np.exp(new_lns)*self.model.unc.unit
-            new_unc = np.sqrt(self.model.unc**2 + new_s**2)*self.model.unc.unit
-            logging.debug('len w {} f {} new u {}'.format(
-                len(self.model.wave),len(new_flux),len(new_unc)))
-
-            ax.step(self.model.wave,new_unc,color='DarkOrange',alpha=0.05)
-        ax.set_xlabel(r'Wavelength ($\mu$m)',fontsize='xx-large')
-        ax.set_ylabel('Flux (normalized)',fontsize='x-large')
-        ax.tick_params(labelsize='large')
-        ax.step(self.model.wave,self.model.flux,color='k')
-        ax.step(self.model.wave,self.model.unc,color='DarkGrey')
-        ax.set_title('{}  {}'.format(self.name,self.date))
-
-
-    def plot_all(self,outfile=None):
-        """
-        Plot all possible plots in a single pdf file
-        """
-        if outfile==None:
-            outfile='{}_fit_{}.pdf'.format(self.name,self.date)
-        pp = PdfPages(outfile)
-
-        self.plot_triangle()
-        pp.savefig()
-        plt.close()
-        self.plot_random()
-        pp.savefig()
-        plt.close()
-        #self.plot_quantiles()
-        #pp.savefig()
-        #plt.close()
-        self.plot_chains()
-        pp.savefig()
-        plt.close()
-        pp.close()
-
-
-    def quantile(x,quantiles):
+    def quantile(self,x,quantiles):
         # From DFM's triangle code
         xsorted = sorted(x)
         qvalues = [xsorted[int(q * len(xsorted))] for q in quantiles]
         return zip(quantiles,qvalues)
 
 
-    def plot_quantiles(self):
-        """
-        Plot the models associated with the 16th, 50th, and 84th quantiles
+    def get_quantiles(self):
+        self.all_quantiles = np.ones((self.ndim,3))*-99.
+        for i in range(len(self.ndim)):
+            quant_array = self.quantile(self.cropchain[:,i],[.16,.5,.84])
+            self.all_quantiles[i] = [quant_array[j][1] for j in range(3)]
 
-        Need to adjust this to deal with ln(s)
-        """
+    def get_error_and_unc(self):
+        self.get_quantiles()
 
+        self.means = self.all_quantiles[:,1]
+        self.lower_lims = self.all_quantiles[:,2]-self.all_quantiles[:,1]
+        self.upper_lims = self.all_quantiles[:,1]-self.all_quantiles[:,0]
 
-        plt.figure(figsize=(12,9))
-        ax = plt.subplot(111)
+        self.error_and_unc = np.ones((self.ndim,3))*-99.
+        self.error_and_unc[:,1] = self.all_quantiles[:,1]
+        self.error_and_unc[:,0] = (self.all_quantiles[:,2]-
+            self.all_quantiles[:,1])
+        self.error_and_unc[:,2] = (self.all_quantiles[:,1]
+            -self.all_quantiles[:,0])
 
-        param_quantiles = [self.quantile(self.cropchain[:,i],[.16,.5,.84]) for 
-            i in range(self.ndim)]
-
-        logging.debug(str(param_quantiles))
-
-        # match up the 16th and 84th quantiles for all params 
-        # (will give 2^ndim models to plot)
-        num_spectra = 2**self.ndim
-        quantile_corners = np.zeros(num_spectra*self.ndim).reshape((-1,self.ndim))
-        logging.debug(str(quantile_corners))
-
-        for i in range(self.ndim):
-            logging.debug(self.params[i])
-            div_by = 2**(self.ndim - i - 1)
-            loc = ((np.arange(2**self.ndim)/div_by) % 2)
-            loc1 = np.where(loc)[0]
-            loc2 = np.where(loc==0)[0]
-
-            quantile_corners[loc1,i] = param_quantiles[i][0][1]
-            quantile_corners[loc2,i] = param_quantiles[i][2][1]
-
-        logging.info(str(quantile_corners))
-
-        for p in quantile_corners:
-            new_flux = self.model.interp_models(p)
-            ax.step(self.model.wave,new_flux,ls=':',label=str(p))
-
-        ax.legend(loc=4,title=str(self.model.params))
-        ax.set_xlabel(r'Wavelength ($\mu$m)',fontsize='xx-large')
-        ax.set_ylabel('Flux (normalized)',fontsize='x-large')
-            
-        # plot the model corresponding to the 50th quantiles of all params
-        best_fit = [param_quantiles[i][1][1] for i in range(self.ndim)]
-        best_fit_flux = self.model.interp_models(best_fit)
-        ax.step(self.model.wave,best_fit_flux,color='r')
-
-        # plot the data
-        ax.step(self.model.wave,self.model.flux,color='k')
-        ax.set_title('{}  {}'.format(self.name,self.date))
+        return self.error_and_unc
