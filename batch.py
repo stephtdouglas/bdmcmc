@@ -29,7 +29,7 @@ class OneBatch(object): #THAT needs a better name
         self.bd.get_low()
 
         self.am = bdmcmc.get_mod.AtmoModel(model_filename)
-        self.model_name = model_filename[:,-4]
+        self.model_name = model_filename[:-4]
 
         if mask_H:
             self.mask = bdmcmc.mask_bands.BandMask(
@@ -39,23 +39,23 @@ class OneBatch(object): #THAT needs a better name
             self.mask.make_pixel_mask()
 
             reverse_mask = np.delete(np.arange(len
-                (self.bd.specs['low']['wavelength'])),mask.pixel_mask)
+                (self.bd.specs['low']['wavelength'])),self.mask.pixel_mask)
 
             self.mask.pixel_mask = reverse_mask
 
             self.bd.specs['low']['wavelength'] = self.bd.specs['low']['wavelength'][
-                mask.pixel_mask]
+                self.mask.pixel_mask]
             self.bd.specs['low']['flux'] = self.bd.specs['low']['flux'][
-                mask.pixel_mask]
+                self.mask.pixel_mask]
             self.bd.specs['low']['unc'] = self.bd.specs['low']['unc'][
-                mask.pixel_mask]
+                self.mask.pixel_mask]
 
         self.pdf_file = PdfPages('{}_{}_all.pdf'.format(self.bd.shortname,
             self.date))
 
         self.num_runs = 4
-        self.ndim = am.ndim+1
-        self.all_params = list(np.append(am.params,'ln(s)'))
+        self.all_params = list(np.append(self.am.params,'ln(s)'))
+        self.ndim = len(self.all_params)
 
         self.medians = np.zeros(self.num_runs*self.ndim).reshape(
             (self.ndim,self.num_runs))
@@ -64,6 +64,7 @@ class OneBatch(object): #THAT needs a better name
         self.run_count = 0
         self.run_titles = []
 
+        self.plot_all()
 
     def run_one(self,spectrum,plot_title,result_key):
         """
@@ -73,6 +74,7 @@ class OneBatch(object): #THAT needs a better name
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
         bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=400)
+        fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 
         self.pdf_file.savefig()
         indiv_results = bdsamp.get_error_and_unc()
@@ -87,7 +89,7 @@ class OneBatch(object): #THAT needs a better name
         """
         
 
-        wav = bd.specs['low']['wavelength']
+        wav = self.bd.specs['low']['wavelength']
         full = np.where(wav>=0.9*u.um)[0]
         Jband = np.where((wav>=0.9*u.um) & (wav<1.4*u.um))[0]
         Hband = np.where((wav>=1.4*u.um) & (wav<1.9*u.um))[0]
@@ -97,13 +99,13 @@ class OneBatch(object): #THAT needs a better name
         band_names = bands.keys()
 
         for b in band_names:
-
+            logging.debug(b)
             band_spectrum = {
-                'wavelength':self.bd.specs['low']['wavelength'][bands[b]]
-                'flux':bd.specs['low']['flux'][bands[b]]
-                'unc':bd.specs['low']['unc'][bands[b]]}
+                'wavelength':self.bd.specs['low']['wavelength'][bands[b]],
+                'flux':self.bd.specs['low']['flux'][bands[b]],
+                'unc':self.bd.specs['low']['unc'][bands[b]]}
 
-            band_plot_title = '{} SpeX {} {}'.format(bd.shortname, band_names[b],
+            band_plot_title = '{} SpeX {} {}'.format(self.bd.shortname, b,
                  self.date)
             self.run_one(band_spectrum,band_plot_title,b)
             self.run_titles.append(b)
@@ -113,8 +115,10 @@ class OneBatch(object): #THAT needs a better name
         """
         """
         self.split_bands()
-        cr.corner(self.medians,self.errors,10,self.all_params)
-    
+        cr.corner(self.medians,self.errors,10,self.all_params,self.run_titles)
+        self.pdf_file.savefig()
+        self.close()    
 
     def close(self):
         self.pdf_file.close()
+
