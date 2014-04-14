@@ -77,6 +77,7 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
             mod_flux = falt2(model_dict['wsyn'],model_dict['fsyn'][i],200*u.AA)
         else:
             mod_flux = model_dict['fsyn'][i]
+            #logging.debug('shape fsyn {} mf {}'.format(np.shape(model_dict['fsyn']), np.shape(mod_flux)))
 
         #logging.debug('lengths dw {} modw {} modf {}'.format(
         #    len(data_wave),len(model_dict['wsyn']),len(mod_flux)))
