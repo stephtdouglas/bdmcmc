@@ -121,7 +121,7 @@ class BDSampler(object):
             elif (self.start_p[i]<=self.model.plims[params[i]]['min']):
                 self.start_p[i] = self.start_p[i]*1.05
 
-        self.all_params = params
+        self.all_params = list(np.copy(params))
         self.all_params.append('ln(s)')
         logging.info('All params: {}'.format(str(self.all_params)))
         logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
@@ -230,7 +230,7 @@ class BDSampler(object):
 
     def get_quantiles(self):
         self.all_quantiles = np.ones((self.ndim,3))*-99.
-        for i in range(len(self.ndim)):
+        for i in range(self.ndim):
             quant_array = self.quantile(self.cropchain[:,i],[.16,.5,.84])
             self.all_quantiles[i] = [quant_array[j][1] for j in range(3)]
 
