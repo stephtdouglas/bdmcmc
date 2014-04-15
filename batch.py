@@ -73,7 +73,7 @@ class OneBatch(object): #THAT needs a better name
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
-        bdsamp.mcmc_go(nwalk_mult=250,nstep_mult=400)
+        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=300)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 
         self.pdf_file.savefig()
@@ -115,10 +115,16 @@ class OneBatch(object): #THAT needs a better name
         """
         """
         self.split_bands()
-        cr.corner(self.medians,self.errors,10,self.all_params,self.run_titles)
+        cr.corner(self.medians,self.errors,self.bd.spt,self.all_params,
+            self.run_titles)
         self.pdf_file.savefig()
-        self.close()    
+        self.close()
+        self.save_results()  
 
     def close(self):
         self.pdf_file.close()
 
+    def save_results(self):
+        pkl_file = open('{}_{}_all.pkl'.format(self.bd.shortname,self.date),'wb')
+        cPickle.dump((self.medians,self.errors),pkl_file)
+        pkl_file.close()
