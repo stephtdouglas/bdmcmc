@@ -164,8 +164,8 @@ class BrownDwarf(object):
             self.shortname = ''
         self.name = name
 
-        spts = db.query.execute(("SELECT spectral_type, gravity FROM 
-            spectral_types WHERE source_id = self.sid AND adopted=True")
+        spts = db.query.execute(("SELECT spectral_type, regime FROM "+
+            "spectral_types WHERE source_id={}".format(self.sid))
             ).fetchall()
         if len(spts)>0:
             self.spt = spts[0][0]
