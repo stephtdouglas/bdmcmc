@@ -19,6 +19,8 @@ __contributors__ = [
     "Pierre Gratier @pirg",
 ]
 
+import logging
+
 import numpy as np
 import matplotlib
 matplotlib.use('agg')
@@ -84,6 +86,7 @@ def corner(medians, errors, spt, param_labels, run_labels,
     """
 
     K = len(medians)
+    logging.debug('K {} spt {}'.format(K,spt))
     factor = 2.0           # size of one side of one panel
     lbdim = 0.5 * factor   # size of left/bottom margin
     trdim = 0.25 * factor  # size of top/right margin
@@ -125,12 +128,17 @@ def corner(medians, errors, spt, param_labels, run_labels,
                                                    np.arange(len(m))[m]))))
 
     for i in range(K):
-        print 'i',i
         ax = axes[i, i]
 
         # Plot ith quantity vs. SpT, with comparison as needed
+        logging.debug('i {} {}'.format(i,type(i)))
+        logging.debug(str(medians[i]))
         single_plot_setup(param_labels[i],ax)
-        spt_array = np.ones(len(medians[i]))*spt+np.arange(len(medians[i]))*0.1
+        logging.debug('len {}'.format(len(medians[i])))
+        mlen = len(medians[i])
+        spt_one = np.ones(mlen)*spt
+        spt_two = np.arange(mlen)*0.1
+        spt_array = spt_one + spt_two
         spt_errors = np.zeros(len(medians[i])*2).reshape((-1,2))
         plot_two(medians[i],spt_array,spt_errors,errors[i],run_labels,ax=ax)
         if i==0:
@@ -239,7 +247,7 @@ def plot_two(x,y,yerr,xerr,run_labels,*args,**kwargs):
 def single_plot_setup(param_name,ax):
     """
     """
-    print param_name
+    logging.debug(param_name)
 
     spt = np.arange(6,22) # M6=6, L0=10, T0=21
 
@@ -261,7 +269,7 @@ def single_plot_setup(param_name,ax):
     m_loc = (new_yticks<10)
     new_ylabels[m_loc] = ['M{}'.format(s) for s in new_yticks[m_loc]]
     l_loc = ((new_yticks<20) & (new_yticks>=10))
-    print new_yticks[l_loc]
+    logging.debug('spt ticks {}'.format(new_yticks[l_loc]))
     new_ylabels[l_loc] = ['L{}'.format(s) for s in (new_yticks[l_loc]-10)]
     t_loc = (new_yticks>=20)
     new_ylabels[t_loc] = ['T{}'.format(s) for s in (new_yticks[t_loc]-20)]
