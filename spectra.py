@@ -157,6 +157,8 @@ class BrownDwarf(object):
             self.unum = query_result[0][1]
             self.shortname = query_result[0][2]
             logging.info('source_id %s',str(self.sid))
+            if self.shortname==None:
+                self.shortname = name
         else:
             logging.info('Object %s not found!',name)
             self.sid = np.inf
