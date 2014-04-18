@@ -117,8 +117,12 @@ class OneBatch(object): #THAT needs a better name
         self.split_bands()
         cr.corner(self.medians,self.errors,self.bd.spt,self.all_params,
             self.run_titles)
-        self.pdf_file.savefig()
-        self.close()
+        try:
+            self.pdf_file.savefig()
+            self.close()
+        except:
+            self.close()
+            logging.info('compare_results failed')
         self.save_results()  
 
     def close(self):
