@@ -32,6 +32,7 @@ import matplotlib.cm as cm
 from matplotlib.patches import Ellipse
 import matplotlib.gridspec as gridspec
 import matplotlib.cm as cm
+from matplotlib.cbook import flatten
 
 
 def corner(medians, errors, spt, param_labels, run_labels,
@@ -45,11 +46,11 @@ def corner(medians, errors, spt, param_labels, run_labels,
 
     Parameters
     ----------
-    medians: array_like (ndim,num_samples)
+    medians: array_like (ndim, num_runs, num_samples)
         Results of a set of mcmc runs.  There should be one row for each parameter,
         and then moving across each row gives the median value from a given run.
 
-    errors: array_like (ndim, num_samples, 2)
+    errors: array_like (ndim, num_runs, 2, num_samples)
         errors associated with the median values given above. Assymetric error
         bars are expected.
 
@@ -113,7 +114,7 @@ def corner(medians, errors, spt, param_labels, run_labels,
                         wspace=whspace, hspace=whspace)
 
     if extents is None:
-        extents = [[x.min(), x.max()] for x in medians]
+        extents = [[min(flatten(x)), max(flatten(x))] for x in medians]
         for i in range(K):
             if param_labels[i]=='teff':
                 extents[i]= [1400,2400]
@@ -137,14 +138,15 @@ def corner(medians, errors, spt, param_labels, run_labels,
         logging.debug(str(medians[i]))
         single_plot_setup(param_labels[i],ax)
         logging.debug('len {}'.format(len(medians[i])))
-        mlen = len(medians[i])
-        spt_one = np.ones(mlen)*spt
-        spt_two = np.arange(mlen)*0.1
-        spt_array = spt_one + spt_two
-        spt_errors = np.zeros(len(medians[i])*2).reshape((-1,2))
+        mshape = np.shape(medians[i])
+        logging.debug('shape {} {}'.format(mshape, sum(mshape)))
+        spt_one = np.ones(mshape)*spt
+        #spt_two = np.arange(sum(mshape)).reshape(mshape)*0.1
+        spt_array = spt_one #+ spt_two
+        spt_errors = np.zeros(np.shape(errors[i]))
         plot_two(medians[i],spt_array,spt_errors,errors[i],run_labels,ax=ax)
         if i==0:
-            ax.legend(loc=4,numpoints=1)
+            ax.legend(loc=3,numpoints=1)
 
 
         #if truths is not None:
@@ -240,8 +242,13 @@ def plot_two(x,y,yerr,xerr,run_labels,*args,**kwargs):
 
     for i in range(num_runs):
         plot_color = scalar_map.to_rgba(i)
-        ax.errorbar(x[i],y[i],yerr[i].reshape((-1,1)),xerr[i].reshape((-1,1)),
-            marker=markers[i],color=plot_color,ms=12,mec='None',elinewidth=2,
+        logging.debug('x {}'.format(x[i]))
+        logging.debug('y {}'.format(y[i]))
+        logging.debug('xerr {}'.format(xerr[i].reshape((-1,2)).T))
+        logging.debug('yerr {}'.format(yerr[i].reshape((-1,2)).T))
+        ax.errorbar(x[i],y[i],
+            yerr[i].reshape((-1,2)).T,xerr[i].reshape((-1,2)).T,
+            marker=markers[i],color=plot_color,ms=9,mec='None',elinewidth=2,
             capsize=5,ecolor=plot_color,barsabove=True,mew=2,
             label=run_labels[i],linewidth=0)
 
@@ -257,7 +264,7 @@ def single_plot_setup(param_name,ax):
         teff = (2265.9 + 347.82*spt - 60.558*spt**2 + 3.151*spt**3
             -0.060481*spt**4 + 0.00024506*spt**5) #eqn 3 in Stephens 2009
         ax.plot(teff,spt,color='DarkGrey',linewidth=6)
-        ax.text(1800,6.5,"Stephens+2009 (eqn 3)",color='#505050',fontsize='small')
+        ax.text(1450,19,"Stephens+2009 (eqn 3)",color='#505050',fontsize='small')
     elif param_name.lower()=='logg':
         base_ones = np.ones(len(spt))
         for i in np.array([5,4,3.5]):
