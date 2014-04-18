@@ -84,6 +84,10 @@ def corner(medians, errors, spt, param_labels, run_labels,
     """
 
     K = len(medians)
+    logging.debug('{} runs'.format(K))
+    logging.debug(str(medians))
+    logging.debug(str(errors))
+
     factor = 2.0           # size of one side of one panel
     lbdim = 0.5 * factor   # size of left/bottom margin
     trdim = 0.25 * factor  # size of top/right margin
