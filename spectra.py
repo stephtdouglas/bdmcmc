@@ -164,17 +164,7 @@ class BrownDwarf(object):
             self.shortname = ''
         self.name = name
 
-        spts = db.query.execute(("SELECT spectral_type, gravity FROM 
-            spectral_types WHERE source_id = self.sid AND adopted=True")
-            ).fetchall()
-        if len(spts)>0:
-            self.spt = spts[0][0]
-            self.spt_regime = spts[0][1]
-            for x in spts:
-                if x[1]=='OPT':
-                    self.spt,self.spt_regime = x[0],x[1]
-        else:
-            self.spt, self.spt_regime = -99, None
+        self.get_spt()
 
         self.specs = {}
 
@@ -273,3 +263,20 @@ class BrownDwarf(object):
             'flux':np.append(self.specs[65]['flux'],
             self.specs[61]['flux']),
             'unc':np.append(self.specs[65]['unc'],self.specs[61]['unc'])}
+
+
+    def get_spt(self):
+        spts = db.query.execute(("SELECT spectral_type, regime FROM "+
+            "spectral_types WHERE source_id={}".format(self.sid))
+            ).fetchall()
+        if len(spts)>0:
+            self.spt = spts[0][0]
+            self.spt_regime = spts[0][1]
+            for x in spts:
+                if x[1]=='OPT':
+                    self.spt,self.spt_regime = x[0],x[1]
+        else:
+            self.spt, self.spt_regime = -99, None
+
+        if type(self.spt)==str:
+            self.spt=float(self.spt[0:4])

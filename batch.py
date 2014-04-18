@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import cPickle
 
 import bdmcmc.bdfit, bdmcmc.spectra, bdmcmc.get_mod
 import bdmcmc.make_model, bdmcmc.mask_bands
@@ -73,7 +74,7 @@ class OneBatch(object): #THAT needs a better name
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
-        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=300)
+        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=400)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 
         self.pdf_file.savefig()
@@ -115,6 +116,8 @@ class OneBatch(object): #THAT needs a better name
         """
         """
         self.split_bands()
+        logging.debug('medians {}'.format(self.medians))
+        logging.debug('errors {}'.format(self.errors))
         cr.corner(self.medians,self.errors,self.bd.spt,self.all_params,
             self.run_titles)
         try:

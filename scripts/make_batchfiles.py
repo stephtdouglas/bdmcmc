@@ -5,7 +5,10 @@ ldwarfs = fetch.fetch_12()
 bds = ldwarfs.brown_dwarfs
 unums = bds.keys()
 
+h = open('submit_allU.sh','w')
 for unum in unums:
+    h.write('qsub run_{}.sh\n'.format(unum))
+
     f = open('run_{}.py'.format(unum),'w')
     f.write('import logging\n')
     f.write('from datetime import date\n\n')
@@ -21,7 +24,7 @@ for unum in unums:
     g.write("#PBS -W group_list=yetiastro\n")
     g.write("#PBS -l nodes=1,walltime=8:00:00,mem=3000mb\n")
     g.write("#PBS -M sd2706@columbia.edu \n")
-    g.write("#PBS -m ae\n")
+    g.write("#PBS -m a\n")
     g.write("#PBS -V\n\n")
     g.write("# Set output and error directories\n")
     g.write("#PBS -o localhost:/vega/astro/users/sd2706/testing/ \n")
@@ -29,3 +32,4 @@ for unum in unums:
     g.write("/vega/astro/users/amp2217/yt-x86_64/bin/python run_{}.py\n".format(unum))
     g.write("# End of script\n")
     g.close()
+h.close()
