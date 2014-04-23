@@ -120,8 +120,12 @@ class OneBatch(object): #THAT needs a better name
         logging.debug('errors {}'.format(self.errors))
         cr.corner(self.medians,self.errors,self.bd.spt,self.all_params,
             self.run_titles)
-        self.pdf_file.savefig()
-        self.close()
+        try:
+            self.pdf_file.savefig()
+            self.close()
+        except:
+            self.close()
+            logging.info('compare_results failed')
         self.save_results()  
 
     def close(self):
