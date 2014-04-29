@@ -39,7 +39,7 @@ def page_plot(chains,model,plot_title):
 
     """
 
-    K=3 # ndim of model, obviously a placeholder
+    K=4 # ndim of model, obviously a placeholder
 
     burn_in = 0
     cropchain = chains[:,burn_in:,:].reshape(
@@ -65,11 +65,12 @@ def page_plot(chains,model,plot_title):
 
 
     # plot the corner plot
-    if len(model.params)==2: # need to make a better check on this
+    logging.debug(len(model.params))
+    if len(model.params)!=K: # need to make a better check on this
         labels = list(np.append(model.params,'ln(s)'))
     else:
         labels=model.params
-    print labels
+    logging.info(labels)
     fig,axes_array = triangle.corner(cropchain,spec_grid=corner_grid,
         labels=labels, quantiles=[0.16,0.5,0.84])
 
