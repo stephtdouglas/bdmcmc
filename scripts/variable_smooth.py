@@ -1,4 +1,4 @@
-# Test the variable smoothing on an entire model-set
+# Run the variable smoothing on an entire model-set
 # Stephanie Douglas, 17 February 2014
 ################################################################################
 import logging
