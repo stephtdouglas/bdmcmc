@@ -35,6 +35,6 @@ for k in sub_grid.keys():
 new_grid = bdmcmc.smooth.smooth_grid(sub_grid,data_wave,res_scale=r_scale,
     incremental_outfile='spex_marley_backup11.pkl')
 
-output = open('marley_ldwarfs11.pkl','wb')
-cPickle.dump(new_grid,output)
-output.close()
+outfile = open('marley_ldwarfs11.pkl','wb')
+cPickle.dump(new_grid,outfile)
+outfile.close()
