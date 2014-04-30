@@ -153,7 +153,7 @@ def corner(medians, errors, spt, param_labels, run_labels,
         #    ax.axvline(truths[i], color=truth_color)
 
         # Set up the axes.
-        ax.set_xlim(extents[i])
+#        ax.set_xlim(extents[i])
 
         # Not so DRY.
         if i < K - 1:
@@ -177,7 +177,7 @@ def corner(medians, errors, spt, param_labels, run_labels,
             # call plot_two
             print i, param_labels[i], j, param_labels[j]
             plot_two(medians[j],medians[i],errors[i],errors[j],run_labels,ax=ax)
-            ax.set_xlim(extents[j])
+#            ax.set_xlim(extents[j])
             ax.set_ylim(extents[i])
 
 
