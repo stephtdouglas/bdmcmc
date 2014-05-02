@@ -74,7 +74,7 @@ class OneBatch(object): #THAT needs a better name
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
-        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=400)
+        bdsamp.mcmc_go(nwalk_mult=150,nstep_mult=200)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 
         self.pdf_file.savefig()
@@ -106,7 +106,7 @@ class OneBatch(object): #THAT needs a better name
                 'flux':self.bd.specs['low']['flux'][bands[b]],
                 'unc':self.bd.specs['low']['unc'][bands[b]]}
 
-            band_plot_title = '{} SpeX {} {}'.format(self.bd.shortname, b,
+            band_plot_title = '{} Marley {} {}'.format(self.bd.shortname, b,
                  self.date)
             self.run_one(band_spectrum,band_plot_title,b)
             self.run_titles.append(b)

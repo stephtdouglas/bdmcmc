@@ -138,6 +138,8 @@ class ModelGrid(object):
         unc_sq = self.unc**2 + s**2
         flux_pts = (self.flux-mod_flux)**2/unc_sq
         width_term = np.log(2*np.pi*unc_sq.value)
+        logging.debug("units flux pts {}".format(flux_pts.unit))
+        #logging.debug("units wt {}".format(width_term.unit))
         lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
         return lnprob
@@ -235,7 +237,7 @@ class ModelGrid(object):
 #            logging.debug(str(cpar))
             if len(find_i)!=1:
                 logging.info('ERROR: Multi/No model {} {}'.format(cpar,find_i))
-                return -np.inf
+                return np.zeros(len(self.wave))*self.flux.unit
 #            print find_i
             corner_spectra[tuple(cpar)] = self.model['fsyn'][find_i]
 

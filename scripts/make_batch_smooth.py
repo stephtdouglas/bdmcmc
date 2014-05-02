@@ -1,0 +1,21 @@
+
+h = open('submit_marley_smooth.sh','w')
+for i in range(2,12):
+    h.write('qsub variable_smooth{}.sh\n'.format(i))
+
+    g = open('variable_smooth{}.sh'.format(i),'w')
+    g.write("#!/bin/sh\n\n")
+    g.write("# Directives\n")
+    g.write("#PBS -N SmoothMarley{}\n".format(i))
+    g.write("#PBS -W group_list=yetiastro\n")
+    g.write("#PBS -l nodes=1,walltime=36:00:00,mem=3000mb\n")
+    g.write("#PBS -M sd2706@columbia.edu \n")
+    g.write("#PBS -m ae\n")
+    g.write("#PBS -V\n\n")
+    g.write("# Set output and error directories\n")
+    g.write("#PBS -o localhost:/vega/astro/users/sd2706/testing/ \n")
+    g.write("#PBS -e localhost:/vega/astro/users/sd2706/testing/ \n")
+    g.write("/vega/astro/users/amp2217/yt-x86_64/bin/python /vega/astro/users/sd2706/python/bdmcmc/scripts/variable_smooth_marley{}.py\n".format(i))
+    g.write("# End of script\n")
+    g.close()
+h.close()
