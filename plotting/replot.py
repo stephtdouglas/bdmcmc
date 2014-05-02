@@ -7,12 +7,12 @@ import bdmcmc.bdfit
 import bdmcmc.spectra
 import bdmcmc.get_mod
 import bdmcmc.make_model
-
+from bdmcmc.plotting.plot_realistic import plot_realistic
 import bdmcmc.plotting.full_page as fp
 
 
 def replot(bd_name,chain_filename,plot_title,
-    model_filename='/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl')
+    model_filename='/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl'):
 
     bd = bdmcmc.spectra.BrownDwarf(bd_name)
     bd.get_low()
@@ -26,4 +26,6 @@ def replot(bd_name,chain_filename,plot_title,
     chains = cPickle.load(cpfile)
     cpfile.close()
 
-    fp.page_plot(chains,mg,plot_title)
+    plot_ax = fp.page_plot(chains,mg,plot_title)
+
+    plot_realistic(bd.spt,mg,plot_ax)

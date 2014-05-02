@@ -258,7 +258,7 @@ def single_plot_setup(param_name,ax):
     """
     logging.debug(param_name)
 
-    spt = np.arange(6,22) # M6=6, L0=10, T0=21
+    spt = np.arange(6,22) # M6=6, L0=10, T1=21
 
     if param_name.lower()=='teff':
         teff = (2265.9 + 347.82*spt - 60.558*spt**2 + 3.151*spt**3

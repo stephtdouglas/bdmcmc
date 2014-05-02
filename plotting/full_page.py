@@ -39,11 +39,13 @@ def page_plot(chains,model,plot_title):
 
     """
 
-    K=3 # ndim of model, obviously a placeholder
+    K=4 # ndim of model, obviously a placeholder
 
     burn_in = 0
+    logging.debug(str(np.shape(chains)))
     cropchain = chains[:,burn_in:,:].reshape(
             (-1,K))
+#    cropchain = chains.reshape((-1,K))
 
     # set up figure and axes
     plt.figure(figsize=(8,10))
@@ -111,3 +113,4 @@ def page_plot(chains,model,plot_title):
     plt.subplots_adjust(left=lb, bottom=lb, right=tr, top=0.95,
                         wspace=whspace, hspace=whspace)
 
+    return rand_ax
