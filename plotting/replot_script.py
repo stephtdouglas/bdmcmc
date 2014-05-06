@@ -8,8 +8,10 @@ import cPickle
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-result_file = '/home/stephanie/ldwarfs/batch_ldwarfs/Marley_2014_04_29/results_2014-04-29.dat'
-model_file = '/home/stephanie/ldwarfs/modelSpectra/SpeX_marley.pkl'
+logging.basicConfig(level=logging.INFO)
+
+result_file = '/home/stephanie/ldwarfs/batch_ldwarfs/SpeX_2014-04-16/results_2014-04-16.dat'
+model_file = '/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl'
 
 dat = at.read(result_file)
 spts,filename = dat['spt'],dat['filename']
@@ -24,7 +26,7 @@ for i in range(dlen):
     date = fsplit[1]
     pp = PdfPages('{}_{}_replot.pdf'.format(obj_name,date))
     for b in bands: 
-        chain_file = "{} Marley {} {}_chains.pkl".format(obj_name,b,date)
+        chain_file = "{} SpeX {} {}_chains.pkl".format(obj_name,b,date)
         replot(obj_name,chain_file,'{}_{}_replot'.format(obj_name,date),
             model_file,mask_H = mask[b])
         pp.savefig()

@@ -27,7 +27,7 @@ def unc_string(quant_name,quant_array):
     return error_string
 
 
-def page_plot(chains,model,plot_title):
+def page_plot(chains,model,plot_title,extents=None):
     """
     Plot data plus random sample of models, plus corner plot of run
 
@@ -39,7 +39,7 @@ def page_plot(chains,model,plot_title):
 
     """
 
-    K=4 # ndim of model, obviously a placeholder
+    K=3 # ndim of model, obviously a placeholder
 
     burn_in = 0
     logging.debug(str(np.shape(chains)))
@@ -74,7 +74,7 @@ def page_plot(chains,model,plot_title):
         labels=model.params
     logging.info(labels)
     fig,axes_array = triangle.corner(cropchain,spec_grid=corner_grid,
-        labels=labels, quantiles=[0.16,0.5,0.84])
+        labels=labels, quantiles=[0.16,0.5,0.84],extents=extents)
 
 
     # overplot the random samples
@@ -114,4 +114,4 @@ def page_plot(chains,model,plot_title):
     plt.subplots_adjust(left=lb, bottom=lb, right=tr, top=0.95,
                         wspace=whspace, hspace=whspace)
 
-    return rand_ax
+    return rand_ax,axes_array
