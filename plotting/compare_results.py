@@ -239,7 +239,7 @@ def plot_two(x,y,yerr,xerr,run_labels,*args,**kwargs):
     scalar_map = cm.ScalarMappable(norm=color_norm,cmap=cmap)
     
 
-
+    logging.debug('{} runs'.format(num_runs))
     for i in range(num_runs):
         plot_color = scalar_map.to_rgba(i)
         logging.debug('x {}'.format(x[i]))
