@@ -184,6 +184,8 @@ class BDSampler(object):
         logging.info('sampler completed')
         logging.info("avg accept {}".format(np.average(
             sampler.acceptance_fraction)))
+        logging.info("avg autocorrelation length {}".format(np.average(
+            sampler.acor)))
 
         ## store chains for plotting/analysis
         self.chain = sampler.chain
