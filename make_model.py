@@ -118,8 +118,10 @@ class ModelGrid(object):
         # the last, always, corresponds to the additional uncertainty
         p = np.asarray(args)[0]
         lns = p[-1]
-        model_p = p[:-1]
-        logging.debug('params {} ln(s) {}'.format(str(model_p),lns))
+        norm_change = p[-2]
+        model_p = p[:-2]
+        logging.debug('params {} norm_change {} ln(s) {}'.format(str(model_p),
+            norm_change,lns))
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
@@ -130,6 +132,7 @@ class ModelGrid(object):
                 return -np.inf
 
         mod_flux = self.interp_models(model_p)
+        mod_flux = mod_flux*norm_change
 
         # On the advice of Dan Foreman-Mackey, I'm changing the calculation
         # of lnprob.  The additional uncertainty needs to be included

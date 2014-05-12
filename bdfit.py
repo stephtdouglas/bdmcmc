@@ -123,6 +123,7 @@ class BDSampler(object):
 
         self.all_params = list(np.copy(params))
         self.all_params.append('ln(s)')
+        self.all_params.append('N')
         logging.info('All params: {}'.format(str(self.all_params)))
         logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
 
@@ -130,6 +131,10 @@ class BDSampler(object):
         logging.info('starting ln(s)={} s={}'.format(start_lns,
             np.exp(start_lns)))
         self.start_p = np.append(self.start_p,start_lns)
+
+        #add normalization parameter
+        self.start_p = np.append(self.start_p,1.0)
+
         logging.info('Set starting params %s', str(self.start_p))
 
         self.ndim = len(self.all_params)
