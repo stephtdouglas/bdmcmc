@@ -20,7 +20,7 @@ class OneBatch(object): #THAT needs a better name
     """
 
     def __init__(self,bd_name,model_filename,
-        mask_H=True):
+        mask_H=True,band_names=None):
         """
         """
 
@@ -54,7 +54,10 @@ class OneBatch(object): #THAT needs a better name
         self.pdf_file = PdfPages('{}_{}_all.pdf'.format(self.bd.shortname,
             self.date))
 
-        self.num_runs = 4
+        if band_names==None:
+            self.num_runs = 4
+        else:
+            self.num_runs = len(band_names)
         self.all_params = list(np.append(self.am.params,'ln(s)'))
         self.ndim = len(self.all_params)
 
@@ -65,7 +68,7 @@ class OneBatch(object): #THAT needs a better name
         self.run_count = 0
         self.run_titles = []
 
-        self.plot_all()
+        self.plot_all(band_names)
 
     def run_one(self,spectrum,plot_title,result_key):
         """
@@ -74,7 +77,7 @@ class OneBatch(object): #THAT needs a better name
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
-        bdsamp.mcmc_go(nwalk_mult=150,nstep_mult=200)
+        bdsamp.mcmc_go(nwalk_mult=600,nstep_mult=400)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 
         self.pdf_file.savefig()
@@ -85,7 +88,7 @@ class OneBatch(object): #THAT needs a better name
         self.run_count += 1        
 
 
-    def split_bands(self):
+    def split_bands(self,band_names=None):
         """
         """
         
@@ -97,7 +100,10 @@ class OneBatch(object): #THAT needs a better name
         Kband = np.where((wav>=1.9*u.um) & (wav<2.5*u.um))[0]
 
         bands = {'J':Jband,'H':Hband,'K':Kband,'full':full}
-        band_names = bands.keys()
+        if band_names==None:
+            band_names = bands.keys()
+        else:
+            band_names = band_names
 
         for b in band_names:
             logging.debug(b)
@@ -112,10 +118,10 @@ class OneBatch(object): #THAT needs a better name
             self.run_titles.append(b)
 
 
-    def plot_all(self):
+    def plot_all(self,band_names):
         """
         """
-        self.split_bands()
+        self.split_bands(band_names)
         logging.debug('medians {}'.format(self.medians))
         logging.debug('errors {}'.format(self.errors))
         cr.corner(self.medians,self.errors,self.bd.spt,self.all_params,
