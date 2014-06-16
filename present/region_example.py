@@ -79,6 +79,9 @@ def plot_four(bd_name,chain_filename,plot_title,
     plot_colors = [scalar_map.to_rgba(i) for i in range(4)]
     rand_color = [plot_colors[i] for i in [3,2,0,1]] # reset from ['H','K','J','full'][i]
 
+    texty = max(bd.specs['low']['flux'].value)
+    textx = [0.85,0.85,1.45,2.0]
+
 
     for i in range(4):
         b = band_names[i]
@@ -108,12 +111,15 @@ def plot_four(bd_name,chain_filename,plot_title,
         else:
             ax = axes[0]
         one_reg(ax,cropchain,mg,rand_color[i])
+        ax.text(textx[i],texty,"Data",color='k',fontsize='large')
+        ax.text(textx[i],texty*0.9,"Model",color=rand_color[i],fontsize='large')
         
-        if i>0:
-              ax.set_xlim(axes[0].get_xlim())
-              yl = ax.get_ylim()
-              ax.plot((1.4,1.4),yl,'k-',lw=2)
-              ax.plot((1.9,1.9),yl,'k-',lw=2)
+    yl = ax2.get_ylim()
+    ax1.set_ylim(yl)
+    ax2.plot((1.4,1.4),yl,'k-',lw=2)
+    ax2.plot((1.9,1.9),yl,'k-',lw=2)
+    ax2.set_yticklabels([])
+    ax1.set_yticklabels([])
 
 
 chain_file = '/home/stephanie/ldwarfs/batch_ldwarfs/Marley_2014-05-13/1228-1547 Marley H 2014-05-13_chains.pkl'
@@ -128,14 +134,19 @@ model_file = '/home/stephanie/ldwarfs/modelSpectra/SpeX_marley_nolowg.pkl'
 obj_name = chain_file.split('/')[-1].split()[0]
 date = chain_file.split('/')[-2].split('_')[-1]
 
-#plot_four(obj_name,chain_file,'',model_file)
-#plt.show()
-#plt.savefig('region_ex_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches='tight')
+plot_four(obj_name,chain_file,'',model_file)
+plt.show()
+plt.savefig('region_ex_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches='tight')
 
 infile = open(results_file,'rb')
 results = cPickle.load(infile)
 infile.close()
 param_labels = ['log(g)','Fsed','Teff','ln(s)']
+medians = results[0]
+err_temp0 = results[1]
+# swap upper and lower uncertainties so that they get plotted correctly
+errors = [[err_temp0[i][j][::-1] for j in range(np.shape(err_temp0)[1])]
+           for i in range(np.shape(err_temp0)[0])]
 fig, axes = cr.corner(results[0],results[1],0.0,param_labels,['H','K','J','full'])
 
 for i in range(3):
