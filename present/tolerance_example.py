@@ -61,7 +61,7 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params,
     left = np.where(mg.wave<1.6*u.um)[0]
     right = np.where(mg.wave>1.6*u.um)[0]
     rand_color='r'
-
+    """
     # first plot the model from the fit without adding tolerance
     fig = plt.figure(figsize=(10,8))
     ax = plt.subplot(111)
@@ -80,6 +80,7 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params,
     ax.set_ylabel('Flux',fontsize='xx-large')
     ax.set_xlabel('Wavelength (micron)',fontsize='xx-large')
     plt.savefig('notol_ex_{}_{}.png'.format(obj_name,date))
+    """
 
     # then plot the random draws from the fit with the tolerance parameter,
     # showing the additional uncertainty
@@ -92,7 +93,7 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params,
 
     random_samp = cropchain[np.random.randint(len(cropchain),size=200)]
 
-    fig = plt.figure(figsize=(10,8))
+    fig = plt.figure(figsize=(12,6))
     ax = plt.subplot(111)
 
     logging.debug('random sample '+str(random_samp))
@@ -100,26 +101,39 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params,
         new_lns = p[-1]
         new_s = np.exp(new_lns)*mg.unc.unit
         new_unc = np.sqrt(mg.unc**2 + new_s**2)*mg.unc.unit
-        ax.errorbar(mg.wave.value[left],mg.flux.value[left],new_unc.value[left]
-            ,color='LightGrey',alpha=0.05,linewidth=0,elinewidth=1,capsize=0)
+        unc_line = ax.errorbar(mg.wave.value[left],mg.flux.value[left],
+            new_unc.value[left],color='LightGrey',alpha=0.05,linewidth=0,
+            elinewidth=1,capsize=0)
         ax.errorbar(mg.wave.value[right],mg.flux.value[right],
             new_unc.value[right],color='LightGrey',
             alpha=0.05,linewidth=0,elinewidth=1,capsize=0)
     for p in random_samp:
         new_flux = mg.interp_models(p[:-1])
-        ax.step(mg.wave[left],new_flux[left],color=rand_color,alpha=0.05,
-            where='mid')
+        rand_line = ax.step(mg.wave[left],new_flux[left],color=rand_color,
+            alpha=0.05,where='mid')
         ax.step(mg.wave[right],new_flux[right],color=rand_color,alpha=0.05,
             where='mid')
     ax.step(mg.wave[left],mg.flux[left],'k-',where='mid')
     ax.errorbar(mg.wave.value[left],mg.flux.value[left],mg.unc.value[left],
         linewidth=0,elinewidth=1,ecolor='k',color='k',capsize=0)
-    ax.step(mg.wave[right],mg.flux[right],'k-',where='mid')
+    data_line = ax.step(mg.wave[right],mg.flux[right],'k-',where='mid')
     ax.errorbar(mg.wave.value[right],mg.flux.value[right],mg.unc.value[right],
         linewidth=0,elinewidth=1,ecolor='k',color='k',capsize=0)
     ax.tick_params(labelleft=False,labelright=False,labelsize='large')
-    ax.set_ylabel('Flux',fontsize='xx-large')
+    ax.set_yticklabels([])
+    ax.set_ylabel('Flux (Normalized)',fontsize='xx-large')
     ax.set_xlabel('Wavelength (micron)',fontsize='xx-large')
+
+    ax.text(1.7,5.3e-15,"Data & original uncertainties",color='k',
+        fontsize='large')
+    ax.text(1.7,5.0e-15,"Increased tolerance",color='Grey',
+        fontsize='large')
+    ax.text(1.7,5.0e-15,"Increased tolerance",color='Grey',
+        fontsize='large')
+    ax.text(1.7,4.7e-15,"Models from posterior probability distribution",
+        color='r',fontsize='large')
+
+    print data_line,unc_line,rand_line
 
     return cropchain
 
@@ -135,8 +149,9 @@ date = chain_file.split('/')[-2].split('_')[-1]
 
 cropchain = plot_one(obj_name,chain_file,'',orig_params,model_file)
 plt.show()
-plt.savefig('tol_ex_{}_{}.png'.format(obj_name,date))
+plt.savefig('tol_ex_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches='tight')
 
-
-triangle.corner(cropchain,['log(g)','Teff','ln(tolerance)'])
-plt.savefig('tol_corner_{}_{}.png'.format(obj_name,date))
+# something is wrong!!!
+# want to use colormap "Reds"
+triangle.corner(cropchain,['log(g)','Teff','ln(tolerance)'],color='r')
+plt.savefig('tol_corner_{}_{}.png'.format(obj_name,date))#,dpi=600,bbox_inches='tight')
