@@ -18,8 +18,11 @@ errs = []
 
 for i in range(dlen):
     infile = open(filename[i],'rb')
-    med_temp, err_temp = cPickle.load(infile)
+    med_temp, err_temp0 = cPickle.load(infile)
     infile.close()
+    # swap upper and lower uncertainties so that they get plotted correctly
+    err_temp = [[err_temp0[i][j][::-1] for j in range(np.shape(err_temp0)[1])]
+                for i in range(np.shape(err_temp0)[0])]
     meds.append(med_temp)
     errs.append(err_temp)
 
