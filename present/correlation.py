@@ -64,7 +64,7 @@ teff_files = ['1228-1547 Marley K 2014-05-13_chains.pkl',
     '0205-1159 Marley K 2014-05-13_chains.pkl']
 
 plot_corr(teff_files,params,'Fsed','Teff',extents)
-plt.savefig('correlation_tf.png',dpi=600)
+plt.savefig('correlation_tf.png',dpi=600,bbox_inches='tight')
 
 logg_files = ['1228-1547 Marley K 2014-05-13_chains.pkl',
     '1228-1547 Marley J 2014-05-13_chains.pkl',
@@ -76,4 +76,4 @@ logg_files = ['1228-1547 Marley K 2014-05-13_chains.pkl',
     ]
 
 plot_corr(logg_files,params,'Fsed','log(g)',extents)
-plt.savefig('correlation_gf.png',dpi=600)
+plt.savefig('correlation_gf.png',dpi=600,bbox_inches='tight')
