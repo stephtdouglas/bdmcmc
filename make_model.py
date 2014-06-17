@@ -115,7 +115,7 @@ class ModelGrid(object):
         # The first arguments correspond to the parameters of the model
         # the next two, if present, correspond to vsini and rv 
         # ^ vsini/rv are NOT IMPLEMENTED YET
-        # the last, always, corresponds to the additional uncertainty
+        # the last, always, corresponds to the tolerance
         p = np.asarray(args)[0]
         lns = p[-1]
         model_p = p[:-1]
@@ -131,9 +131,13 @@ class ModelGrid(object):
 
         mod_flux = self.interp_models(model_p)
 
+        # if the model isn't found, interp_models returns an array of -99s
+        if sum(mod_flux)<0: 
+            return -np.inf
+
         # On the advice of Dan Foreman-Mackey, I'm changing the calculation
-        # of lnprob.  The additional uncertainty needs to be included
-        # in the definition of the gaussian used for chi^squared
+        # of lnprob.  The additional uncertainty/tolerance needs to be 
+        # included in the definition of the gaussian used for chi^squared
         s = np.exp(lns)*self.unc.unit
         unc_sq = self.unc**2 + s**2
         flux_pts = (self.flux-mod_flux)**2/unc_sq
@@ -237,7 +241,7 @@ class ModelGrid(object):
 #            logging.debug(str(cpar))
             if len(find_i)!=1:
                 logging.info('ERROR: Multi/No model {} {}'.format(cpar,find_i))
-                return np.zeros(len(self.wave))*self.flux.unit
+                return np.ones(len(self.wave))*-99.0*self.flux.unit
 #            print find_i
             corner_spectra[tuple(cpar)] = self.model['fsyn'][find_i]
 
