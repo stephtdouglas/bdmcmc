@@ -16,8 +16,47 @@ from config import *
 from smooth import *
 
 class ModelGrid(object):
+    """
+    NOTE: at this point I have not accounted for model parameters
+    that are NOT being used for the fit - this means there will be 
+    duplicate spectra and the interpolation will fail/be incorrect!
 
-    def __init__(self,spectrum,model_dict,params,smooth=False):
+    Parameters
+    ----------
+    spectrum: dictionary of astropy.units Quantities
+        keys of 'wavelength', 'flux', and 'unc' give the relevant arrays
+
+    model_dict: dictionary
+        keys 'wsyn' and 'fsyn' should correspond to model wavelength and 
+        flux arrays, and those should be astropy.units Quantities
+        other keys should correspond to params
+
+    params: array of strings
+        the model parameters to be interpolated over.  These should 
+        correspond to keys of model_dict
+
+    smooth: boolean (default=True)
+        whether or not to smooth the model spectra before interpolation 
+        onto the data wavelength grid 
+        (a check will be performed before interpolation to see if it's
+        it's necessary)
+
+    Creates
+    -------
+    wave (array; astropy.units quantity)
+    flux (array; astropy.units quantity)
+    unc (array; astropy.units quantity)
+    model (dictionary)
+    mod_keys (list) : model parameters (from keys of model)
+    params (array_like) : parameters to be interpolated over; for now, same as mod_keys
+    ndim (integer) : number of params
+    plims (dictionary) : limits of each parameter 
+    smooth (boolean) 
+    interp (boolean)
+
+    """
+
+    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None):
         """
         NOTE: at this point I have not accounted for model parameters
         that are NOT being used for the fit - this means there will be 
@@ -37,16 +76,17 @@ class ModelGrid(object):
             the model parameters to be interpolated over.  These should 
             correspond to keys of model_dict
 
-        smooth: boolean (default=True)
+        smooth: boolean (default=False)
             whether or not to smooth the model spectra before interpolation 
             onto the data wavelength grid 
             (a check will be performed before interpolation to see if it's
             it's necessary)
 
+        resolution: astropy.units Quantity (optional)
+            Resolution of the input DATA, to be used in smoothing the model.
+            Only relevant if smooth=True
+
         """
-        self.wave = spectrum['wavelength']
-        self.flux = spectrum['flux']
-        self.unc = spectrum['unc']
 
         self.model = model_dict
         self.mod_keys = model_dict.keys()
@@ -76,12 +116,15 @@ class ModelGrid(object):
                 self.plims[p]['min'] = min(self.plims[p]['vals'])
                 self.plims[p]['max'] = max(self.plims[p]['vals'])
 
-        self.itcount = 0
-
         self.smooth = smooth
 
         check_diff = self.model['wsyn'][0]-self.wave.to(
             self.model['wsyn'].unit)[0]
+
+        # convert data wavelength here; rather than at every interpolation
+        self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
+        self.flux = spectrum['flux']
+        self.unc = spectrum['unc']
 
         if ((len(self.model['wsyn'])==len(self.wave)) and 
             (abs(check_diff.value)<1e-3)):
@@ -306,22 +349,16 @@ class ModelGrid(object):
         mod_flux = old_spectra[()][0]
 #        logging.debug('all done! %d %d', len(mod_flux), len(self.flux))
 
-        #### NEED A FUNCTION TO DO THE RESAMPLING
-        # There's a problem in that the model is still higher-res than
-        # the data, so I think we're losing something in a simple
-        # interpolation resampling
-
         # THIS IS WHERE THE CODE TAKES A LONG TIME
         if self.smooth:
 #            logging.debug('starting smoothing')
-            mod_flux = falt2(self.model['wsyn'],mod_flux,100*u.AA)
+            mod_flux = falt2(self.model['wsyn'],mod_flux,resolution) 
 #            logging.debug('finished smoothing')
         else:
             logging.debug('no smoothing')
         if self.interp:
 #            logging.debug('starting interp')
-            mod_flux = np.interp(self.wave.to(self.model['wsyn'].unit),
-                self.model['wsyn'],mod_flux)
+            mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
         # Need to normalize (taking below directly from old makemodel code)
@@ -345,15 +382,6 @@ class ModelGrid(object):
         #Applying scaling factor to rescale model flux array
         mod_flux = mod_flux*ck
 #        logging.debug('finished renormalization')
-
-#        self.itcount += 1
-#        if np.mod(self.itcount,500)==0:
-#            print p
-#            plt.figure()
-#            plt.plot(self.wave,self.flux,'k-',label='data')
-#            plt.plot(self.wave,mod_flux,'r-',label='model')
-#            plt.legend()
-
 
 
         return mod_flux
