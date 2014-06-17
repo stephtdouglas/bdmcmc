@@ -34,7 +34,7 @@ def falt2(w, f, res):
     """
     logging.debug('{} {} {}'.format(res, w.unit, f.unit))
 
-    output_unit = w.unit
+    output_unit = f.unit
 
     #w = w.to(u.AA)
     #res = res.to(u.AA)
@@ -89,7 +89,7 @@ def falt2(w, f, res):
 #    plt.step(wtar,fconvol2,label='convolved')
 
     logging.debug('w {} wtar {} fconvol2 {}'.format(len(w), len(wtar), len(fconvol2)))
-    ftar2 = np.interp(w, wtar, fconvol2)*f.unit
+    ftar2 = np.interp(w, wtar, fconvol2)*output_unit
     #print ftar2
 #    plt.step(w,ftar2,label='final')
 #    plt.legend(loc=4)
