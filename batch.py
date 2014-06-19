@@ -58,8 +58,10 @@ class OneBatch(object): #THAT needs a better name
             self.num_runs = 4
         else:
             self.num_runs = len(band_names)
-        self.all_params = list(np.append(self.am.params,'ln(s)'))
+        self.all_params = list(np.append(self.am.params,'N'))
+        self.all_params = list(np.append(self.all_params,'ln(s)'))
         self.ndim = len(self.all_params)
+        logging.info('{} {}'.format(self.ndim,self.all_params))
 
         self.medians = np.zeros(self.num_runs*self.ndim).reshape(
             (self.ndim,self.num_runs))
@@ -77,7 +79,7 @@ class OneBatch(object): #THAT needs a better name
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
-        bdsamp.mcmc_go(nwalk_mult=600,nstep_mult=400)
+        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=250)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 
         self.pdf_file.savefig()

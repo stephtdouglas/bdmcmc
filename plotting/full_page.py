@@ -46,7 +46,7 @@ def page_plot(chains,model,plot_title,extents=None):
 
     """
 
-    logging.debug(str(np.shape(chains)))
+    logging.info('chains: '+str(np.shape(chains)))
     K = np.shape(chains)[-1]
 
     burn_in = 0
@@ -73,9 +73,10 @@ def page_plot(chains,model,plot_title,extents=None):
 
 
     # plot the corner plot
-    logging.debug(len(model.params))
+    logging.info(len(model.params))
     if len(model.params)!=K: # need to make a better check on this
-        labels = list(np.append(model.params,'ln(s)'))
+        labels1 = list(np.append(model.params,'N'))
+        labels = list(np.append(labels1,'ln(s)'))
     else:
         labels=model.params
     logging.info(labels)

@@ -91,6 +91,11 @@ class ModelGrid(object):
         self.model = model_dict
         self.mod_keys = model_dict.keys()
 
+        # convert data wavelength here; rather than at every interpolation
+        self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
+        self.flux = spectrum['flux']
+        self.unc = spectrum['unc']
+
         # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
             logging.info("ERROR! model wavelength array must be keyed with 'wsyn'!")
@@ -118,13 +123,8 @@ class ModelGrid(object):
 
         self.smooth = smooth
 
-        check_diff = self.model['wsyn'][0]-self.wave.to(
-            self.model['wsyn'].unit)[0]
+        check_diff = self.model['wsyn'][0]-self.wave[0]
 
-        # convert data wavelength here; rather than at every interpolation
-        self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = spectrum['flux']
-        self.unc = spectrum['unc']
 
         if ((len(self.model['wsyn'])==len(self.wave)) and 
             (abs(check_diff.value)<1e-3)):
@@ -162,7 +162,7 @@ class ModelGrid(object):
         # the second to last corresponds to the normalization variance
         p = np.asarray(args)[0]
         lns = p[-1]
-        norm_change = p[-2]
+        normalization = p[-2]
         model_p = p[:-2]
         logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
             normalization,lns))

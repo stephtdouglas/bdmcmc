@@ -152,13 +152,13 @@ class BDSampler(object):
         logging.info('All params: {}'.format(str(self.all_params)))
         logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
 
+        #add normalization parameter
+        self.start_p = np.append(self.start_p,1.0)
+
         start_lns = np.log(2.0*np.average(self.model.unc))
         logging.info('starting ln(s)={} s={}'.format(start_lns,
             np.exp(start_lns)))
         self.start_p = np.append(self.start_p,start_lns)
-
-        #add normalization parameter
-        self.start_p = np.append(self.start_p,1.0)
 
         logging.info('Set starting params %s', str(self.start_p))
 
