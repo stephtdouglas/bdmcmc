@@ -56,7 +56,8 @@ class ModelGrid(object):
 
     """
 
-    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None):
+    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None,
+        snap=False):
         """
         NOTE: at this point I have not accounted for model parameters
         that are NOT being used for the fit - this means there will be 
@@ -86,7 +87,15 @@ class ModelGrid(object):
             Resolution of the input DATA, to be used in smoothing the model.
             Only relevant if smooth=True
 
+        snap: boolean (default=False)
+            Rather than interpolate between points in the model grid,
+            return the model closest to the input parameters. (To make the
+            emcee output also stay on the grid, this needs to be set to 
+            True in bdfit as well)
+
         """
+
+        self.snap = snap
 
         self.model = model_dict
         self.mod_keys = model_dict.keys()
@@ -172,7 +181,12 @@ class ModelGrid(object):
                     self.plims[self.params[i]]['max'])
                 return -np.inf
 
-        mod_flux = self.interp_models(model_p)
+        if self.snap:
+            # new function that will just get the model from the grid
+            # placeholder for now
+            mod_flux = self.model['fsyn'][0]
+        else:
+            mod_flux = self.interp_models(model_p)
 
         # if the model isn't found, interp_models returns an array of -99s
         if sum(mod_flux)<0: 
@@ -361,6 +375,69 @@ class ModelGrid(object):
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
+        mod_flux = self.normalize_model(mod_flux)
+
+        return mod_flux
+
+    def find_nearest(arr,val):
+        """
+        Finds the *locations* (indices) in an array (arr) 
+        that are closest to a given value (val)
+        (closest means within 1e-5)
+
+        THIS ISN'T ACTUALLY WHAT I WANT
+        """
+
+        indices = np.where(np.abs(arr-val)<=1e-5)[0]
+        return indices
+
+
+    def retrieve_model(self,*args)
+        """
+        NOTE: at this point I have not accounted for model parameters
+        that are NOT being used for the fit - this means there will be 
+        duplicate spectra!
+
+        Parameters
+        ----------
+        *args: array or list
+             new parameters. Order and number must correspond to params
+        
+        Returns
+        -------
+        mod_flux: array
+             model flux corresponding to input parameters
+
+        """
+
+        p = np.asarray(args)[0]
+        logging.debug('params %s',str(p))
+
+        # p_loc is the location in the model grid that fits all the 
+        # constraints up to that point. There aren't constraints yet,
+        # so it matches the full array.
+        p_loc = range(len(self.model['fsyn']))
+
+        for i in range(self.ndim):
+            # find the location in the ith parameter array corresponding
+            # to the ith parameter
+            this_p_loc = find_nearest(self.params[i],p[i])
+
+            # then match that with the locations that already exist
+            p_loc = np.intersect1d(p_loc,this_p_loc)
+
+        logging.debug(str(p_loc))
+        mod_flux = np.ones(len(self.wave))*-99.0*self.flux.unit
+        if len(p_loc)==1:
+            this_model = self.model['fsyn'][p_loc]
+            mod_flux = self.normalize_model(this_model)
+        else:
+            logging.info("MODEL NOT FOUND/DUPLICATE MODELS FOUND!!")
+            logging.info("params {} location(s) {}".format(p, p_loc))
+
+        return mod_flux
+
+    def normalize_model(self,model_flux):
         # Need to normalize (taking below directly from old makemodel code)
 
         #This defines a scaling factor; it expresses the ratio 
@@ -369,19 +446,19 @@ class ModelGrid(object):
         #The model spectra are at some arbitrary luminosity; 
         #the scaling factor places this model spectrum at the same 
         #apparent luminosity as the observed spectrum.
-        mult1 = self.flux*mod_flux
+        mult1 = self.flux*model_flux
         bad = np.isnan(mult1)
         mult = np.sum(mult1[~bad])
         #print 'mult',mult
-        sq1 = mod_flux**2
+        sq1 = model_flux**2
         square = np.sum(sq1[~bad])
         #print 'sq',square
         ck = mult/square
         #print 'ck',ck
 
         #Applying scaling factor to rescale model flux array
-        mod_flux = mod_flux*ck
+        model_flux = model_flux*ck
 #        logging.debug('finished renormalization')
 
+        return model_flux
 
-        return mod_flux
