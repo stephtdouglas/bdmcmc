@@ -182,7 +182,10 @@ class ModelGrid(object):
         mod_flux = self.interp_models(model_p)
 
         # if the model isn't found, interp_models returns an array of -99s
-        if sum(mod_flux)<0: 
+        logging.debug(str(type(mod_flux)))
+        logging.debug(str(mod_flux.dtype))
+        logging.debug(mod_flux)
+        if sum(mod_flux.value)<0: 
             return -np.inf
 
         mod_flux = mod_flux*normalization
