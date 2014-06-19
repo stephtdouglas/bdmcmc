@@ -16,33 +16,41 @@ def calc_chisq(data_flux,data_unc,model_flux):
     return np.sum((data_flux-model_flux)**2/(data_unc**2))
 
 def test_all(data_wave, data_flux, data_unc, model_dict, params,
-    smooth=False):
+    smooth=False,resolution=None):
     """
-        NOTE: at this point I have not accounted for model parameters
-        that are NOT being used for the fit
+    Calculates chi-squared for all models in a grid to determine
+    the starting point for the emcee walkers (or just to find the
+    model that minimizes chi-squared...)
 
-        Parameters
-        ----------
-        data_wave: array; astropy.units Quantity
+    NOTE: at this point I have not accounted for model parameters
+    that are NOT being used for the fit
 
-        data_flux: array; astropy.units Quantity
+    Parameters
+    ----------
+    data_wave: array; astropy.units Quantity
 
-        data_unc: array; astropy.units Quantity
+    data_flux: array; astropy.units Quantity
 
-        model_dict: dictionary
-            keys 'wsyn' and 'fsyn' should correspond to model wavelength and 
-            flux arrays, and those should be astropy.units Quantities
-            other keys should correspond to params
+    data_unc: array; astropy.units Quantity
 
-        params: array of strings
-            the model parameters to be interpolated over.  These should 
-            correspond to keys of model_dict
+    model_dict: dictionary
+        keys 'wsyn' and 'fsyn' should correspond to model wavelength and 
+        flux arrays, and those should be astropy.units Quantities
+        other keys should correspond to params
 
-        smooth: boolean (default=True)
-            whether or not to smooth the model spectra before interpolation 
-            onto the data wavelength grid 
-            (a check will be performed before interpolation to see if it's
-            it's necessary)
+    params: array of strings
+        the model parameters to be interpolated over.  These should 
+        correspond to keys of model_dict
+
+    smooth: boolean (default=True)
+        whether or not to smooth the model spectra before interpolation 
+        onto the data wavelength grid 
+        (a check will be performed before interpolation to see if it's
+        it's necessary)
+
+    resolution: astropy.units Quantity (optional)
+        Resolution of the input DATA, to be used in smoothing the model.
+        Only relevant if smooth=True
 
     """
 
@@ -55,8 +63,7 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
     #logging.debug(data_wave.unit.to_string('fits'))
 
     if ((len(model_dict['wsyn'])==len(data_wave)) and 
-        (np.sum(model_dict['wsyn']-data_wave.to(
-        model_dict['wsyn'].unit))<(model_dict['wsyn'].unit*10**-12))):
+        (np.sum(model_dict['wsyn']-data_wave)<(model_dict['wsyn'].unit*1e-12))):
         interp = False
         logging.info('calc_chisq.test_all: NO INTERPOLATION')
     else:
@@ -74,7 +81,7 @@ def test_all(data_wave, data_flux, data_unc, model_dict, params,
 #        logging.debug('%d %d %f %f',i, num_models, model_dict['logg'][i], 
 #            model_dict['teff'][i])
         if smooth:
-            mod_flux = falt2(model_dict['wsyn'],model_dict['fsyn'][i],200*u.AA)
+            mod_flux = falt2(model_dict['wsyn'],model_dict['fsyn'][i],resolution)
         else:
             mod_flux = model_dict['fsyn'][i]
             #logging.debug('shape fsyn {} mf {}'.format(np.shape(model_dict['fsyn']), np.shape(mod_flux)))

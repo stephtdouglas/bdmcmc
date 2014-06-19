@@ -14,7 +14,38 @@ import bdmcmc.mask_bands as mb
 
 def replot(bd_name,chain_filename,plot_title,
     model_filename='/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl',
-    mask_H=True):
+    wavelength_range=None,mask_H=True):
+    """
+    Replot results from a fit that's already been done
+
+    Parameters
+    ----------
+    bd_name : string
+        shortname or unum to use for searching the BDNYC catalog
+
+    chain_filename : string
+        filename for the Pickle file containing the chains output from 
+        running emcee
+
+    plot_title : string
+
+    model_filename : string
+        (default='/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl')
+        filename containing the model grid
+
+    wavelength_range : iterable/tuple (2, optional)
+        if given, only the indicated range will be plotted
+        For reference:
+            Jband: 0.9-1.4 microns
+            Hband: 1.4-1.9 microns
+            Kband: 1.9-2.5 microns
+
+    mask_H : boolean (optional, default = True)
+        whether to mask the FeH peak in H-band; only relevant if 
+        wavelength_range includes 1.58-1.75 microns
+        
+
+    """
 
     bd = bdmcmc.spectra.BrownDwarf(bd_name)
     bd.get_low()
@@ -31,6 +62,15 @@ def replot(bd_name,chain_filename,plot_title,
             mask.pixel_mask]
         bd.specs['low']['flux'] = bd.specs['low']['flux'][mask.pixel_mask]
         bd.specs['low']['unc'] = bd.specs['low']['unc'][mask.pixel_mask]
+
+    if wavelength_range!=None:
+        wav = bd.specs['low']['wavelength']
+        band = np.where((wav>=wavelength_range[0]) & (wav<wavelength_range[1])
+            )[0]
+        bd.specs['low']['wavelength'] = bd.specs['low']['wavelength'][band]
+        bd.specs['low']['flux'] = bd.specs['low']['flux'][band]
+        bd.specs['low']['unc'] = bd.specs['low']['unc'][band]
+
     spectrum = bd.specs['low']
 
 

@@ -232,14 +232,14 @@ def plot_two(x,y,yerr,xerr,run_labels,*args,**kwargs):
 
 
     num_runs = len(x)
+    logging.debug('{} runs'.format(num_runs))
 
     markers = ['o','v','s','^','*','<','D','>']
-    cmap = cm.get_cmap("Paired")
-    color_norm = Normalize(vmin=0,vmax=7)
+    cmap = cm.get_cmap("paired")
+    color_norm = Normalize(vmin=0,vmax=num_runs)
     scalar_map = cm.ScalarMappable(norm=color_norm,cmap=cmap)
     
 
-    logging.debug('{} runs'.format(num_runs))
     for i in range(num_runs):
         plot_color = scalar_map.to_rgba(i)
         logging.debug('x {}'.format(x[i]))
