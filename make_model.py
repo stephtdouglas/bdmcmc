@@ -159,12 +159,16 @@ class ModelGrid(object):
         # the next two, if present, correspond to vsini and rv 
         # ^ vsini/rv are NOT IMPLEMENTED YET
         # the last, always, corresponds to the tolerance
+        # the second to last corresponds to the normalization variance
         p = np.asarray(args)[0]
         lns = p[-1]
         norm_change = p[-2]
         model_p = p[:-2]
-        logging.debug('params {} norm_change {} ln(s) {}'.format(str(model_p),
-            norm_change,lns))
+        logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
+            normalization,lns))
+
+        if (normalization<0.5) or (normalization>2.0):
+            return -np.inf
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
@@ -174,12 +178,14 @@ class ModelGrid(object):
                     self.plims[self.params[i]]['max'])
                 return -np.inf
 
+
         mod_flux = self.interp_models(model_p)
-        mod_flux = mod_flux*norm_change
 
         # if the model isn't found, interp_models returns an array of -99s
         if sum(mod_flux)<0: 
             return -np.inf
+
+        mod_flux = mod_flux*normalization
 
         # On the advice of Dan Foreman-Mackey, I'm changing the calculation
         # of lnprob.  The additional uncertainty/tolerance needs to be 
