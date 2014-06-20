@@ -41,6 +41,16 @@ class ModelGrid(object):
         (a check will be performed before interpolation to see if it's
         it's necessary)
 
+    resolution: astropy.units Quantity (optional)
+        Resolution of the input DATA, to be used in smoothing the model.
+        Only relevant if smooth=True
+
+    snap: boolean (default=False)
+        Rather than interpolate between points in the model grid,
+        return the model closest to the input parameters. (To make the
+        emcee output also stay on the grid, this needs to be set to 
+        True in bdfit as well)
+
     Creates
     -------
     wave (array; astropy.units quantity)
@@ -379,20 +389,19 @@ class ModelGrid(object):
 
         return mod_flux
 
-    def find_nearest(arr,val):
+    def find_nearest(self,arr,val):
         """
         Finds the *locations* (indices) in an array (arr) 
         that are closest to a given value (val)
-        (closest means within 1e-5)
-
-        THIS ISN'T ACTUALLY WHAT I WANT
         """
 
-        indices = np.where(np.abs(arr-val)<=1e-5)[0]
+        close_val = arr[np.abs(arr-val).argmin()]
+
+        indices = np.where(np.abs(arr-close_val)<=1e-5)[0]
         return indices
 
 
-    def retrieve_model(self,*args)
+    def retrieve_model(self,*args):
         """
         NOTE: at this point I have not accounted for model parameters
         that are NOT being used for the fit - this means there will be 
