@@ -20,14 +20,17 @@ class OneBatch(object): #THAT needs a better name
     """
 
     def __init__(self,bd_name,model_filename,
-        mask_H=True,band_names=None):
+        mask_H=True,band_names=None,obs_date=None):
         """
         """
 
         self.date= date.isoformat(date.today())
 
         self.bd = bdmcmc.spectra.BrownDwarf(bd_name)
-        self.bd.get_low()
+        if obs_date:
+            self.bd.get_low(obs_date=obs_date)
+        else:
+            self.bd.get_low()
 
         self.am = bdmcmc.get_mod.AtmoModel(model_filename)
         self.model_name = model_filename[:-4]
