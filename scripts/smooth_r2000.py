@@ -31,6 +31,27 @@ res = 1.5*u.um/R
 new_grid = bdmcmc.smooth.smooth_grid(am.model,spectrum['wavelength'],
     variable=False,res=res,incremental_outfile='marley_n3_backup.pkl')
 
+new_grid['logg'][new_grid['logg']==100] = 4.0
+new_grid['logg'][new_grid['logg']==178] = 4.25
+new_grid['logg'][new_grid['logg']==300] = 4.5
+new_grid['logg'][new_grid['logg']==1000] = 5.0
+new_grid['logg'][new_grid['logg']==3000] = 5.5
+
+low_grav = np.where(new_grid['logg']<4.4)[0]
+while len(low_grav)>0:
+    i = low_grav[0]
+    new_grid['logg'] = np.delete(new_grid['logg'],i)
+    new_grid['teff'] = np.delete(new_grid['teff'],i)
+    new_grid['fsed'] = np.delete(new_grid['fsed'],i)
+    new_grid['fsyn'] = np.delete(new_grid['fsyn'],i,0)
+    low_grav = np.where(new_grid['logg']<4.4)[0]
+
+wav_sq = new_grid['wsyn']**2
+
+for i in range(len(new_grid['logg'])):
+    new_grid['fsyn'][i] = new_grid['fsyn'][i]*3e7/wav_sq
+
+
 outfile = open(modelpath+'SXD_Marley.pkl','wb')
 cPickle.dump(new_grid,outfile)
 outfile.close()
