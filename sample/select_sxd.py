@@ -1,6 +1,11 @@
 import logging
 
 import numpy as np
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import astropy.units as u
 
 import bdmcmc.spectra, bdmcmc.batch
 from bdmcmc.config import *
@@ -60,4 +65,78 @@ def make_sxd_batch(model_name="marley",model_file="SXD_marley.pkl"):
         g.close()
     h.close()
 
-make_sxd_batch()
+def plot_all_sxd():
+
+    spex_sxd = fetch_sxd()
+
+    pp = PdfPages('All_SXD.pdf')
+    plt.figure()
+    ax = plt.subplot(111)
+    for name,date in spex_sxd:
+         if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
+             bd = bdmcmc.spectra.BrownDwarf(name)
+             bd.get_low(obs_date=date)
+             print name,date,bd.specs['low']['slit_width']
+             ax.step(bd.specs['low']['wavelength'],bd.specs['low']['flux'])
+             ax.set_title(name)
+             ax.set_xlim(0.8,2.6)
+             pp.savefig()
+             ax.cla()
+    pp.close()
+
+
+def plot_sxd_res():
+    spex_sxd = fetch_sxd()
+
+    fig1 = plt.figure()
+    ax1 = plt.subplot(111)
+    for name,date in spex_sxd:
+         if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
+             bd = bdmcmc.spectra.BrownDwarf(name)
+             bd.get_low(obs_date=date)
+             print name,date,bd.specs['low']['slit_width']
+             w = bd.specs['low']['wavelength']
+             wdiff = w[2:]-w[:-2]
+             R = w[:-2] / wdiff * (
+                 0.3/bd.specs['low']['slit_width'].value)
+             Rclean = R[R>1000]
+             wclean = w[:-1][R>1000]#w[:-2][wdiff>0.01*u.um]
+             ax1.plot(wclean, Rclean,'.',label=name)
+#    ax1.legend(ncol=3)
+
+def calc_sxd_res():
+    spex_sxd = fetch_sxd()
+    all_w = np.array([])
+    all_R = np.array([])
+
+    for name,date in spex_sxd:
+         if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
+             bd = bdmcmc.spectra.BrownDwarf(name)
+             bd.get_low(obs_date=date)
+             if bd.specs['low']['slit_width']==(0.5*u.um):
+                  w = bd.specs['low']['wavelength']
+                  wdiff = w[2:]-w[:-2]
+                  R = w[:-2] / wdiff * (0.3/0.5)
+                  Rclean = R[(R>1000) & (R<1375)]
+                  wclean = w[:-1][(R>1000) & (R<1375)]
+                  np.append(all_w,wclean)
+                  np.append(all_R,Rclean)
+         all_w.sort()
+         all_R.sort()
+         split_points = [0.93891,1.1277,1.41055,1.85]
+
+         # there are 5 orders
+         # for each order, fit a line to the R vs. lambda curve
+         # Then use that point to calculate the fitted R as a
+         # function of all the data wavelength points
+         # Smooth the models to the right R, but resample onto this
+         # horrendously oversampled wavelength grid, so that the code
+         # can just interpolate
+
+plot_sxd_res()
+
+#plot_all_sxd()
+
+
+
+#make_sxd_batch()
