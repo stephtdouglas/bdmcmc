@@ -67,6 +67,8 @@ class OneBatch(object): #THAT needs a better name
             (self.ndim,self.num_runs))
         self.errors = np.zeros(self.num_runs*self.ndim*2).reshape(
             (self.ndim,self.num_runs,2))
+        self.extents = np.zeros(self.num_runs*self.ndim*2).reshape(
+            (self.num_runs,self.ndim,2))
         self.run_count = 0
         self.run_titles = []
 
@@ -89,6 +91,8 @@ class OneBatch(object): #THAT needs a better name
         self.medians[:,self.run_count] = indiv_results[:,1]
         self.errors[:,self.run_count,0] = indiv_results[:,0]
         self.errors[:,self.run_count,1] = indiv_results[:,2]
+        self.extents[self.run_count,:,0] = indiv_results[:,0]*0.8
+        self.extents[self.run_count,:,1] = indiv_results[:,2]*1.2
         self.run_count += 1        
 
 
@@ -128,8 +132,9 @@ class OneBatch(object): #THAT needs a better name
         self.split_bands(band_names)
         logging.debug('medians {}'.format(self.medians))
         logging.debug('errors {}'.format(self.errors))
+        logging.debug('extents {}'.format(self.extents))
         cr.corner(self.medians,self.errors,self.bd.spt,self.all_params,
-            self.run_titles)
+            self.run_titles,extents=self.extents[0])
         try:
             self.pdf_file.savefig()
             self.close()
