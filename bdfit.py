@@ -152,9 +152,12 @@ class BDSampler(object):
         logging.info('All params: {}'.format(str(self.all_params)))
         logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
 
-        #add normalization parameter
-        self.start_p = np.append(self.start_p,1.0)
+        # add normalization parameter
+        start_flux1 = self.model.interp_models(self.start_p)
+        start_flux2, start_ck = self.model.normalize_model(start_flux1,True)
+        self.start_p = np.append(self.start_p,start_ck)
 
+        # add (log of) tolerance parameter
         start_lns = np.log(2.0*np.average(self.model.unc))
         logging.info('starting ln(s)={} s={}'.format(start_lns,
             np.exp(start_lns)))

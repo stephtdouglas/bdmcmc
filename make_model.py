@@ -167,8 +167,9 @@ class ModelGrid(object):
         logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
             normalization,lns))
 
-        if (normalization<0.5) or (normalization>2.0):
-            return -np.inf
+# Removing this for now, since I'm changing what the parameter does
+#        if (normalization<0.5) or (normalization>2.0):
+#            return -np.inf
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
@@ -188,14 +189,17 @@ class ModelGrid(object):
         if sum(mod_flux.value)<0: 
             return -np.inf
 
-        mod_flux = mod_flux*normalization
+#        mod_flux = mod_flux*normalization
 
         # On the advice of Dan Foreman-Mackey, I'm changing the calculation
         # of lnprob.  The additional uncertainty/tolerance needs to be 
         # included in the definition of the gaussian used for chi^squared
+        # And on the advice of Mike Cushing (who got it from David Hogg)
+        # I'm changing it again, so that the normalization is accounted for
+        # (I don't have my notes on me at the moment; do need to check this)
         s = np.exp(lns)*self.unc.unit
-        unc_sq = self.unc**2 + s**2
-        flux_pts = (self.flux-mod_flux)**2/unc_sq
+        unc_sq = (self.unc**2 + s**2) * normalization**2
+        flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
         width_term = np.log(2*np.pi*unc_sq.value)
         logging.debug("units flux pts {}".format(flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
@@ -373,6 +377,10 @@ class ModelGrid(object):
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
+        return mod_flux
+
+
+    def normalize_model(self,model_flux,return_ck=False):
         # Need to normalize (taking below directly from old makemodel code)
 
         #This defines a scaling factor; it expresses the ratio 
@@ -381,19 +389,22 @@ class ModelGrid(object):
         #The model spectra are at some arbitrary luminosity; 
         #the scaling factor places this model spectrum at the same 
         #apparent luminosity as the observed spectrum.
-        mult1 = self.flux*mod_flux
+        mult1 = self.flux*model_flux
         bad = np.isnan(mult1)
         mult = np.sum(mult1[~bad])
         #print 'mult',mult
-        sq1 = mod_flux**2
+        sq1 = model_flux**2
         square = np.sum(sq1[~bad])
         #print 'sq',square
         ck = mult/square
         #print 'ck',ck
 
         #Applying scaling factor to rescale model flux array
-        mod_flux = mod_flux*ck
+        model_flux = model_flux*ck
 #        logging.debug('finished renormalization')
 
+        if return_ck:
+            return model_flux, ck
+        else:
+            return model_flux
 
-        return mod_flux
