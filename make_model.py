@@ -134,7 +134,7 @@ class ModelGrid(object):
             self.interp = True
             logging.info('INTERPOLATION NEEDED')
 
-
+        self.model_flux_units = self.model['fsyn'][0].unit
 
 
     def __call__(self,*args):
@@ -377,7 +377,7 @@ class ModelGrid(object):
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
-        return mod_flux
+        return mod_flux*self.flux.unit
 
 
     def normalize_model(self,model_flux,return_ck=False):
