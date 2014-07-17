@@ -185,7 +185,7 @@ class ModelGrid(object):
         # if the model isn't found, interp_models returns an array of -99s
         logging.debug(str(type(mod_flux)))
         logging.debug(str(mod_flux.dtype))
-        logging.debug(mod_flux)
+#        logging.debug(mod_flux)
         if sum(mod_flux.value)<0: 
             return -np.inf
 
@@ -199,9 +199,12 @@ class ModelGrid(object):
         # (I don't have my notes on me at the moment; do need to check this)
         s = np.exp(lns)*self.unc.unit
         unc_sq = (self.unc**2 + s**2) * normalization**2
+        logging.debug("unc_sq {}".format(np.where(np.isnan(unc_sq))))
         flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
+        logging.debug("flux+pts {}".format(np.where(np.isnan(unc_sq))))
         width_term = np.log(2*np.pi*unc_sq.value)
-        logging.debug("units flux pts {}".format(flux_pts.unit))
+        logging.debug("width_term {} units flux pts {}".format(
+            np.sum(width_term),flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
         lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
