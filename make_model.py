@@ -161,15 +161,17 @@ class ModelGrid(object):
         # the last, always, corresponds to the tolerance
         # the second to last corresponds to the normalization variance
         p = np.asarray(args)[0]
+        model_p = p[:self.ndim]
         lns = p[-1]
-        normalization = p[-2]
-        model_p = p[:-2]
-        logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
-            normalization,lns))
+        norm_values = p[self.ndim:-1]
+        logging.debug('params {} normalization {} ln(s) {}'.format(
+            model_p,norm_values,lns))
 
 # Removing this for now, since I'm changing what the parameter does
 #        if (normalization<0.5) or (normalization>2.0):
 #            return -np.inf
+
+        normalization = self.calc_normalization(norm_values)
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
@@ -201,6 +203,8 @@ class ModelGrid(object):
         unc_sq = (self.unc**2 + s**2) * normalization**2
         flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
         width_term = np.log(2*np.pi*unc_sq.value)
+        logging.debug("s {} unc_sq {}".format(s,unc_sq))
+        #logging.debug("flux_pts {} width term {}".format(flux_pts,width_term))
         logging.debug("units flux pts {}".format(flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
         lnprob = -0.5*(np.sum(flux_pts + width_term))
@@ -408,3 +412,40 @@ class ModelGrid(object):
         else:
             return model_flux
 
+
+    def calc_normalization(self,n_values,
+        wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
+        """
+        calculates normalization as a function of wavelength
+
+        Parameters
+        ----------
+        n_values: array or list
+            normalization values for the regions given by wavelength_bins
+    
+        wavelength_bins: array or list
+            the wavelength bins corresponding to n_values
+            length should be one longer then n_values
+            the normalization for wavelengths below and above the minimum
+            and maximum bin edges will be set to 1
+
+
+        Returns
+        -------
+        normalization: array
+            normalization values as a function of wavelength
+            corresponding to self.wave
+
+        """
+
+        normalization = np.ones(len(self.wave))
+
+        if len(wavelength_bins)==0:
+            normalization[:] = n_values
+        else:
+            for i in range(len(n_values)):
+                norm_loc = np.where((self.wave>wavelength_bins[i]) &
+                    (self.wave<=wavelength_bins[i+1]))[0]
+                normalization[norm_loc] = n_values[i]
+
+        return normalization
