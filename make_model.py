@@ -93,8 +93,8 @@ class ModelGrid(object):
 
         # convert data wavelength here; rather than at every interpolation
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = spectrum['flux']
-        self.unc = spectrum['unc']
+        self.flux = np.float64(spectrum['flux'])
+        self.unc = np.float64(spectrum['unc'])
 
         # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
@@ -167,9 +167,11 @@ class ModelGrid(object):
         logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
             normalization,lns))
 
-# Removing this for now, since I'm changing what the parameter does
-#        if (normalization<0.5) or (normalization>2.0):
-#            return -np.inf
+        if (normalization<0.) or (normalization>2.0):
+            return -np.inf
+
+        if (lns>1.0):
+            return -np.inf
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
@@ -196,12 +198,13 @@ class ModelGrid(object):
         # included in the definition of the gaussian used for chi^squared
         # And on the advice of Mike Cushing (who got it from David Hogg)
         # I'm changing it again, so that the normalization is accounted for
-        # (I don't have my notes on me at the moment; do need to check this)
-        s = np.exp(lns)*self.unc.unit
+        s = np.float64(np.exp(lns))*self.unc.unit
+        logging.debug("type unc {} s {} n {}".format(self.unc.value.dtype,
+            type(s.value),type(normalization)))
         unc_sq = (self.unc**2 + s**2) * normalization**2
-        logging.debug("unc_sq {}".format(np.where(np.isnan(unc_sq))))
+#        logging.debug("unc_sq {}".format(unc_sq))
         flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
-        logging.debug("flux+pts {}".format(np.where(np.isnan(unc_sq))))
+#        logging.debug("flux+pts {}".format(flux_pts))
         width_term = np.log(2*np.pi*unc_sq.value)
         logging.debug("width_term {} units flux pts {}".format(
             np.sum(width_term),flux_pts.unit))
