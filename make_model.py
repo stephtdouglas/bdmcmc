@@ -56,7 +56,8 @@ class ModelGrid(object):
 
     """
 
-    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None):
+    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None,
+        wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
         """
         NOTE: at this point I have not accounted for model parameters
         that are NOT being used for the fit - this means there will be 
@@ -90,6 +91,7 @@ class ModelGrid(object):
 
         self.model = model_dict
         self.mod_keys = model_dict.keys()
+        self.wavelength_bins = wavelength_bins
 
         # convert data wavelength here; rather than at every interpolation
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
@@ -171,7 +173,8 @@ class ModelGrid(object):
 #        if (normalization<0.5) or (normalization>2.0):
 #            return -np.inf
 
-        normalization = self.calc_normalization(norm_values)
+        normalization = self.calc_normalization(norm_values,
+            self.wavelength_bins)
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 

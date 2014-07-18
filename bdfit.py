@@ -90,7 +90,7 @@ class BDSampler(object):
     """
 
     def __init__(self,obj_name,spectrum,model,params,smooth=False,
-        plot_title='None'):
+        plot_title='None',wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
         """
         Parameters 
         ----------
@@ -130,7 +130,8 @@ class BDSampler(object):
         else:
             self.plot_title = plot_title
 
-        self.model = ModelGrid(spectrum,model,params,smooth=smooth)
+        self.model = ModelGrid(spectrum,model,params,smooth=smooth,
+             wavelength_bins=wavelength_bins)
         #print spectrum.keys()
         logging.info('Set model')
 
@@ -154,7 +155,8 @@ class BDSampler(object):
 
         # add normalization parameter
         start_flux1 = self.model.interp_models(self.start_p)
-        start_flux2, start_ck = self.model.normalize_model(start_flux1,True)
+        start_flux2, start_ck1 = self.model.normalize_model(start_flux1,True)
+        start_ck2 = np.ones(len(wavelength_bins)-1,'float64')*start_ck1
         self.start_p = np.append(self.start_p,start_ck)
 
         # add (log of) tolerance parameter
