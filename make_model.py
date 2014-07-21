@@ -163,12 +163,13 @@ class ModelGrid(object):
         p = np.asarray(args)[0]
         lns = p[-1]
         normalization = p[-2]
+#        r2d2 = p[-3]
         model_p = p[:-2]
         logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
             normalization,lns))
 
-        if (normalization<0.) or (normalization>2.0):
-            return -np.inf
+#        if (normalization<0.) or (normalization>2.0):
+#            return -np.inf
 
         if (lns>1.0):
             return -np.inf
@@ -185,8 +186,8 @@ class ModelGrid(object):
         mod_flux = self.interp_models(model_p)
 
         # if the model isn't found, interp_models returns an array of -99s
-        logging.debug(str(type(mod_flux)))
-        logging.debug(str(mod_flux.dtype))
+#        logging.debug(str(type(mod_flux)))
+#        logging.debug(str(mod_flux.dtype))
 #        logging.debug(mod_flux)
         if sum(mod_flux.value)<0: 
             return -np.inf
@@ -199,15 +200,18 @@ class ModelGrid(object):
         # And on the advice of Mike Cushing (who got it from David Hogg)
         # I'm changing it again, so that the normalization is accounted for
         s = np.float64(np.exp(lns))*self.unc.unit
-        logging.debug("type unc {} s {} n {}".format(self.unc.value.dtype,
-            type(s.value),type(normalization)))
-        unc_sq = (self.unc**2 + s**2) * normalization**2
+#        logging.debug("type unc {} s {} n {}".format(self.unc.value.dtype,
+#            type(s.value),type(normalization)))
+        unc_sq = (self.unc**2 + s**2)  * normalization**2 
+#        unc_sq = (self.unc**2) * normalization**2
 #        logging.debug("unc_sq {}".format(unc_sq))
+#        logging.debug("units f {} mf {}".format(self.flux.unit,
+#            mod_flux.unit))
         flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
 #        logging.debug("flux+pts {}".format(flux_pts))
-        width_term = np.log(2*np.pi*unc_sq.value)
-        logging.debug("width_term {} units flux pts {}".format(
-            np.sum(width_term),flux_pts.unit))
+        width_term = np.log(np.sqrt(2*np.pi*unc_sq.value))
+        logging.debug("width_term {} flux pts {} units fp {}".format(
+            np.sum(width_term),np.sum(flux_pts),flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
         lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
@@ -253,7 +257,7 @@ class ModelGrid(object):
                      self.plims[self.params[i]]['vals']<p[i]])
                 up_val = min(self.plims[self.params[i]]['vals'][
                      self.plims[self.params[i]]['vals']>p[i]])
-                logging.debug('up {} down {}'.format(up_val,dn_val))
+#                logging.debug('up {} down {}'.format(up_val,dn_val))
                 grid_edges[self.params[i]] = np.array([dn_val,up_val])
                 edge_inds[self.params[i]] = np.array([np.where(
                     self.plims[self.params[i]]['vals']==dn_val)[0],np.where(
@@ -376,14 +380,16 @@ class ModelGrid(object):
 #            logging.debug('starting smoothing')
             mod_flux = falt2(self.model['wsyn'],mod_flux,resolution) 
 #            logging.debug('finished smoothing')
-        else:
-            logging.debug('no smoothing')
+#        else:
+#            logging.debug('no smoothing')
         if self.interp:
 #            logging.debug('starting interp')
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
-        return mod_flux*self.flux.unit
+        mod_flux = self.normalize_model(mod_flux)
+
+        return mod_flux#*self.flux.unit
 
 
     def normalize_model(self,model_flux,return_ck=False):
