@@ -85,7 +85,7 @@ class OneBatch(object): #THAT needs a better name
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
 #        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
-        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=250)
+        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
 #        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
 #        bdsamp.mcmc_go(nwalk_mult=10,nstep_mult=20)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)

@@ -91,11 +91,6 @@ class ModelGrid(object):
         self.model = model_dict
         self.mod_keys = model_dict.keys()
 
-        # convert data wavelength here; rather than at every interpolation
-        self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = np.float64(spectrum['flux'])
-        self.unc = np.float64(spectrum['unc'])
-
         # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
             logging.info("ERROR! model wavelength array must be keyed with 'wsyn'!")
@@ -124,11 +119,16 @@ class ModelGrid(object):
         self.smooth = smooth
 
         # convert data wavelength here; rather than at every interpolation
+#        logging.debug("data units w {} f {} u {}".format(
+#            spectrum['wavelength'].unit, spectrum['flux'].unit,
+#            spectrum['unc'].unit))
+#        logging.debug("model units w {} f {}".format(self.model['wsyn'].unit,
+#            self.model['fsyn'].unit))
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = spectrum['flux'].to(self.model['fsyn'].unit,
-             equivalencies=u.spectral_density(self.wave))
-        self.unc = spectrum['unc'].to(self.model['fsyn'].unit,
-             equivalencies=u.spectral_density(self.wave))
+        self.flux = np.float64(spectrum['flux'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave)))
+        self.unc = np.float64(spectrum['unc'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave)))
 
         check_diff = self.model['wsyn'][0]-self.wave[0]
 
@@ -171,8 +171,8 @@ class ModelGrid(object):
         normalization = p[-2]
 #        r2d2 = p[-3]
         model_p = p[:-2]
-        logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
-            normalization,lns))
+#        logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
+#            normalization,lns))
 
 #        if (normalization<0.) or (normalization>2.0):
 #            return -np.inf
