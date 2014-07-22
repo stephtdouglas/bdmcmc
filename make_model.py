@@ -123,7 +123,8 @@ class ModelGrid(object):
 
         # convert data wavelength here; rather than at every interpolation
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = spectrum['flux']
+        self.flux = spectrum['flux'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave))
         self.unc = spectrum['unc']
 
         if ((len(self.model['wsyn'])==len(self.wave)) and 
