@@ -447,7 +447,7 @@ class ModelGrid(object):
             the wavelength bins corresponding to n_values
             length should be one longer then n_values
             the normalization for wavelengths below and above the minimum
-            and maximum bin edges will be set to 1
+            and maximum bin edges will be set to the same as the nearest bin
 
 
         Returns
@@ -458,7 +458,7 @@ class ModelGrid(object):
 
         """
 
-        normalization = np.ones(len(self.wave))
+        normalization = np.zeros(len(self.wave))
 
         if len(wavelength_bins)==0:
             normalization[:] = n_values
@@ -467,5 +467,9 @@ class ModelGrid(object):
                 norm_loc = np.where((self.wave>wavelength_bins[i]) &
                     (self.wave<=wavelength_bins[i+1]))[0]
                 normalization[norm_loc] = n_values[i]
+            norm_loc = np.where(self.wave<=wavelength_bins[0])[0]
+            normalization[norm_loc] = n_values[i]
+            norm_loc = np.where(self.wave>wavelength_bins[-1])[0]
+            normalization[norm_loc] = n_values[i]
 
         return normalization
