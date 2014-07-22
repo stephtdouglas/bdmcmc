@@ -23,6 +23,9 @@ def falt2(w, f, res):
     f: float array OR astropy.units Quantity
          The model flux array
     
+    data_wave: astropy.units Quantity
+         The data wavelength array
+
     res: astropy.units Quantity
          The resolution of the observed spectrum 
 
@@ -50,10 +53,11 @@ def falt2(w, f, res):
 
     while len(w.value)==1:
         w = w[0]
-        #print 'un-nested w!', len(w.value)
+        logging.debug('un-nested w! {}'.format(len(w.value)))
 #    plt.figure()
 #    plt.step(w,f,label='input')
 
+    logging.debug(str(w))
     nw = (max(w) - min(w))/(fwhm*0.1)
     nw2 = np.floor(nw) + 1.0
     logging.debug('nw {} {} {} {}'.format(nw, nw2-1, fwhm, res))
@@ -168,8 +172,42 @@ def variable_smooth(w, f, data_wave, delta_pixels=2, res_scale=1):
     # Return calculated array
     return new_flux
 
-def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1,
-    incremental_outfile='incremental_outfile.pkl'):
+def smooth_model(w, f, data_wave, res):
+    """
+    Given a model spectrum and a single R, computes the model at the 
+    appropriate resolution
+
+    Parameters
+    ----------
+    w: astropy.units Quantity
+         The model wavelength array 
+
+    f: float array OR astropy.units Quantity
+         The model flux array
+
+    data_wave: astropy.units Quantity
+         The data wavelength array
+
+    res: astropy.units Quantity
+         The resolution of the observed spectrum 
+
+
+    Returns
+    -------
+    new_flux: astropy.units Quantity
+        smoothed and interpolated flux array
+
+    """
+
+    smoothed_flux = falt2(w, f, res)
+    new_flux = np.interp(data_wave,w,smoothed_flux)
+    logging.debug(str(new_flux))
+    return new_flux
+
+
+
+def smooth_grid(model_dict, data_wave, variable=True, delta_pixels=2, 
+    res_scale=1,res=3000,incremental_outfile='incremental_outfile.pkl'):
     """
     Computes a new grid of model spectra, where all calculated models
     in the grid are matched to the wavelength grid from the data
@@ -185,12 +223,20 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1,
     data_wave: astropy.units Quantity
          The data wavelength array
 
+    variable: boolean (default=True)
+
     delta_pixels: int (default=2)
          number of pixels that correspond to delta_lambda
+         only relevant if variable==True
 
     res_scale: float (default=1)
          multiply delta_lambda/lambda by this factor 
          (useful when changing slit width)
+         only relevant if variable==True
+
+    res: float (default=2000)
+         resolution (lambda-over-delta-lambda) to smooth the model to
+         only relevant if variable==False
 
     incremental_outfile: string (default='none')
         output file to save the model file to, to prevent losing everything
@@ -214,8 +260,14 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1,
 
     # for each grid point, call variable_smooth to get the smoothed model
     for i in range(mlen):
-        new_flux = variable_smooth(model_dict['wsyn'][i],model_dict['fsyn'][i],
-            data_wave,delta_pixels=delta_pixels,res_scale=res_scale)
+        if variable:
+            new_flux = variable_smooth(model_dict['wsyn'][i],
+                model_dict['fsyn'][i],data_wave,delta_pixels=delta_pixels,
+                res_scale=res_scale)
+        else:
+            new_flux = smooth_model(model_dict['wsyn'][i],
+                model_dict['fsyn'][i],data_wave,res)
+        logging.info('{} {}'.format(len(new_flux),len(data_wave)))
         logging.info('{} {}'.format(i,str(model_new.keys())))
         model_new['fsyn'][i] = new_flux
         if (np.mod(i,10))==0 and (incremental_outfile!='none'):
@@ -223,5 +275,6 @@ def smooth_grid(model_dict, data_wave, delta_pixels=2, res_scale=1,
             cPickle.dump(model_new,open_outfile)
             open_outfile.close()
 
+    model_new['wsyn'] = data_wave
     # return model_new
     return model_new

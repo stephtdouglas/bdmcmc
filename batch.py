@@ -20,14 +20,17 @@ class OneBatch(object): #THAT needs a better name
     """
 
     def __init__(self,bd_name,model_filename,
-        mask_H=True,band_names=None):
+        mask_H=True,band_names=None,obs_date=None):
         """
         """
 
         self.date= date.isoformat(date.today())
 
         self.bd = bdmcmc.spectra.BrownDwarf(bd_name)
-        self.bd.get_low()
+        if obs_date:
+            self.bd.get_low(obs_date=obs_date)
+        else:
+            self.bd.get_low()
 
         self.am = bdmcmc.get_mod.AtmoModel(model_filename)
         self.model_name = model_filename[:-4]
@@ -81,8 +84,9 @@ class OneBatch(object): #THAT needs a better name
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
             self.am.model,self.am.params,smooth=False,
             plot_title=plot_title)
-#        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=250)
-        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
+#        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
+        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
+#        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
 #        bdsamp.mcmc_go(nwalk_mult=10,nstep_mult=20)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 

@@ -72,7 +72,8 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
 
     wave_unit = q_result['wavelength_units']
     flux_unit = q_result['flux_units']
-    flux_unit = flux_unit.replace('ergs','erg s').replace('Wm','W m')
+    flux_unit = flux_unit.replace('ergs','erg s').replace('Wm','W m').replace(
+        "A","AA")
     flux_unit = u.Unit(flux_unit.replace('normalized',''))
     wave_unit = u.Unit(wave_unit)
     logging.info('%s %s', wave_unit.to_string('fits'), 

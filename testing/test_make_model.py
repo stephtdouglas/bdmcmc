@@ -4,6 +4,7 @@ import astropy.units as u
 
 import bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model
 
+reload(bdmcmc.spectra)
 reload(bdmcmc.make_model)
 
 logging.basicConfig(level=logging.DEBUG)

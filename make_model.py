@@ -93,11 +93,6 @@ class ModelGrid(object):
         self.mod_keys = model_dict.keys()
         self.wavelength_bins = wavelength_bins
 
-        # convert data wavelength here; rather than at every interpolation
-        self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = spectrum['flux']
-        self.unc = spectrum['unc']
-
         # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
             logging.info("ERROR! model wavelength array must be keyed with 'wsyn'!")
@@ -105,9 +100,9 @@ class ModelGrid(object):
             logging.info("ERROR! model flux must be keyed with 'fsyn'!")
         if ((type(self.model['wsyn'])!=u.quantity.Quantity) |
             (type(self.model['fsyn'])!=u.quantity.Quantity) |
-            (type(self.wave)!=u.quantity.Quantity) |
-            (type(self.flux)!=u.quantity.Quantity) |
-            (type(self.unc)!=u.quantity.Quantity)):
+            (type(spectrum['wavelength'])!=u.quantity.Quantity) |
+            (type(spectrum['flux'])!=u.quantity.Quantity) |
+            (type(spectrum['unc'])!=u.quantity.Quantity)):
             logging.info("ERROR! model arrays and spectrum arrays must all"
                 + " be of type astropy.units.quantity.Quantity")
 
@@ -125,8 +120,19 @@ class ModelGrid(object):
 
         self.smooth = smooth
 
-        check_diff = self.model['wsyn'][0]-self.wave[0]
+        # convert data wavelength here; rather than at every interpolation
+#        logging.debug("data units w {} f {} u {}".format(
+#            spectrum['wavelength'].unit, spectrum['flux'].unit,
+#            spectrum['unc'].unit))
+#        logging.debug("model units w {} f {}".format(self.model['wsyn'].unit,
+#            self.model['fsyn'].unit))
+        self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
+        self.flux = np.float64(spectrum['flux'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave)))
+        self.unc = np.float64(spectrum['unc'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave)))
 
+        check_diff = self.model['wsyn'][0]-self.wave[0]
 
         if ((len(self.model['wsyn'])==len(self.wave)) and 
             (abs(check_diff.value)<1e-3)):
@@ -168,13 +174,17 @@ class ModelGrid(object):
         norm_values = p[self.ndim:-1]
         logging.debug('params {} normalization {} ln(s) {}'.format(
             model_p,norm_values,lns))
+#        r2d2 = p[-3]
+        model_p = p[:-2]
 
-# Removing this for now, since I'm changing what the parameter does
-#        if (normalization<0.5) or (normalization>2.0):
+#        if (normalization<0.) or (normalization>2.0):
 #            return -np.inf
 
         normalization = self.calc_normalization(norm_values,
             self.wavelength_bins)
+
+        if (lns>1.0):
+            return -np.inf
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
@@ -188,9 +198,9 @@ class ModelGrid(object):
         mod_flux = self.interp_models(model_p)
 
         # if the model isn't found, interp_models returns an array of -99s
-        logging.debug(str(type(mod_flux)))
-        logging.debug(str(mod_flux.dtype))
-        logging.debug(mod_flux)
+#        logging.debug(str(type(mod_flux)))
+#        logging.debug(str(mod_flux.dtype))
+#        logging.debug(mod_flux)
         if sum(mod_flux.value)<0: 
             return -np.inf
 
@@ -201,14 +211,19 @@ class ModelGrid(object):
         # included in the definition of the gaussian used for chi^squared
         # And on the advice of Mike Cushing (who got it from David Hogg)
         # I'm changing it again, so that the normalization is accounted for
-        # (I don't have my notes on me at the moment; do need to check this)
-        s = np.exp(lns)*self.unc.unit
-        unc_sq = (self.unc**2 + s**2) * normalization**2
+        s = np.float64(np.exp(lns))*self.unc.unit
+#        logging.debug("type unc {} s {} n {}".format(self.unc.value.dtype,
+#            type(s.value),type(normalization)))
+        unc_sq = (self.unc**2 + s**2)  * normalization**2 
+#        unc_sq = (self.unc**2) * normalization**2
+#        logging.debug("unc_sq {}".format(unc_sq))
+#        logging.debug("units f {} mf {}".format(self.flux.unit,
+#            mod_flux.unit))
         flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
         width_term = np.log(2*np.pi*unc_sq.value)
-        logging.debug("s {} unc_sq {}".format(s,unc_sq))
-        #logging.debug("flux_pts {} width term {}".format(flux_pts,width_term))
-        logging.debug("units flux pts {}".format(flux_pts.unit))
+#        logging.debug("flux+pts {}".format(flux_pts))
+        logging.debug("width_term {} flux pts {} units fp {}".format(
+            np.sum(width_term),np.sum(flux_pts),flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
         lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
@@ -254,7 +269,7 @@ class ModelGrid(object):
                      self.plims[self.params[i]]['vals']<p[i]])
                 up_val = min(self.plims[self.params[i]]['vals'][
                      self.plims[self.params[i]]['vals']>p[i]])
-                logging.debug('up {} down {}'.format(up_val,dn_val))
+#                logging.debug('up {} down {}'.format(up_val,dn_val))
                 grid_edges[self.params[i]] = np.array([dn_val,up_val])
                 edge_inds[self.params[i]] = np.array([np.where(
                     self.plims[self.params[i]]['vals']==dn_val)[0],np.where(
@@ -377,14 +392,16 @@ class ModelGrid(object):
 #            logging.debug('starting smoothing')
             mod_flux = falt2(self.model['wsyn'],mod_flux,resolution) 
 #            logging.debug('finished smoothing')
-        else:
-            logging.debug('no smoothing')
+#        else:
+#            logging.debug('no smoothing')
         if self.interp:
 #            logging.debug('starting interp')
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
-        return mod_flux*self.flux.unit
+        mod_flux = self.normalize_model(mod_flux)
+
+        return mod_flux#*self.flux.unit
 
 
     def normalize_model(self,model_flux,return_ck=False):
