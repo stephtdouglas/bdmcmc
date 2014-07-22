@@ -52,7 +52,7 @@ def make_sxd_batch(model_name="marley",model_file="SXD_marley.pkl"):
         g.write("# Directives\n")
         g.write("#PBS -N {}{}\n".format(model_name,name))
         g.write("#PBS -W group_list=yetiastro\n")
-        g.write("#PBS -l nodes=1,walltime=20:00:00,mem=4000mb\n")
+        g.write("#PBS -l nodes=1,walltime=8:00:00,mem=2500mb\n")
         g.write("#PBS -M sd2706@columbia.edu \n")
         g.write("#PBS -m a\n")
         g.write("#PBS -V\n\n")
