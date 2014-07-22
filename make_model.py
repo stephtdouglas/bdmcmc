@@ -98,9 +98,9 @@ class ModelGrid(object):
             logging.info("ERROR! model flux must be keyed with 'fsyn'!")
         if ((type(self.model['wsyn'])!=u.quantity.Quantity) |
             (type(self.model['fsyn'])!=u.quantity.Quantity) |
-            (type(self.wave)!=u.quantity.Quantity) |
-            (type(self.flux)!=u.quantity.Quantity) |
-            (type(self.unc)!=u.quantity.Quantity)):
+            (type(spectrum['wavelength'])!=u.quantity.Quantity) |
+            (type(spectrum['flux'])!=u.quantity.Quantity) |
+            (type(spectrum['unc'])!=u.quantity.Quantity)):
             logging.info("ERROR! model arrays and spectrum arrays must all"
                 + " be of type astropy.units.quantity.Quantity")
 
@@ -118,14 +118,14 @@ class ModelGrid(object):
 
         self.smooth = smooth
 
-        check_diff = self.model['wsyn'][0]-self.wave.to(
-            self.model['wsyn'].unit)[0]
-
         # convert data wavelength here; rather than at every interpolation
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
         self.flux = spectrum['flux'].to(self.model['fsyn'].unit,
              equivalencies=u.spectral_density(self.wave))
-        self.unc = spectrum['unc']
+        self.unc = spectrum['unc'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave))
+
+        check_diff = self.model['wsyn'][0]-self.wave[0]
 
         if ((len(self.model['wsyn'])==len(self.wave)) and 
             (abs(check_diff.value)<1e-3)):
@@ -176,7 +176,9 @@ class ModelGrid(object):
         mod_flux = self.interp_models(model_p)
 
         # if the model isn't found, interp_models returns an array of -99s
-        if sum(mod_flux)<0: 
+        logging.debug("type {} units {} elem1 {}".format(type(mod_flux),
+            mod_flux.unit,mod_flux[0]))
+        if sum(mod_flux.value)<0: 
             return -np.inf
 
         # On the advice of Dan Foreman-Mackey, I'm changing the calculation
