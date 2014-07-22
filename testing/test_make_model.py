@@ -13,6 +13,7 @@ bd = bdmcmc.spectra.BrownDwarf('U20012')
 bd.get_low()
 
 am = bdmcmc.get_mod.AtmoModel('/home/stephanie/ldwarfs/modelSpectra/SpeX_marley.pkl')
+#am = bdmcmc.get_mod.AtmoModel('/home/stephanie/ldwarfs/modelSpectra/SXD_marley.pkl')
 
 mg = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params)
 
