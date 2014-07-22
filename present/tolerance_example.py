@@ -153,5 +153,5 @@ plt.savefig('tol_ex_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches='tight'
 
 # something is wrong!!!
 # want to use colormap "Reds"
-triangle.corner(cropchain,['log(g)','Teff','ln(tolerance)'],color='r')
+triangle.corner(cropchain,['log(g)','Teff','ln(tolerance)'])
 plt.savefig('tol_corner_{}_{}.png'.format(obj_name,date))#,dpi=600,bbox_inches='tight')
