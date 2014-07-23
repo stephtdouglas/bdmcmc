@@ -1,5 +1,6 @@
-import logging
+import logging, os
 
+import numpy as np
 import astropy.units as u
 
 import bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model
@@ -9,10 +10,14 @@ reload(bdmcmc.make_model)
 
 logging.basicConfig(level=logging.DEBUG)
 
+mbase_path = '/vega/astro/users/sd2706/'
+if os.path.exists(mbase_path)==False:
+    mbase_path = '/home/stephanie/ldwarfs/'
+
 bd = bdmcmc.spectra.BrownDwarf('U20012')
 bd.get_low()
 
-am = bdmcmc.get_mod.AtmoModel('/home/stephanie/ldwarfs/modelSpectra/SpeX_marley.pkl')
+am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SpeX_marley.pkl')
 
 mg = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params)
 
