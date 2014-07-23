@@ -41,8 +41,9 @@ def plot_random(cropchain,model,ax=None,rand_color='r',plot_s=True):
 
     for p in random_samp:
         logging.debug('random params '+str(p))
-        new_flux = model.interp_models(p[:-2])
-        new_norm = p[-2]
+        new_flux = model.interp_models(p[:model.ndim])
+        new_norm = model.calc_normalization(p[model.ndim:-1],
+            model.wavelength_bins)
         #logging.debug('new flux '+str(new_flux))
         ax.step(model.wave,new_flux*new_norm,color=rand_color,alpha=0.05)
         if plot_s:

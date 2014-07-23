@@ -180,7 +180,7 @@ class ModelGrid(object):
 #        if (normalization<0.) or (normalization>2.0):
 #            return -np.inf
 
-        normalization = self.calc_normalization(norm_values,
+        normalization = self.calc_normalization(norm_values,#[])
             self.wavelength_bins)
 
         if (lns>1.0):

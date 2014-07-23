@@ -75,7 +75,11 @@ def page_plot(chains,model,plot_title,extents=None):
     # plot the corner plot
     logging.info(len(model.params))
     if len(model.params)!=K: # need to make a better check on this
-        labels1 = list(np.append(model.params,'N'))
+        nlen = K - len(model.params) - 1
+        labels1 = np.copy(model.params)
+        logging.info("nlen {}".format(nlen))
+        for i in range(nlen):
+            labels1 = np.append(labels1,'N{}'.format(i))
         labels = list(np.append(labels1,'ln(s)'))
     else:
         labels=model.params
