@@ -77,13 +77,13 @@ class OneBatch(object): #THAT needs a better name
 
         self.plot_all(band_names)
 
-    def run_one(self,spectrum,plot_title,result_key):
+    def run_one(self,spectrum,plot_title,result_key,wavelength_bins):
         """
         """
 
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
             self.am.model,self.am.params,smooth=False,
-            plot_title=plot_title)
+            plot_title=plot_title,wavelength_bins=wavelength_bins)
 #        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
         bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
 #        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
@@ -112,6 +112,7 @@ class OneBatch(object): #THAT needs a better name
         Kband = np.where((wav>=1.9*u.um) & (wav<2.5*u.um))[0]
 
         bands = {'J':Jband,'H':Hband,'K':Kband,'full':full}
+        norm_bins = {'J':[],'H':[],'K':[],'full':[0.9,1.4,1.9,2.5]}
         if band_names==None:
             band_names = bands.keys()
         else:
@@ -126,7 +127,8 @@ class OneBatch(object): #THAT needs a better name
 
             band_plot_title = '{} Marley {} {}'.format(self.bd.shortname, b,
                  self.date)
-            self.run_one(band_spectrum,band_plot_title,b)
+            self.run_one(band_spectrum,band_plot_title,b,
+                 wavelength_bins=wavelength_bins)
             self.run_titles.append(b)
 
 
