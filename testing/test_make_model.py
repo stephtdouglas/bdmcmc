@@ -19,11 +19,15 @@ bd.get_low()
 
 am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SpeX_marley.pkl')
 
-mg = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params)
-
 test_model_p = [4.794,2.34,2139.]
 test_norm_p = [1e-16,2e-16,1.4e-16]
 test_s = 5e-16
 test_p = np.append(np.append(test_model_p,test_norm_p),test_s)
 
-print mg(test_p)
+logging.debug("testing without snap")
+mg1 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params)
+print mg1(test_p)
+
+logging.debug("testing WITH snap")
+mg2 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params,snap=True)
+print mg2(test_p)
