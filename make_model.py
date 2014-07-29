@@ -215,7 +215,7 @@ class ModelGrid(object):
         if self.snap:
             # new function that will just get the model from the grid
             # placeholder for now
-            mod_flux = self.model['fsyn'][0]
+            mod_flux = self.retrieve_model(model_p)
         else:
             mod_flux = self.interp_models(model_p)
 
@@ -421,9 +421,7 @@ class ModelGrid(object):
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
-        mod_flux = self.normalize_model(mod_flux)
-
-        return mod_flux
+        return mod_flux*self.model_flux_units
 
     def find_nearest(self,arr,val):
         """
@@ -456,7 +454,7 @@ class ModelGrid(object):
         """
 
         p = np.asarray(args)[0]
-        logging.debug('params %s',str(p))
+        logging.debug('starting params %s',str(p))
 
         # p_loc is the location in the model grid that fits all the 
         # constraints up to that point. There aren't constraints yet,
@@ -466,7 +464,7 @@ class ModelGrid(object):
         for i in range(self.ndim):
             # find the location in the ith parameter array corresponding
             # to the ith parameter
-            this_p_loc = find_nearest(self.params[i],p[i])
+            this_p_loc = self.find_nearest(self.model[self.params[i]],p[i])
 
             # then match that with the locations that already exist
             p_loc = np.intersect1d(p_loc,this_p_loc)
@@ -474,14 +472,77 @@ class ModelGrid(object):
         logging.debug(str(p_loc))
         mod_flux = np.ones(len(self.wave))*-99.0*self.flux.unit
         if len(p_loc)==1:
-            this_model = self.model['fsyn'][p_loc]
-            mod_flux = self.normalize_model(this_model)
+            mod_flux = self.model['fsyn'][p_loc]
+            while len(mod_flux)==1:
+                mod_flux = mod_flux[0]
         else:
             logging.info("MODEL NOT FOUND/DUPLICATE MODELS FOUND!!")
             logging.info("params {} location(s) {}".format(p, p_loc))
 
-        return mod_flux
+        if self.smooth:
+#            logging.debug('starting smoothing')
+            mod_flux = falt2(self.model['wsyn'],mod_flux,resolution) 
+#            logging.debug('finished smoothing')
+#        else:
+#            logging.debug('no smoothing')
+        if self.interp:
+            logging.debug('starting interp {} {} {}'.format(len(self.wave),
+                len(self.model['wsyn']),len(mod_flux)))
+            mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
+            logging.debug('finished interp')
 
+        return mod_flux*self.model_flux_units
+
+    def snap_full_run(self,cropchain):
+        """
+        """
+        new_cropchain = np.copy(cropchain)
+        round_is_valid = False
+        for i in range(self.ndim):
+            check = np.unique(np.diff(np.unique(self.model[self.params[i]])))
+            if len(check)!=1:
+                round_is_valid=False
+                logging.info("can't round {}".format(self.params[i]))
+                break
+            else:
+                round_is_valid=True
+                logging.info("{} ok to round".format(self.params[i]))
+                continue
+
+        logging.info("Starting to snap chains")
+        if round_is_valid:
+            def my_round(x,base):
+                return np.round(base * np.round(x / base),2)
+
+            for i in range(self.ndim):
+                base_i = np.unique(np.diff(np.unique(self.model[self.params[i]]
+                    )))[0]
+                new_cropchain[:,i] = my_round(cropchain[:,i],base_i)
+            logging.info("Finished rounding chains")
+        else:
+            for j,p in enumerate(cropchain):
+                #logging.debug('starting params %s',str(p))
+
+                # p_loc is the location in the model grid that fits all the 
+                # constraints up to that point. There aren't constraints yet,
+                # so it matches the full array.
+                p_loc = range(len(self.model['fsyn']))
+
+                for i in range(self.ndim):
+                    # find the location in the ith parameter array corresponding
+                    # to the ith parameter
+                    this_p_loc = self.find_nearest(self.model[self.params[i]],
+                         p[i])
+            
+                    # then match that with the locations that already exist
+                    p_loc = np.intersect1d(p_loc,this_p_loc)
+
+                for i in range(self.ndim):
+                    new_cropchain[j,i] = self.model[self.params[i]][p_loc]
+                #logging.debug("snapped params {}".format(new_cropchain[j]))
+            logging.info("Finished snapping chains")
+
+        return new_cropchain
 
 
     def calc_normalization(self,n_values,
