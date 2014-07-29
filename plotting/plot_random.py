@@ -31,7 +31,7 @@ def plot_random(cropchain,model,ax=None,rand_color='r',plot_s=True):
 
     """
 
-    random_samp = cropchain[np.random.randint(len(cropchain),size=200)]
+    random_samp = cropchain[np.random.randint(len(cropchain),size=100)]
 
     logging.debug('random sample '+str(random_samp))
 
