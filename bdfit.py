@@ -151,7 +151,11 @@ class BDSampler(object):
 
 #        self.all_params.append('r2/d2')
 #        self.all_params.append('N')
-        for i in range(len(wavelength_bins)-1):
+        if len(wavelength_bins)>1:
+            norm_number = len(wavelength_bins)-1
+        else:
+            norm_number = 1
+        for i in range(norm_number):
             self.all_params.append("N{}".format(i))
         self.all_params.append('ln(s)')
         logging.info('All params: {}'.format(str(self.all_params)))
@@ -163,7 +167,7 @@ class BDSampler(object):
 #        self.start_p = np.append(self.start_p,start_ck)
 
         # add normalization parameter
-        self.start_p = np.append(self.start_p,np.ones(len(wavelength_bins)-1))
+        self.start_p = np.append(self.start_p,np.ones(norm_number))
 
         # add (log of) tolerance parameter
         start_lns = np.log(2.0*np.average(self.model.unc))
