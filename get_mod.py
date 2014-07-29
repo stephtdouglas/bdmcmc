@@ -77,7 +77,7 @@ class AtmoModel(object):
             self.model['fsyn'] = self.model.pop(flux_key)
 
         logging.debug(str(type(self.model['fsyn'][0])))
-        logging.debug(str(self.model['fsyn'][0]))
+        #logging.debug(str(self.model['fsyn'][0]))
 
         if params_to_ignore!=None:
             for drop in params_to_ignore:

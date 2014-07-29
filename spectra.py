@@ -61,7 +61,7 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
     logging.debug(full_query)
 
     q_result = db.dict.execute(full_query).fetchall()
-    logging.debug(q_result)
+    #logging.debug(q_result)
     #print '0',q_result[0]
 
     try:
