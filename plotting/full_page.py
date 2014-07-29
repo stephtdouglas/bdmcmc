@@ -46,7 +46,7 @@ def page_plot(chains,model,plot_title,extents=None):
 
     """
 
-    logging.debug(str(np.shape(chains)))
+    logging.info('chains: '+str(np.shape(chains)))
     K = np.shape(chains)[-1]
 
     burn_in = 0
@@ -73,14 +73,20 @@ def page_plot(chains,model,plot_title,extents=None):
 
 
     # plot the corner plot
-    logging.debug(len(model.params))
+    logging.info(len(model.params))
     if len(model.params)!=K: # need to make a better check on this
-        labels = list(np.append(model.params,'ln(s)'))
+        nlen = K - len(model.params) - 1
+        labels1 = np.copy(model.params)
+        logging.info("nlen {}".format(nlen))
+        for i in range(nlen):
+            labels1 = np.append(labels1,'N{}'.format(i))
+        labels = list(np.append(labels1,'ln(s)'))
     else:
         labels=model.params
     logging.info(labels)
     fig,axes_array = triangle.corner(cropchain,spec_grid=corner_grid,
-        labels=labels, quantiles=[0.16,0.5,0.84],extents=extents)
+        labels=labels, quantiles=[0.16,0.5,0.84],extents=extents,
+        plot_datapoints=False)
 
 
     # overplot the random samples

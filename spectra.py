@@ -72,19 +72,20 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
 
     wave_unit = q_result['wavelength_units']
     flux_unit = q_result['flux_units']
-    flux_unit = flux_unit.replace('ergs','erg s').replace('Wm','W m')
+    flux_unit = flux_unit.replace('ergs','erg s').replace('Wm','W m').replace(
+        "A","AA")
     flux_unit = u.Unit(flux_unit.replace('normalized',''))
     wave_unit = u.Unit(wave_unit)
     logging.info('%s %s', wave_unit.to_string('fits'), 
         flux_unit.to_string('fits'))
 
     q_result_out = {'wavelength':q_result['wavelength']*wave_unit,
-         'flux':q_result['flux']*flux_unit}
+         'flux':np.float64(q_result['flux'])*flux_unit}
     if q_result['unc']==None:
-         q_result_out['unc'] = np.ones(len(q_result['flux']))*flux_unit
+         q_result_out['unc'] = np.ones(len(q_result['flux']),'float64')*flux_unit
          logging.info('no unc array found for %s', full_query)
     else:
-         q_result_out['unc'] = q_result['unc']*flux_unit
+         q_result_out['unc'] = np.float64(q_result['unc'])*flux_unit
 
     if return_header:
         q_result_out['header'] = q_result['header']

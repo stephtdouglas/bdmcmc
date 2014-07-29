@@ -31,7 +31,7 @@ def plot_random(cropchain,model,ax=None,rand_color='r',plot_s=True):
 
     """
 
-    random_samp = cropchain[np.random.randint(len(cropchain),size=200)]
+    random_samp = cropchain[np.random.randint(len(cropchain),size=100)]
 
     logging.debug('random sample '+str(random_samp))
 
@@ -41,9 +41,11 @@ def plot_random(cropchain,model,ax=None,rand_color='r',plot_s=True):
 
     for p in random_samp:
         logging.debug('random params '+str(p))
-        new_flux = model.interp_models(p[:-1])
+        new_flux = model.interp_models(p[:model.ndim])
+        new_norm = model.calc_normalization(p[model.ndim:-1],
+            model.wavelength_bins)
         #logging.debug('new flux '+str(new_flux))
-        ax.step(model.wave,new_flux,color=rand_color,alpha=0.05)
+        ax.step(model.wave,new_flux*new_norm,color=rand_color,alpha=0.05)
         if plot_s:
             new_lns = p[-1]
             new_s = np.exp(new_lns)*model.unc.unit
