@@ -1,7 +1,7 @@
 
 
 ################################################################################
-import logging
+import logging, os
 from datetime import date
 
 import bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.smooth
@@ -13,9 +13,10 @@ import cPickle
 
 logging.basicConfig(level=logging.INFO)
 
-#modelpath = '/vega/astro/users/sd2706/modelSpectra/'
-modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
-am = bdmcmc.get_mod.AtmoModel(modelpath+'marley_ldwarfs.pkl')#,wave_unit=u.um)
+modelpath = '/vega/astro/users/sd2706/modelSpectra/'
+#modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
+am = bdmcmc.get_mod.AtmoModel(modelpath+'marley_ldwarfs.pkl',
+    flux_unit=(u.erg / u.cm**2 / u.s / u.Hz))#,wave_unit=u.um)
 
 for t in range(1200,2500,100):
     for g in [100,300,1000,3000]:
@@ -29,8 +30,10 @@ for t in range(1200,2500,100):
                     am.model['logg'] = np.append(am.model['logg'],g)
                     am.model['teff'] = np.append(am.model['teff'],t)
                     am.model['fsed'] = np.append(am.model['fsed'],f)
-                    am.model['fsyn'] = np.append(am.model['fsyn'],new_model['col2'])
-                    am.model['wsyn'] = np.append(am.model['wsyn'],new_model['col1'])
+                    am.model['fsyn'] = np.append(am.model['fsyn'],
+                         new_model['col2']*(u.erg / u.cm**2 / u.s / u.Hz))
+                    am.model['wsyn'] = np.append(am.model['wsyn'],
+                         new_model['col1']*am.model['wsyn'].unit)
 
 
 
@@ -68,6 +71,6 @@ for i in range(len(new_grid['logg'])):
         equivalencie=u.spectral_density(new_grid['wsyn']))
 
 
-outfile = open(modelpath+'SXD_Marley.pkl','wb')
+outfile = open(modelpath+'SXD_Marley_r1200.pkl','wb')
 cPickle.dump(new_grid,outfile)
 outfile.close()
