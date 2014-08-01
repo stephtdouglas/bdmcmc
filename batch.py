@@ -58,7 +58,7 @@ class OneBatch(object): #THAT needs a better name
             self.date))
 
         if band_names==None:
-            self.num_runs = 4
+            self.num_runs = 6
         else:
             self.num_runs = len(band_names)
         self.all_params = list(np.append(self.am.params,'N1'))
@@ -124,9 +124,13 @@ class OneBatch(object): #THAT needs a better name
         Jband = np.where((wav>=0.9*u.um) & (wav<1.4*u.um))[0]
         Hband = np.where((wav>=1.4*u.um) & (wav<1.9*u.um))[0]
         Kband = np.where((wav>=1.9*u.um) & (wav<2.5*u.um))[0]
+        order61 = np.where((wav>=1.240*u.um) & (wav<1.260*u.um))[0]
+        order65 = np.where((wav>=1.165*u.um) & (wav<1.181*u.um))[0]
 
-        bands = {'J':Jband,'H':Hband,'K':Kband,'full':full}
-        norm_bins = {'J':[],'H':[],'K':[],'full':[0.9,1.4,1.9,2.5]*u.um}
+        bands = {'J':Jband,'H':Hband,'K':Kband,'full':full,'order61':order61,
+            'order65':order65}
+        norm_bins = {'J':[],'H':[],'K':[],'full':[0.9,1.4,1.9,2.5]*u.um,
+            'order61':[],'order65':[]}
         if band_names==None:
             band_names = bands.keys()
         else:
