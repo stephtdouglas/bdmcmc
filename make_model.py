@@ -56,7 +56,8 @@ class ModelGrid(object):
 
     """
 
-    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None):
+    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None,
+        wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
         """
         NOTE: at this point I have not accounted for model parameters
         that are NOT being used for the fit - this means there will be 
@@ -90,6 +91,7 @@ class ModelGrid(object):
 
         self.model = model_dict
         self.mod_keys = model_dict.keys()
+        self.wavelength_bins = wavelength_bins
 
         # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
@@ -167,15 +169,19 @@ class ModelGrid(object):
         # the last, always, corresponds to the tolerance
         # the second to last corresponds to the normalization variance
         p = np.asarray(args)[0]
+        model_p = p[:self.ndim]
         lns = p[-1]
-        normalization = p[-2]
+        norm_values = p[self.ndim:-1]
+        logging.debug('params {} normalization {} ln(s) {}'.format(
+            model_p,norm_values,lns))
 #        r2d2 = p[-3]
         model_p = p[:-2]
-#        logging.debug('params {} normalization {} ln(s) {}'.format(str(model_p),
-#            normalization,lns))
 
 #        if (normalization<0.) or (normalization>2.0):
 #            return -np.inf
+
+        normalization = self.calc_normalization(norm_values,#[])
+            self.wavelength_bins)
 
         if (lns>1.0):
             return -np.inf
@@ -214,8 +220,8 @@ class ModelGrid(object):
 #        logging.debug("units f {} mf {}".format(self.flux.unit,
 #            mod_flux.unit))
         flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
+        width_term = np.log(2*np.pi*unc_sq.value)
 #        logging.debug("flux+pts {}".format(flux_pts))
-        width_term = np.log(np.sqrt(2*np.pi*unc_sq.value))
         logging.debug("width_term {} flux pts {} units fp {}".format(
             np.sum(width_term),np.sum(flux_pts),flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
@@ -426,3 +432,44 @@ class ModelGrid(object):
         else:
             return model_flux
 
+
+    def calc_normalization(self,n_values,
+        wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
+        """
+        calculates normalization as a function of wavelength
+
+        Parameters
+        ----------
+        n_values: array or list
+            normalization values for the regions given by wavelength_bins
+    
+        wavelength_bins: array or list
+            the wavelength bins corresponding to n_values
+            length should be one longer then n_values
+            the normalization for wavelengths below and above the minimum
+            and maximum bin edges will be set to the same as the nearest bin
+
+
+        Returns
+        -------
+        normalization: array
+            normalization values as a function of wavelength
+            corresponding to self.wave
+
+        """
+
+        normalization = np.zeros(len(self.wave))
+
+        if len(wavelength_bins)==0:
+            normalization[:] = n_values
+        else:
+            for i in range(len(n_values)):
+                norm_loc = np.where((self.wave>wavelength_bins[i]) &
+                    (self.wave<=wavelength_bins[i+1]))[0]
+                normalization[norm_loc] = n_values[i]
+            norm_loc = np.where(self.wave<=wavelength_bins[0])[0]
+            normalization[norm_loc] = n_values[i]
+            norm_loc = np.where(self.wave>wavelength_bins[-1])[0]
+            normalization[norm_loc] = n_values[i]
+
+        return normalization
