@@ -33,18 +33,24 @@ def page_plot(chains,model,plot_title,extents=None):
 
     Parameters
     ----------
-    chains : 
+    chains : array_like (nwalkers, nsteps, ndim)
+         output from emcee run
 
     model : ModelGrid instance
 
+    plot_title : string
+
+    extents : iterable (ndim,) (optional)
+        A list of length 2 tuples containing lower and upper bounds
+        for each dimension, e.g., [(0.,10.), (1.,5.),etc]
+
     """
 
-    K=3 # ndim of model, obviously a placeholder
+    logging.debug(str(np.shape(chains)))
+    K = np.shape(chains)[-1]
 
     burn_in = 0
-    logging.debug(str(np.shape(chains)))
-    cropchain = chains[:,burn_in:,:].reshape(
-            (-1,K))
+    cropchain = chains[:,burn_in:,:].reshape((-1,K))
 #    cropchain = chains.reshape((-1,K))
 
     # set up figure and axes

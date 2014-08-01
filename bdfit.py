@@ -56,6 +56,37 @@ class BDSampler(object):
 
     plot_title (string,default='None')
 
+    Creates
+    -------
+    date (string)
+    name (string)
+    plot_title (string)
+    model (bdmcmc.make_model.ModelGrid instance)
+    model_ndim (integer) : number of parameters in model
+    start_p (array_like) : starting parameters
+    all_params (list) : all parameters (model params + ln(s))
+    ndim (int) : total number of parameters
+
+    mcmc_go(nwalk_mult=20, nstep_mult=50, outfile=None):
+        chain (array_like)
+        cropchain (array_like)
+
+    plot_triangle():
+        corner_fig (pyplot figure)
+    plot_chains():
+        chain_fig (pyplot figure)
+
+    get_error_and_unc():
+        all_quantiles (array_like) : 
+        means (array_like) : 
+        lower_lims (array_like) : 
+        upper_lims (array_like) : 
+        error_and_unc (array_like) : 
+
+    Automatic Outputs
+    -----------------
+    pickled output file (filename is plot_title + '_chains.pkl')
+
     """
 
     def __init__(self,obj_name,spectrum,model,params,smooth=False,
@@ -85,12 +116,6 @@ class BDSampler(object):
         plot_title (string,default='None')
 
 
-        Creates
-        -------
-            date (string)
-            name (string)
-            model (dict)
-            ndim (int)
         """
 
         # date string to version output files for a particular run
