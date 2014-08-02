@@ -276,9 +276,9 @@ def smooth_grid(model_dict, data_wave, variable=True, delta_pixels=2,
             open_outfile = open(incremental_outfile,'wb')
             cPickle.dump(model_new,open_outfile)
             open_outfile.close()
-    logging.debug("model complete; funit {} wunit {}".format(model_new['fsyn'].unit,model_new['wsyn'].unit))
-    model_new['fsyn'] = model_new['fsyn'].value*model_dict['fsyn'][i].unit
+#    logging.debug("model complete; funit {} wunit {}".format(model_new['fsyn'].unit,model_new['wsyn'].unit))
+    model_new['fsyn'] = model_new['fsyn']*model_dict['fsyn'][i].unit
     model_new['wsyn'] = data_wave
-    logging.debug("model updated; funit {} wunit {}".format(model_new['fsyn'].unit,model_new['wsyn'].unit))
+    #logging.debug("model updated; funit {} wunit {}".format(model_new['fsyn'].unit,model_new['wsyn'].unit))
     # return model_new
     return model_new
