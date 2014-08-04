@@ -24,7 +24,7 @@ def fetch_sxd():
 
     # only keep object names and observation_dates for those with resolution 
     # over 1000 (Prism has R~200-400, XD has R~2000)
-    spex_sxd = [[i['shortname'],i['obs_date']] for i in all_spex if 
+    spex_sxd = [[i['shortname'],i['obs_date'],i['source_id']] for i in all_spex if 
         (np.average(i['wavelength'][:-1] / np.diff(i['wavelength'])))>1000]
 
     return spex_sxd
@@ -34,7 +34,7 @@ def make_sxd_batch(model_name="marley",model_file="SXD_marley.pkl"):
     spex_sxd = fetch_sxd()
 
     h = open('submit_all_{}.sh'.format(model_name),'w')
-    for name,date in spex_sxd:
+    for name,date,sid in spex_sxd:
         h.write('qsub run_{}_{}.sh\n'.format(model_name,name))
 
         f = open('run_{}_{}.py'.format(model_name,name),'w')
@@ -72,7 +72,7 @@ def plot_all_sxd():
     pp = PdfPages('All_SXD.pdf')
     plt.figure()
     ax = plt.subplot(111)
-    for name,date in spex_sxd:
+    for name,date,sid in spex_sxd:
          if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
              bd = bdmcmc.spectra.BrownDwarf(name)
              bd.get_low(obs_date=date)
@@ -90,7 +90,7 @@ def plot_sxd_res():
 
     fig1 = plt.figure()
     ax1 = plt.subplot(111)
-    for name,date in spex_sxd:
+    for name,date,sid in spex_sxd:
          if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
              bd = bdmcmc.spectra.BrownDwarf(name)
              bd.get_low(obs_date=date)
@@ -109,7 +109,7 @@ def calc_sxd_res():
     all_w = np.array([])
     all_R = np.array([])
 
-    for name,date in spex_sxd:
+    for name,date,sid in spex_sxd:
          if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
              bd = bdmcmc.spectra.BrownDwarf(name)
              bd.get_low(obs_date=date)
@@ -133,7 +133,69 @@ def calc_sxd_res():
          # horrendously oversampled wavelength grid, so that the code
          # can just interpolate
 
-plot_sxd_res()
+def get_source_info():
+    spex_sxd = fetch_sxd()
+    # Info I want:
+    # sources: ra, dec, publication_id, shortname, components
+    # parallaxes: parallax, parallax_unc, publication_id
+    # spectral_types: spectral_type, gravity, publication_id, regime, adopted
+    # spectra: publication_id
+    # (tie all above to publications: id, shortname, eventually bibtex)
+
+    outfile = "/home/stephanie/ldwarfs/SXD_info.dat"
+    f = open(outfile,"w")
+    f.write("shortname\tcomponents\t")
+    f.write("spec_pub\t")
+    f.write("SpT\tGrav\tRegime\n")
+    for name,date,sid in spex_sxd:
+        result = db.dict.execute("SELECT s.ra, s.dec, "#s.publication_id, "
+            "s.shortname, s.components FROM sources AS s WHERE s.id={}".format(
+            sid)).fetchall()
+        #print len(result)
+        f.write("{}\t{}\t".format(result[0]["shortname"],
+            result[0]["components"]))
+
+        result = db.dict.execute("SELECT p.shortname "
+            " FROM spectra AS s JOIN publications AS p ON "
+            " s.publication_id=p.id WHERE s.source_id={}".format(
+            sid)).fetchall()
+        if len(result)>0:
+            f.write("{}\t".format(result[0]["shortname"]))
+        else:
+            f.write("unknown\t")
+
+        result = db.dict.execute("SELECT p.shortname, "
+            " s.spectral_type, s.gravity, s.regime "
+            " FROM spectral_types AS s JOIN publications AS p ON "
+            " s.publication_id=p.id WHERE s.source_id={}".format(
+            sid)).fetchall()
+        optical_found=False
+        for i,res_line in enumerate(result):
+            if res_line["regime"]=="OPT":
+                f.write("{}\t{}\t{}\t".format(res_line["spectral_type"],
+                     res_line["gravity"],res_line["regime"]))
+                #print "{}\t{}\t{}\t".format(res_line["spectral_type"],
+                #     res_line["gravity"],res_line["regime"])
+                optical_found=True
+                break
+        #print "spt {} optical {}".format(len(result),optical_found)
+        if (optical_found==False) and (len(result)>0):
+            res_line = result[0]
+            f.write("{}\t{}\t{}\n".format(res_line["spectral_type"],
+                 res_line["gravity"],res_line["regime"]))
+        else:
+            f.write("n/a\tn/a\tn/a\n")
+    f.close()
+
+#        result = db.dict.execute("SELECT "
+#            " FROM  WHERE .source_id={}".format(
+#            sid))
+#        f.write("{}\t{}\t".format())
+
+
+get_source_info()
+
+#plot_sxd_res()
 
 #plot_all_sxd()
 
