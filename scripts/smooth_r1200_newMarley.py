@@ -56,8 +56,7 @@ new_grid['logg'][new_grid['logg']==3000] = 5.5
 
 new_grid['wsyn'] = spectrum['wavelength']
 
-"""
-another_fsyn = np.array([],'float64')
+another_fsyn = []
 for i in range(len(new_grid['logg'])):
     logging.debug(i)
     logging.debug(type(new_grid['fsyn'][i]))
@@ -66,16 +65,12 @@ for i in range(len(new_grid['logg'])):
     logging.debug("converted! {}".format(converted_fsyn.unit))
     another_fsyn = np.append(another_fsyn,converted_fsyn).reshape((i+1,-1))
     logging.debug(another_fsyn[0])
-new_grid['fsyn'] = another_fsyn*spectrum['flux'].unit
-#new_grid['fsyn'] = new_grid['fsyn'].to(spectrum['flux'].unit,
-#    equivalencies=u.spectral_density(spectrum['wavelength']))
+new_grid['fsyn'] = np.array(another_fsyn)*spectrum['flux'].unit
 
-new_grid['fsyn'] = new_grid['fsyn']*spectrum['flux'].unit
 
-#logging.info("final w {} f {}".format(new_grid['wsyn'].unit,new_grid['fsyn'].unit))
+logging.info("final w {} f {}".format(new_grid['wsyn'].unit,new_grid['fsyn'].unit))
 # need to stop dealing with units on Yeti; run, save, fix issues on Aya
-"""
 
-outfile = open(modelpath+'SXD_Marley_r1200.pkl','wb')
+outfile = open(modelpath+'SXD2_Marley_r1200.pkl','wb')
 cPickle.dump(new_grid,outfile)
 outfile.close()
