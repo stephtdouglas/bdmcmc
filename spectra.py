@@ -70,11 +70,24 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
         return {'wavelength':[],'flux':[],'unc':[]}
         logging.info('spectrum not found for %s', full_query)
 
+    qheader = q_result['header']
+    header_flux_unit = qheader["YUNITS"]
+    # edit flux units string so that astropy.units will parse it correctly
+    header_flux_unit = header_flux_unit.replace("ergss","erg s").replace(
+        'ergs','erg s').replace('Wm','W m').replace("A","AA")
+
+
     wave_unit = q_result['wavelength_units']
     flux_unit = q_result['flux_units']
-    flux_unit = flux_unit.replace('ergs','erg s').replace('Wm','W m').replace(
+    # edit flux units string so that astropy.units will parse it correctly
+    flux_unit = flux_unit.replace("ergss","erg s").replace(
+        'ergs','erg s').replace('Wm','W m').replace(
         "A","AA")
-    flux_unit = u.Unit(flux_unit.replace('normalized',''))
+
+    logging.info("header says {} and db says {}, using header unit".format(
+        header_flux_unit,flux_unit))
+
+    flux_unit = u.Unit(header_flux_unit.replace('normalized',''))
     wave_unit = u.Unit(wave_unit)
     logging.info('%s %s', wave_unit.to_string('fits'), 
         flux_unit.to_string('fits'))
@@ -88,8 +101,7 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
          q_result_out['unc'] = np.float64(q_result['unc'])*flux_unit
 
     if return_header:
-        q_result_out['header'] = q_result['header']
-
+        q_result_out['header'] = qheader
     logging.debug(str(q_result_out.keys()))
     return q_result_out
 

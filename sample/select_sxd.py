@@ -193,7 +193,7 @@ def get_source_info():
 #        f.write("{}\t{}\t".format())
 
 
-get_source_info()
+#get_source_info()
 
 #plot_sxd_res()
 
