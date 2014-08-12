@@ -42,6 +42,24 @@ logging.info("cropchain shape {}".format(np.shape(cropchain)))
 new_cropchain = mg2.snap_full_run(cropchain)
 logging.info("new cropchain shape {}".format(np.shape(new_cropchain)))
 
+######################################################
+logging.info("testing snap with SXD")
+bd = bdmcmc.spectra.BrownDwarf('0355+1133')
+bd.get_low(obs_date='2007-11-13')
+
+am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SXD_marley.pkl')
+
+plot_title="Test {}".format(bd.shortname)
+bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,
+    am.params,smooth=False,plot_title=plot_title)
+
+logging.info("set up BDSampler")
+bdsamp.mcmc_go(nwalk_mult=2,nstep_mult=10)
+
+
+
+
+
 
 """
 new_cropchain = np.copy(cropchain)

@@ -90,7 +90,7 @@ class BDSampler(object):
     """
 
     def __init__(self,obj_name,spectrum,model,params,smooth=False,
-        plot_title='None',wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
+        plot_title='None',snap=False,wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
         """
         Parameters 
         ----------
@@ -122,6 +122,7 @@ class BDSampler(object):
         self.date = datetime.date.isoformat(datetime.date.today()) 
         # Eventually - Add a timestamp?
 
+        self.snap = snap
         self.name = obj_name
         logging.info('%s',self.name)
 
@@ -131,7 +132,7 @@ class BDSampler(object):
             self.plot_title = plot_title
 
         self.model = ModelGrid(spectrum,model,params,smooth=smooth,
-             wavelength_bins=wavelength_bins)
+             snap=snap,wavelength_bins=wavelength_bins)
         #print spectrum.keys()
         logging.info('Set model')
 
@@ -235,18 +236,25 @@ class BDSampler(object):
         ## store chains for plotting/analysis
         self.chain = sampler.chain
 
+
+        ## cut out the burn-in samples (first 10%, for now)
+        burn_in = np.floor(nsteps*0.1)
+        self.cropchain = sampler.chain[:,burn_in:,:].reshape(
+            (-1,self.ndim))
+
+        if self.snap:
+            chain_shape = np.shape(self.chain)
+            self.cropchain = self.model.snap_full_run(self.cropchain)
+            logging.debug("Snapped cropchains")
+            self.chain = self.cropchain.reshape(chain_shape)
+            logging.debug("Snapped chains")
+
         ## Save the chains to a pkl file for any diagnostics
         if outfile==None:
             outfile='{}_chains.pkl'.format(self.plot_title)
         open_outfile = open(outfile,'wb')
         cPickle.dump(self.chain,open_outfile)
         open_outfile.close()
-
-
-        ## cut out the burn-in samples (first 10%, for now)
-        burn_in = np.floor(nsteps*0.1)
-        self.cropchain = sampler.chain[:,burn_in:,:].reshape(
-            (-1,self.ndim))
 
 
     def plot_triangle(self):
