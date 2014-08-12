@@ -30,7 +30,7 @@ logging.info("testing WITH snap")
 mg2 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params,snap=True)
 print mg2(test_p)
 
-infile = open(mbase_path+"batch_ldwarfs/Marley_2014-06-23/2057-0252 Marley full 2014-06-23_chains.pkl","rb")
+infile = open(mbase_path+"testing/2057-0252_Marley_full_2014-06-23_chains.pkl","rb")
 chains = cPickle.load(infile)
 infile.close()
 
