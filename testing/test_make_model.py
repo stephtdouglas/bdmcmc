@@ -28,6 +28,13 @@ logging.debug("testing without snap")
 mg1 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params)
 print mg1(test_p)
 
+# Test find_nearest2
+num_models = len(mg1.plims[mg1.params[0]]["vals"])
+param_arrays = [[mg1.plims[mg1.params[i]]["vals"][j] for i in range(mg1.ndim)]
+                for j in range(num_models)]
+mg1.find_nearest2(param_arrays,test_model_p)
+mg1.check_grid_coverage()
+
 logging.debug("testing WITH snap")
 mg2 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params,snap=True)
 print mg2(test_p)

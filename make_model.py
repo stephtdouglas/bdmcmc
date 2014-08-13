@@ -105,8 +105,6 @@ class ModelGrid(object):
 
         """
 
-        self.snap = snap
-
         self.model = model_dict
         self.mod_keys = model_dict.keys()
         self.wavelength_bins = wavelength_bins
@@ -159,6 +157,15 @@ class ModelGrid(object):
         else:
             self.interp = True
             logging.info('INTERPOLATION NEEDED')
+
+        self.is_grid_complete = self.check_grid_coverage()
+        if self.is_grid_complete==False:
+            self.snap = True
+            logging.info("Grid is incomplete; no interpolation on the model grid")
+        else:
+            logging.info("Grid is complete")
+            self.snap = snap
+        self.snap = snap
 
         self.model_flux_units = self.model['fsyn'][0].unit
 
@@ -423,10 +430,48 @@ class ModelGrid(object):
 
         return mod_flux*self.model_flux_units
 
+    def check_grid_coverage(self):
+        """ checks if every parameter permutation has a corresponding model """
+
+        unique_params = [np.unique(self.plims[self.params[i]]["vals"]) for 
+                         i in range(self.ndim)]
+
+        # calculate the number of possible permutations 
+        ncomb = 1 
+        for i in range(self.ndim):
+            ncomb = ncomb * len(unique_params[i])
+
+        unique_combinations = np.zeros(ncomb*self.ndim).reshape((ncomb,self.ndim))
+
+        for i in range(self.ndim):
+            div_by = 2**(self.ndim - i - 1)
+            loc = ((np.arange(ncomb)/div_by) % len(unique_params[i]))
+            for j in range(len(unique_params[i])):
+                loc_j = np.where(loc==j)[0]
+                unique_combinations[loc_j,i] = unique_params[i][j]
+
+        is_grid_full = True
+        for i, up in enumerate(unique_combinations):
+            p_loc = np.arange(len(unique_combinations))
+            for j in range(self.ndim):
+                p_loc = np.intersect1d(p_loc,np.where(
+                     self.plims[self.params[i]]["vals"]==up[j])[0])
+            if len(p_loc)==0:
+                logging.info("UNEVEN GRID")
+                is_grid_full = False
+                break
+            else:
+                continue
+
+        return is_grid_full
+
+
     def find_nearest(self,arr,val):
         """
         Finds the *locations* (indices) in an array (arr) 
         that are closest to a given value (val)
+
+        This only works when the entire grid is filled and evenly spaced
         """
 
         close_val = arr[np.abs(arr-val).argmin()]
@@ -434,6 +479,33 @@ class ModelGrid(object):
         indices = np.where(np.abs(arr-close_val)<=1e-5)[0]
         return indices
 
+    def find_nearest2(self,param_arrays,p_values):
+        """
+        finds the set of model parameters in param_arrays that is
+        closest to the values give in p_values
+
+        Parameters
+        ----------
+        param_arrays: array-like (n_models, ndim)
+
+        p_values: array-like (ndim)
+
+        """
+
+        min_distance = 1e10
+        matched_i = -99
+        for i, mod_params in enumerate(param_arrays):
+             mod_difference = abs(np.array(mod_params) - np.array(p_values))
+             check_distance = np.average(mod_difference)
+             if check_distance==min_distance:
+                 logging.debug("MULTIPLE MODELS FOUND {}".format(p_values))
+             elif check_distance<min_distance:
+                 min_distance = check_distance
+                 matched_i = i
+             else:
+                 continue
+
+        return matched_i
 
     def retrieve_model(self,*args):
         """
