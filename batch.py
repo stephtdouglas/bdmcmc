@@ -84,13 +84,13 @@ class OneBatch(object): #THAT needs a better name
         """
 
         bdsamp = bdmcmc.bdfit.BDSampler(self.bd.name,spectrum,
-            self.am.model,self.am.params,smooth=False,
+            self.am.model,self.am.params,smooth=False,snap=True,
             plot_title=plot_title,wavelength_bins=wavelength_bins)
 #        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
-        bdsamp.mcmc_go(nwalk_mult=150,nstep_mult=150)
+#        bdsamp.mcmc_go(nwalk_mult=150,nstep_mult=150)
 #        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
 #        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
-#        bdsamp.mcmc_go(nwalk_mult=4,nstep_mult=4)
+        bdsamp.mcmc_go(nwalk_mult=4,nstep_mult=4)
         fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
 
         self.pdf_file.savefig()

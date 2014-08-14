@@ -4,13 +4,14 @@ import numpy as np
 import astropy.units as u
 import cPickle
 
-import bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model
+import bdmcmc.spectra, bdmcmc.get_mod, bdmcmc.make_model, bdmcmc.bdfit
 
 reload(bdmcmc.spectra)
 reload(bdmcmc.make_model)
+reload(bdmcmc.bdfit)
 
 lformat = "%(asctime)s %(message)s"
-logging.basicConfig(level=logging.INFO,format=lformat)
+logging.basicConfig(level=logging.DEBUG,format=lformat)
 
 mbase_path = '/vega/astro/users/sd2706/'
 if os.path.exists(mbase_path)==False:

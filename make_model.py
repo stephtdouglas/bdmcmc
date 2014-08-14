@@ -139,11 +139,11 @@ class ModelGrid(object):
         self.smooth = smooth
 
         # convert data wavelength here; rather than at every interpolation
-#        logging.debug("data units w {} f {} u {}".format(
-#            spectrum['wavelength'].unit, spectrum['flux'].unit,
-#            spectrum['unc'].unit))
-#        logging.debug("model units w {} f {}".format(self.model['wsyn'].unit,
-#            self.model['fsyn'].unit))
+        logging.debug("data units w {} f {} u {}".format(
+            spectrum['wavelength'].unit, spectrum['flux'].unit,
+            spectrum['unc'].unit))
+        logging.debug("model units w {} f {}".format(self.model['wsyn'].unit,
+            self.model['fsyn'].unit))
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
         self.flux = np.float64(spectrum['flux'].to(self.model['fsyn'].unit,
              equivalencies=u.spectral_density(self.wave)))
@@ -239,13 +239,13 @@ class ModelGrid(object):
         unc_sq = (self.unc**2 + s**2)  * normalization**2 
 #        unc_sq = (self.unc**2) * normalization**2
 #        logging.debug("unc_sq {}".format(unc_sq))
-#        logging.debug("units f {} mf {}".format(self.flux.unit,
-#            mod_flux.unit))
+        logging.debug("units f {} mf {}".format(self.flux.unit,
+            mod_flux.unit))
         flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
         width_term = np.log(2*np.pi*unc_sq.value)
 #        logging.debug("flux+pts {}".format(flux_pts))
-        logging.debug("width_term {} flux pts {} units fp {}".format(
-            np.sum(width_term),np.sum(flux_pts),flux_pts.unit))
+#        logging.debug("width_term {} flux pts {} units fp {}".format(
+#            np.sum(width_term),np.sum(flux_pts),flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
         lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
@@ -408,12 +408,13 @@ class ModelGrid(object):
                 logging.debug('make_model WTF')
         mod_flux = old_spectra[()][0]
 #        logging.debug('all done! %d %d', len(mod_flux), len(self.flux))
+#        logging.debug('all done! {} {}'.format(type(mod_flux), type(self.flux)))
 
         # THIS IS WHERE THE CODE TAKES A LONG TIME
         if self.smooth:
 #            logging.debug('starting smoothing')
             mod_flux = falt2(self.model['wsyn'],mod_flux,resolution) 
-#            logging.debug('finished smoothing')
+#            logging.debug('finished smoothing {}'.format(type(mod_flux)))
 #        else:
 #            logging.debug('no smoothing')
         if self.interp:
@@ -421,7 +422,8 @@ class ModelGrid(object):
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
-        return mod_flux*self.model_flux_units
+#        logging.debug('returning {} {}'.format(type(mod_flux),mod_flux.unit))
+        return mod_flux#*self.model_flux_units
 
     def find_nearest(self,arr,val):
         """
@@ -430,6 +432,7 @@ class ModelGrid(object):
         """
 
         close_val = arr[np.abs(arr-val).argmin()]
+        logging.debug("{} nearest {}".format(val,close_val))
 
         indices = np.where(np.abs(arr-close_val)<=1e-5)[0]
         return indices
@@ -478,6 +481,7 @@ class ModelGrid(object):
         else:
             logging.info("MODEL NOT FOUND/DUPLICATE MODELS FOUND!!")
             logging.info("params {} location(s) {}".format(p, p_loc))
+            return mod_flux
 
         if self.smooth:
 #            logging.debug('starting smoothing')
@@ -521,16 +525,17 @@ class ModelGrid(object):
             logging.info("Finished rounding chains")
         else:
             for j,p in enumerate(cropchain):
-                #logging.debug('starting params %s',str(p))
+                logging.debug('starting params %s',str(p))
 
                 # p_loc is the location in the model grid that fits all the 
                 # constraints up to that point. There aren't constraints yet,
                 # so it matches the full array.
-                p_loc = range(len(self.model['fsyn']))
+                p_loc = range(len(self.model['teff']))
 
                 for i in range(self.ndim):
                     # find the location in the ith parameter array corresponding
-                    # to the ith parameter
+                    # to the ith parameter in p 
+                    # (which is the jth set of parameters in cropchain)
                     this_p_loc = self.find_nearest(self.model[self.params[i]],
                          p[i])
             
@@ -538,6 +543,7 @@ class ModelGrid(object):
                     p_loc = np.intersect1d(p_loc,this_p_loc)
 
                 for i in range(self.ndim):
+                    logging.debug("i {} p[i] {}".format(i,self.model[self.params[i]][p_loc]))
                     new_cropchain[j,i] = self.model[self.params[i]][p_loc]
                 #logging.debug("snapped params {}".format(new_cropchain[j]))
             logging.info("Finished snapping chains")
