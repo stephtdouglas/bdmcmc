@@ -89,9 +89,16 @@ class OneBatch(object): #THAT needs a better name
 #        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
 #        bdsamp.mcmc_go(nwalk_mult=150,nstep_mult=150)
 #        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
-#        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
-        bdsamp.mcmc_go(nwalk_mult=4,nstep_mult=4)
-        fp.page_plot(bdsamp.chain,bdsamp.model,plot_title)
+        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
+#        bdsamp.mcmc_go(nwalk_mult=4,nstep_mult=4)
+        extents_this_run = [[min(bdsamp.cropchain[:,i])*0.9,
+            max(bdsamp.cropchain[:,i])*1.1] for i in range(bdsamp.ndim)]
+        # deal with the ln(s) extents separately because they're negative
+        extents_this_run[-1] = [min(bdsamp.cropchain[:,i]),
+            max(bdsamp.cropchain[:,i])]
+        logging.debug("extents {}".format(extents_this_run))
+        fp.page_plot(bdsamp.chain,bdsamp.model,plot_title,
+            extents=extents_this_run)
 
         self.pdf_file.savefig()
         indiv_results = bdsamp.get_error_and_unc()
