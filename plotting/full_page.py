@@ -84,6 +84,7 @@ def page_plot(chains,model,plot_title,extents=None):
     else:
         labels=model.params
     logging.info(labels)
+    logging.info(extents)
     fig,axes_array = triangle.corner(cropchain,spec_grid=corner_grid,
         labels=labels, quantiles=[0.16,0.5,0.84],extents=extents,
         plot_datapoints=False)
