@@ -17,18 +17,20 @@ if os.path.exists(mbase_path)==False:
 bd = bdmcmc.spectra.BrownDwarf('U20012')
 bd.get_low()
 
-am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SpeX_marley_nolowg.pkl')
+am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SpeX_marley.pkl')
 
 test_model_p = [4.794,2.34,2139.]
 test_norm_p = [1e-16,2e-16,1.4e-16]
 test_s = 5e-16
 test_p = np.append(np.append(test_model_p,test_norm_p),test_s)
 
-logging.debug("testing without snap")
-mg1 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params)
-print mg1(test_p)
+#logging.debug("testing without snap")
+#mg1 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am.model,am.params)
+#print mg1(test_p)
 
 am2 = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SpeX_marley_nolowg.pkl')
+am2.model['fsyn'] = am2.model['fsyn']*(u.erg / (u.AA * u.cm**2 * u.s))
+logging.debug("testing types fsyn {} {}".format(type(am2.model["fsyn"]),am2.model["fsyn"].unit))
 mg3 = bdmcmc.make_model.ModelGrid(bd.specs['low'],am2.model,am2.params)
 
 # Test find_nearest2

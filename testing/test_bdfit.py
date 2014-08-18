@@ -9,7 +9,7 @@ import bdmcmc.bdfit
 #reload(bdmcmc.spectra)
 #reload(bdmcmc.make_model)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 mbase_path = '/vega/astro/users/sd2706/'
 if os.path.exists(mbase_path)==False:
@@ -22,7 +22,7 @@ am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SXD_marley.pkl')
 
 plot_title="Test {}".format(bd.shortname)
 bdsamp = bdmcmc.bdfit.BDSampler(bd.name,bd.specs['low'],am.model,
-    am.params,smooth=False,plot_title=plot_title)
+    am.params,smooth=False,plot_title=plot_title,snap=True)
 
 logging.info("set up BDSampler")
 bdsamp.mcmc_go(nwalk_mult=2,nstep_mult=10)
