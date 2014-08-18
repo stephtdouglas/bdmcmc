@@ -13,13 +13,12 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import emcee
-import triangle
-# https://github.com/dfm/triangle.py/blob/master/triangle.py
 from emcee_plot import emcee_plot 
 # https://github.com/adrn/streams/blob/master/streams/plot/emcee.py
 # Want to update ^ so it shows the burn_in cut
 
 # config loads database and makes it available within the module as db
+from bdmcmc.plotting import triangle
 from config import * 
 from make_model import *
 from calc_chisq import *
@@ -55,6 +54,8 @@ class BDSampler(object):
         onto the data wavelength grid 
 
     plot_title (string,default='None')
+        title for any plots created; also used as part of filenames for 
+        output files
 
     Creates
     -------
@@ -113,31 +114,40 @@ class BDSampler(object):
             whether or not to smooth the model spectra before interpolation 
             onto the data wavelength grid 
 
-        plot_title (string,default='None')
+        plot_title (string, default='None')
+            title for any plots created; also used as part of filenames for 
+            output files. If none is provided, object name and date are used
 
 
         """
 
-        # date string to version output files for a particular run
+        ## date string to version output files for a particular run
         self.date = datetime.date.isoformat(datetime.date.today()) 
         # Eventually - Add a timestamp?
 
         self.name = obj_name
         logging.info('%s',self.name)
 
+        ## If no plot_title is provided, create one
         if plot_title=='None':
             self.plot_title = '{} {}'.format(self.name,self.date)
         else:
             self.plot_title = plot_title
 
+        ## Set up the ModelGrid instance (this contains the data and 
+        ## model dictionary. It is passed to emcee, and is used to 
+        ## calculate the probabilities during the MCMC run)
         self.model = ModelGrid(spectrum,model,params,smooth=smooth)
         #print spectrum.keys()
         logging.info('Set model')
 
+        ## Calculate the number of parameters for the atmospheric model
         self.model_ndim = len(params)
         logging.info('{} params {}'.format(self.model_ndim,
             str(params)))
 
+        ## Calculate starting parameters for the emcee walkers 
+        ## by minimizing chi-squared just using the grid of synthetic spectra
         self.start_p = test_all(spectrum['wavelength'],spectrum['flux'],
             spectrum['unc'], model, params,smooth=smooth)
         for i in range(self.model_ndim):
@@ -146,7 +156,12 @@ class BDSampler(object):
             elif (self.start_p[i]<=self.model.plims[params[i]]['min']):
                 self.start_p[i] = self.start_p[i]*1.05
 
+        ## Add additional parameters beyond the atmospheric model parameters
         self.all_params = list(np.copy(params))
+
+        ## First up, the tolerance parameter
+        ## Initialize it using the average difference between the data
+        ## and the minimum-chi-squared model
         self.all_params.append('ln(s)')
         logging.info('All params: {}'.format(str(self.all_params)))
         logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
@@ -157,6 +172,8 @@ class BDSampler(object):
         self.start_p = np.append(self.start_p,start_lns)
         logging.info('Set starting params %s', str(self.start_p))
 
+        ## The total number of dimensions for the fit is the number of
+        ## parameters for the model plus any additional parameters added above
         self.ndim = len(self.all_params)
 
 
@@ -172,6 +189,9 @@ class BDSampler(object):
         nstep_mult: integer (default=50)
             multiplied by ndim to get the number of steps
 
+        outfile: string (default=None)
+            filename for any output files; if none is provided, use plot_title
+
         Creates
         -------
         self.chain (output of all chains)
@@ -181,28 +201,30 @@ class BDSampler(object):
 
         nwalkers, nsteps = self.ndim*nwalk_mult, self.ndim*nstep_mult
         logging.info('%d walkers, %d steps', nwalkers, nsteps)
+
+        ## Initialize the walkers in a gaussian ball around start_p
+        ## start_p was set in __init, with the minimum chi-squared model
+        ## plus any additional parameters
         p0 = np.zeros((nwalkers,self.ndim))
         logging.debug('p0 shape %s',str(np.shape(p0)))
         for i in range(nwalkers):
              p0[i] = self.start_p + (1e-2*np.random.randn(self.ndim)*
                   self.start_p)
              logging.debug('p0[%s] shape %s',i,str(p0[i]))
-#        p0 = p0.T
 
-#        p0 = np.zeros((nwalkers,self.ndim))
-#        for i in range(self.ndim):
-#            p0[:,i] = np.random.uniform(
-#                 self.model.plims[self.model.params[i]]['min'],
-#                 self.model.plims[self.model.params[i]]['max'],
-#                 size=nwalkers)
-
-        #print p0.shape, nsteps/10
+        ## Set up the sampler
         sampler = emcee.EnsembleSampler(nwalkers,self.ndim,self.model)
         logging.info('sampler set')
+
+        ## Burn in the walkers
         pos, prob, state = sampler.run_mcmc(p0,nsteps/10)
         logging.debug('pos %s', str(pos))
         logging.debug('prob %s', str(prob))
         logging.debug('state %s', str(state))
+
+        ## Reset the walkers, so the burn-in steps aren't included in analysis
+        ## Now the walkers start at the position from the end of the burn-in
+        ## Then run the actual MCMC run
         sampler.reset()
         logging.info('sampler reset')
         pos,prob,state = sampler.run_mcmc(pos,nsteps)
@@ -213,6 +235,7 @@ class BDSampler(object):
             sampler.acor)))
 
         ## store chains for plotting/analysis
+        ## Chains contains the positions for each parameter, for each walker
         self.chain = sampler.chain
 
         ## Save the chains to a pkl file for any diagnostics
@@ -222,11 +245,9 @@ class BDSampler(object):
         cPickle.dump(self.chain,open_outfile)
         open_outfile.close()
 
-
-        ## cut out the burn-in samples (first 10%, for now)
-        burn_in = np.floor(nsteps*0.1)
-        self.cropchain = sampler.chain[:,burn_in:,:].reshape(
-            (-1,self.ndim))
+        ## Reshape the chains (don't need to crop out burn-in b/c that's done)
+        ## This makes one array with all the samples for each parameter
+        self.cropchain = sampler.chain.reshape((-1,self.ndim))
 
 
     def plot_triangle(self):
@@ -249,21 +270,31 @@ class BDSampler(object):
 
 
     def quantile(self,x,quantiles):
-        # From DFM's triangle code
+        """
+        Calculate the quantiles given by quantiles for the array x
+
+        From DFM's triangle code
+        """
         xsorted = sorted(x)
         qvalues = [xsorted[int(q * len(xsorted))] for q in quantiles]
         return zip(quantiles,qvalues)
 
 
     def get_quantiles(self):
+        """ calculates (16th, 50th, 84th) quantiles for all parameters """
         self.all_quantiles = np.ones((self.ndim,3))*-99.
         for i in range(self.ndim):
             quant_array = self.quantile(self.cropchain[:,i],[.16,.5,.84])
             self.all_quantiles[i] = [quant_array[j][1] for j in range(3)]
 
     def get_error_and_unc(self):
+        """ Calculates 1-sigma uncertainties for all parameters """
+
         self.get_quantiles()
 
+        ## The 50th quantile is the mean, the upper and lower "1-sigma" 
+        ## uncertainties are calculated from the 16th- and 84th- quantiles
+        ## in imitation of Gaussian uncertainties
         self.means = self.all_quantiles[:,1]
         self.lower_lims = self.all_quantiles[:,2]-self.all_quantiles[:,1]
         self.upper_lims = self.all_quantiles[:,1]-self.all_quantiles[:,0]
