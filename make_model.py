@@ -21,6 +21,9 @@ class ModelGrid(object):
     that are NOT being used for the fit - this means there will be 
     duplicate spectra and the interpolation will fail/be incorrect!
 
+    So, for now, params needs to include ALL of the keys in model_dict
+    (aside from "wsyn" and "fsyn")
+
     Parameters
     ----------
     spectrum: dictionary of astropy.units Quantities
@@ -62,6 +65,9 @@ class ModelGrid(object):
         that are NOT being used for the fit - this means there will be 
         duplicate spectra and the interpolation will fail/be incorrect!
 
+        So, for now, params needs to include ALL of the keys in model_dict
+        (aside from "wsyn" and "fsyn")
+
         Parameters
         ----------
         spectrum: dictionary of astropy.units Quantities
@@ -91,7 +97,7 @@ class ModelGrid(object):
         self.model = model_dict
         self.mod_keys = model_dict.keys()
 
-        # check that the input model dictionary is formatted correctly
+        ## check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
             logging.info("ERROR! model wavelength array must be keyed with 'wsyn'!")
         if ('fsyn' in self.mod_keys)==False:
@@ -104,10 +110,15 @@ class ModelGrid(object):
             logging.info("ERROR! model arrays and spectrum arrays must all"
                 + " be of type astropy.units.quantity.Quantity")
 
+        ## Note that the ndim here is just for the MODEL, not everything being fit
         self.params = params
         self.ndim = len(self.params)
-        self.plims = {}
 
+        ## Check that all of the parameters listed in params are actually 
+        ## included in the model.
+        ## Then construct the plims arrays - max and min values on the grid,
+        ## along with making sure the parameter values are in numpy arrays
+        self.plims = {}
         for p in self.params:
             if (p in self.mod_keys)==False:
                 logging.info('ERROR! parameter %s not found!',p)
@@ -116,19 +127,24 @@ class ModelGrid(object):
                 self.plims[p]['min'] = min(self.plims[p]['vals'])
                 self.plims[p]['max'] = max(self.plims[p]['vals'])
 
+        ## smooth==True -> the model has already been matched to the data resolution
         self.smooth = smooth
 
-        # convert data wavelength here; rather than at every interpolation
+        ## convert data units to model units (here vs. at every interpolation)
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
         self.flux = spectrum['flux'].to(self.model['fsyn'].unit,
              equivalencies=u.spectral_density(self.wave))
         self.unc = spectrum['unc'].to(self.model['fsyn'].unit,
              equivalencies=u.spectral_density(self.wave))
 
+        ## Is the first element of the wavelength arrays the same?
         check_diff = self.model['wsyn'][0]-self.wave[0]
 
+        ## If the model and wavelength arrays are the same length
+        ## and have the same first element, then don't need to interpolate 
+        ## the model onto the data wavelength array
         if ((len(self.model['wsyn'])==len(self.wave)) and 
-            (abs(check_diff.value)<1e-3)):
+            (abs(check_diff.value)<1e-10)):
             self.interp = False
             logging.info('NO INTERPOLATION')
         else:
@@ -140,6 +156,10 @@ class ModelGrid(object):
 
     def __call__(self,*args):
         """
+        Calculates the probability for the model corresponding to *args
+        and returns it (this is what emcee uses when it calls the 
+        ModelGrid instance as the lnprob function in bdfit)
+
         NOTE: at this point I have not accounted for model parameters
         that are NOT being used for the fit - this means there will be 
         duplicate spectra and the interpolation will fail/be incorrect!
@@ -156,34 +176,36 @@ class ModelGrid(object):
         """
         logging.debug(str(args))
 
-        # The first arguments correspond to the parameters of the model
-        # the next two, if present, correspond to vsini and rv 
-        # ^ vsini/rv are NOT IMPLEMENTED YET
-        # the last, always, corresponds to the tolerance
+        ## The first arguments correspond to the parameters of the model
+        ## the next two, if present, correspond to vsini and rv 
+        ## ^ vsini/rv are NOT IMPLEMENTED YET
+        ## the last, always, corresponds to the tolerance
         p = np.asarray(args)[0]
         lns = p[-1]
         model_p = p[:-1]
         logging.debug('params {} ln(s) {}'.format(str(model_p),lns))
 
+        ## Check if any of the parameters are outside the limits of the model
         for i in range(self.ndim):
-            if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
-                (model_p[i]<=self.plims[self.params[i]]['min'])):
+            if ((model_p[i]>self.plims[self.params[i]]['max']) or 
+                (model_p[i]<self.plims[self.params[i]]['min'])):
                 logging.debug("bad param %s: %f, min: %f, max: %f", 
                     self.params[i],model_p[i],self.plims[self.params[i]]['min'],
                     self.plims[self.params[i]]['max'])
                 return -np.inf
 
+        ## Actually get the model corresponding to the input parameters
         mod_flux = self.interp_models(model_p)
 
-        # if the model isn't found, interp_models returns an array of -99s
+        ## if the model isn't found, interp_models returns an array of -99s
         logging.debug("type {} units {} elem1 {}".format(type(mod_flux),
             mod_flux.unit,mod_flux[0]))
         if sum(mod_flux.value)<0: 
             return -np.inf
 
-        # On the advice of Dan Foreman-Mackey, I'm changing the calculation
-        # of lnprob.  The additional uncertainty/tolerance needs to be 
-        # included in the definition of the gaussian used for chi^squared
+        ## On the advice of Dan Foreman-Mackey, I'm changing the calculation
+        ## of lnprob.  The additional uncertainty/tolerance needs to be 
+        ## included in the definition of the gaussian used for chi^squared
         s = np.exp(lns)*self.unc.unit
         unc_sq = self.unc**2 + s**2
         flux_pts = (self.flux-mod_flux)**2/unc_sq
