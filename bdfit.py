@@ -243,9 +243,11 @@ class BDSampler(object):
             (-1,self.ndim))
 
         if self.snap:
-            chain_shape = np.shape(self.chain)
+            chain_shape = np.shape(self.chain[:,burn_in:,:])
+            logging.debug("starting to snap {}".format(chain_shape))
             self.cropchain = self.model.snap_full_run(self.cropchain)
-            logging.debug("Snapped cropchains")
+            logging.debug("Snapped cropchains {} to {}".format(
+                chain_shape,np.shape(self.cropchain)))
             self.chain = self.cropchain.reshape(chain_shape)
             logging.debug("Snapped chains")
 
