@@ -200,7 +200,6 @@ class ModelGrid(object):
         logging.debug('params {} normalization {} ln(s) {}'.format(
             model_p,norm_values,lns))
 #        r2d2 = p[-3]
-        model_p = p[:-2]
 
 #        if (normalization<0.) or (normalization>2.0):
 #            return -np.inf
@@ -241,8 +240,8 @@ class ModelGrid(object):
         # And on the advice of Mike Cushing (who got it from David Hogg)
         # I'm changing it again, so that the normalization is accounted for
         s = np.float64(np.exp(lns))*self.unc.unit
-#        logging.debug("type unc {} s {} n {}".format(self.unc.value.dtype,
-#            type(s.value),type(normalization)))
+        logging.debug("type unc {} s {} n {}".format(self.unc.value.dtype,
+            type(s.value),type(normalization)))
         unc_sq = (self.unc**2 + s**2)  * normalization**2 
 #        unc_sq = (self.unc**2) * normalization**2
 #        logging.debug("unc_sq {}".format(unc_sq))
@@ -428,9 +427,11 @@ class ModelGrid(object):
 #            logging.debug('starting interp')
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
+        if type(mod_flux)!=u.quantity.Quantity:
+            mod_flux = mod_flux*self.model_flux_units
 
-#        logging.debug('returning {} {}'.format(type(mod_flux),mod_flux.unit))
-        return mod_flux#*self.model_flux_units
+#        logging.debug('returning {}'.format(type(mod_flux)))
+        return mod_flux
 
     def check_grid_coverage(self):
         """ checks if every parameter permutation has a corresponding model """
@@ -498,15 +499,16 @@ class ModelGrid(object):
         min_distance = 1e10
         matched_i = -99
         for i, mod_params in enumerate(param_arrays):
-             mod_difference = abs(np.array(mod_params) - np.array(p_values))
-             check_distance = np.average(mod_difference)
-             if check_distance==min_distance:
-                 logging.debug("MULTIPLE MODELS FOUND {}".format(p_values))
-             elif check_distance<min_distance:
-                 min_distance = check_distance
-                 matched_i = i
-             else:
-                 continue
+#            logging.debug("mod_p {} p_val {}".format(mod_params,p_values))
+            mod_difference = abs(np.array(mod_params) - np.array(p_values))
+            check_distance = np.average(mod_difference)
+            if check_distance==min_distance:
+                logging.debug("MULTIPLE MODELS FOUND {}".format(p_values))
+            elif check_distance<min_distance:
+                min_distance = check_distance
+                matched_i = i
+            else:
+                continue
 
         return matched_i
 
@@ -529,20 +531,26 @@ class ModelGrid(object):
         """
 
         p = np.asarray(args)[0]
-        logging.debug('starting params %s',str(p))
+#        logging.debug('starting params %s',str(p))
 
         # p_loc is the location in the model grid that fits all the 
         # constraints up to that point. There aren't constraints yet,
         # so it matches the full array.
         p_loc = range(len(self.model['fsyn']))
 
-        for i in range(self.ndim):
-            # find the location in the ith parameter array corresponding
-            # to the ith parameter
-            this_p_loc = self.find_nearest(self.model[self.params[i]],p[i])
+        if self.is_grid_complete:
+            for i in range(self.ndim):
+                # find the location in the ith parameter array corresponding
+                # to the ith parameter
+                this_p_loc = self.find_nearest(self.model[self.params[i]],p[i])
 
-            # then match that with the locations that already exist
-            p_loc = np.intersect1d(p_loc,this_p_loc)
+                # then match that with the locations that already exist
+                p_loc = np.intersect1d(p_loc,this_p_loc)
+        else:
+            num_models = len(self.plims[self.params[0]]["vals"])
+            param_arrays = [[self.plims[self.params[i]]["vals"][j]
+                for i in range(self.ndim)] for j in range(num_models)]
+            p_loc = [self.find_nearest2(param_arrays,p)]
 
         logging.debug(str(p_loc))
         mod_flux = np.ones(len(self.wave))*-99.0*self.flux.unit
@@ -567,7 +575,11 @@ class ModelGrid(object):
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
             logging.debug('finished interp')
 
-        return mod_flux*self.model_flux_units
+        if type(mod_flux)!=u.quantity.Quantity:
+            mod_flux = mod_flux*self.model_flux_units
+
+#        logging.debug('returning {}'.format(type(mod_flux)))
+        return mod_flux
 
     def snap_full_run(self,cropchain):
         """
@@ -586,7 +598,7 @@ class ModelGrid(object):
                 continue
 
         logging.info("Starting to snap chains")
-        if round_is_valid:
+        if round_is_valid and self.is_grid_complete:
             def my_round(x,base):
                 return np.round(base * np.round(x / base),2)
 
@@ -596,28 +608,18 @@ class ModelGrid(object):
                 new_cropchain[:,i] = my_round(cropchain[:,i],base_i)
             logging.info("Finished rounding chains")
         else:
-            for j,p in enumerate(cropchain):
-                logging.debug('starting params %s',str(p))
-
-                # p_loc is the location in the model grid that fits all the 
-                # constraints up to that point. There aren't constraints yet,
-                # so it matches the full array.
-                p_loc = range(len(self.model['teff']))
-
-                for i in range(self.ndim):
-                    # find the location in the ith parameter array corresponding
-                    # to the ith parameter in p 
-                    # (which is the jth set of parameters in cropchain)
-                    this_p_loc = self.find_nearest(self.model[self.params[i]],
-                         p[i])
-            
-                    # then match that with the locations that already exist
-                    p_loc = np.intersect1d(p_loc,this_p_loc)
+            num_models = len(self.plims[self.params[0]]["vals"])
+            param_arrays = [[self.plims[self.params[i]]["vals"][j]
+                for i in range(self.ndim)] for j in range(num_models)]
+            for j,p_all in enumerate(cropchain):
+                p = p_all[:self.ndim]
+#                logging.debug('starting params %s',str(p))
+                p_loc = self.find_nearest2(param_arrays,p)
 
                 for i in range(self.ndim):
-                    logging.debug("i {} p[i] {}".format(i,self.model[self.params[i]][p_loc]))
+#                    logging.debug("i {} p[i] {}".format(i,self.model[self.params[i]][p_loc]))
                     new_cropchain[j,i] = self.model[self.params[i]][p_loc]
-                #logging.debug("snapped params {}".format(new_cropchain[j]))
+#                logging.debug("snapped params {}".format(new_cropchain[j]))
             logging.info("Finished snapping chains")
 
         return new_cropchain
