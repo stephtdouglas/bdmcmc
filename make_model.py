@@ -427,11 +427,41 @@ class ModelGrid(object):
 #            logging.debug('starting interp')
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
+
+        mod_flux = self.normalize_model(mod_flux)
+
         if type(mod_flux)!=u.quantity.Quantity:
             mod_flux = mod_flux*self.model_flux_units
 
 #        logging.debug('returning {}'.format(type(mod_flux)))
         return mod_flux
+
+    def normalize_model(self,model_flux,return_ck=False):
+        # Need to normalize (taking below directly from old makemodel code)
+        #This defines a scaling factor; it expresses the ratio 
+        #of the observed flux to the model flux in a way that  
+        #takes into account the entire spectrum.  
+        #The model spectra are at some arbitrary luminosity;
+        #the scaling factor places this model spectrum at the same
+        #apparent luminosity as the observed spectrum.     
+        mult1 = self.flux*model_flux
+	bad = np.isnan(mult1)
+	mult = np.sum(mult1[~bad])
+        #print 'mult',mult                                 
+        sq1 = model_flux**2
+        square = np.sum(sq1[~bad])
+        #print 'sq',square                                 
+        ck = mult/square
+        #print 'ck',ck                                     
+        #Applying scaling factor to rescale model flux array
+        model_flux = model_flux*ck
+#        logging.debug('finished renormalization') 
+
+        if return_ck:
+            return model_flux, ck
+        else:
+            return model_flux
+
 
     def check_grid_coverage(self):
         """ checks if every parameter permutation has a corresponding model """
@@ -574,6 +604,8 @@ class ModelGrid(object):
                 len(self.model['wsyn']),len(mod_flux)))
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
             logging.debug('finished interp')
+
+        mod_flux = self.normalize_model(mod_flux)
 
         if type(mod_flux)!=u.quantity.Quantity:
             mod_flux = mod_flux*self.model_flux_units
