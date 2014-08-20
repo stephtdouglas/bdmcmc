@@ -17,7 +17,7 @@ flux_unit=(u.erg / u.cm**2 / u.s / u.um)
 
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
-am = bdmcmc.get_mod.AtmoModel(modelpath+'urrows_06_cloud.pkl',
+am = bdmcmc.get_mod.AtmoModel(modelpath+'burrows_06_cloud.pkl',
     flux_unit=(u.erg / u.cm**2 / u.s / u.um))#,wave_unit=u.um)
 
 
