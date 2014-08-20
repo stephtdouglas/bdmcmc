@@ -95,7 +95,9 @@ class AtmoModel(object):
         if type(self.model['wsyn'])!=u.quantity.Quantity:
             self.model['wsyn'] = self.model['wsyn']*wave_unit
 
-        if type(self.model['fsyn'][0])!=u.quantity.Quantity:
+        if ((type(self.model['fsyn'][0])!=u.quantity.Quantity)
+            or ((type(self.model['fsyn'][0])==u.quantity.Quantity)
+            and (self.model['fsyn'][0].unit==u.dimensionless_unscaled))):
             self.model['fsyn'] = self.model['fsyn']*flux_unit
 
         temp_mod = dict(self.model)
