@@ -17,7 +17,7 @@ flux_unit=(u.erg / u.cm**2 / u.s / u.um)
 
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
-am = bdmcmc.get_mod.AtmoModel(modelpath+'burrows_06_cloud.pkl',
+am = bdmcmc.get_mod.AtmoModel(modelpath+'burrows_06_cloud_expanded.pkl',
     flux_unit=(u.erg / u.cm**2 / u.s / u.um))#,wave_unit=u.um)
 
 
@@ -57,6 +57,6 @@ new_grid['fsyn'] = np.array(another_fsyn)*spectrum['flux'].unit
 logging.info("final w {} f {}".format(new_grid['wsyn'].unit,new_grid['fsyn'].unit))
 # need to stop dealing with units on Yeti; run, save, fix issues on Aya
 
-outfile = open(modelpath+'B06_cloud_r1200.pkl','wb')
+outfile = open(modelpath+'B06_cloud_exp_r1200.pkl','wb')
 cPickle.dump(new_grid,outfile)
 outfile.close()
