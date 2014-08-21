@@ -260,13 +260,19 @@ def smooth_grid(model_dict, data_wave, variable=True, delta_pixels=2,
 
     # for each grid point, call variable_smooth to get the smoothed model
     for i in range(mlen):
-        if variable:
-            new_flux = variable_smooth(model_dict['wsyn'][i],
-                model_dict['fsyn'][i],data_wave,delta_pixels=delta_pixels,
-                res_scale=res_scale)
+        ## Check whether all models have their own wavelength arrays,
+        ## or whether they share the same wavelength array
+        if len(np.shape(model_dict["wsyn"][0]))>0:
+            this_wave = model_dict["wsyn"][i]
         else:
-            new_flux = smooth_model(model_dict['wsyn'][i],
-                model_dict['fsyn'][i],data_wave,res)
+            this_wave = model_dict["wsyn"]
+
+        if variable:
+            new_flux = variable_smooth(this_wave,model_dict['fsyn'][i],
+                data_wave,delta_pixels=delta_pixels,res_scale=res_scale)
+        else:
+            new_flux = smooth_model(this_wave,model_dict['fsyn'][i],
+                data_wave,res)
         logging.debug('{} {}'.format(len(new_flux),len(data_wave)))
         logging.debug('{} {}'.format(i,str(model_new.keys())))
         logging.debug("{} {}".format(type(model_dict['fsyn'][i]),type(new_flux)))

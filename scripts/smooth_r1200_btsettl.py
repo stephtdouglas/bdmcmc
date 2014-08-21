@@ -18,7 +18,7 @@ flux_unit=(u.erg / u.cm**2 / u.s / u.cm)
 
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
-am = bdmcmc.get_mod.AtmoModel(modelpath+'burrows_06_cloud_expanded.pkl',
+am = bdmcmc.get_mod.AtmoModel(modelpath+'btsettl.pkl',
     flux_unit=(u.erg / u.cm**2 / u.s / u.cm))#,wave_unit=u.um)
 
 
@@ -39,7 +39,7 @@ R = 1200.0 #lambda/delta-lambda
 res = 1.5*u.um/R
 
 new_grid = bdmcmc.smooth.smooth_grid(am.model,spectrum['wavelength'],
-    variable=False,res=res,incremental_outfile='marley_n3_backup.pkl')
+    variable=False,res=res,incremental_outfile='btsettl_n3_backup.pkl')
 
 new_grid['wsyn'] = spectrum['wavelength']
 

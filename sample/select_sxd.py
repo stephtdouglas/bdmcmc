@@ -201,4 +201,4 @@ def get_source_info():
 
 
 
-make_sxd_batch()
+make_sxd_batch(model_name="btsettl",model_file="btsettl_r1200.pkl")
