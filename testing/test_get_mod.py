@@ -14,5 +14,14 @@ mbase_path = '/vega/astro/users/sd2706/'
 if os.path.exists(mbase_path)==False:
     mbase_path = '/home/stephanie/ldwarfs/'
 
-am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/btsettl.pkl')
+am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/btsettl_r1200.pkl')
 
+print am.model["logg"]
+
+print am.model["teff"]
+
+print np.shape(am.model["fsyn"])
+
+print np.shape(am.model["wsyn"])
+
+print am.model["wsyn"]
