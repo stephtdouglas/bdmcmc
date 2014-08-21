@@ -110,17 +110,20 @@ cPickle.dump(models, output)
 output.close()
 
 
-to_add = np.where(solar_grid["teff"]>max(unedited_cloudy["teff"]))[0]
+# The solar metallicity grid is more complete, but doesn't go to quite 
+# as hot temperatures, so we need to add what models we can from
+# the 06 cloudy models
+to_add = np.where(unedited_cloudy["teff"]>max(solar_grid["teff"]))[0]
+models = solar_grid
 
 for i in to_add:
-    unedited_cloudy["teff"] = np.append(unedited_cloudy["teff"],
+    models["teff"] = np.append(unedited_cloudy["teff"],
         solar_grid["teff"][i])
-    unedited_cloudy["logg"] = np.append(unedited_cloudy["logg"],
+    models["logg"] = np.append(unedited_cloudy["logg"],
         solar_grid["logg"][i])
-    unedited_cloudy["fsyn"].append(solar_grid["fsyn"][i])
-    unedited_cloudy["wsyn"].append(solar_grid["wsyn"][i])
+    models["fsyn"].append(unedited_cloudy["fsyn"][i])
+    models["wsyn"].append(unedited_cloudy["wsyn"][i])
 
-models = unedited_cloudy
 
 for i in range(len(models['logg'])):
     logging.debug("{} {}".format(type(models['wsyn'][i]),models['wsyn'][i]))
