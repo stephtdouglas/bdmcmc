@@ -44,7 +44,7 @@ def make_sxd_batch(model_name="marley",model_file="SXD2_Marley_r1200.pkl"):
         f.write('logging.basicConfig(level=logging.INFO)\n\n')
         f.write("ob = OneBatch('{}',"
              "'/vega/astro/users/sd2706/modelSpectra/{}',"
-             "obs_date='{}')\n".format(name,model_file,date))
+             "{},obs_date='{}')\n".format(name,model_file,model_name,date))
         f.close()
 
         g = open('run_{}_{}.sh'.format(model_name,name),'w')
@@ -201,4 +201,5 @@ def get_source_info():
 
 
 
-make_sxd_batch()
+make_sxd_batch("BTSettl","btsettl_r1200.pkl")
+#make_sxd_batch("Burrows06","B06_cloud_exp_r1200.pkl")
