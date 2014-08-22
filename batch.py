@@ -19,12 +19,13 @@ class OneBatch(object): #THAT needs a better name
     """
     """
 
-    def __init__(self,bd_name,model_filename,
+    def __init__(self,bd_name,model_filename,model_name,
         mask_H=True,band_names=None,obs_date=None):
         """
         """
 
         self.date= date.isoformat(date.today())
+        self.model_name = model_name
 
         self.bd = bdmcmc.spectra.BrownDwarf(bd_name)
         if obs_date:
@@ -88,8 +89,8 @@ class OneBatch(object): #THAT needs a better name
             plot_title=plot_title,wavelength_bins=wavelength_bins)
 #        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
 #        bdsamp.mcmc_go(nwalk_mult=150,nstep_mult=150)
-#        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
-        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
+        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
+#        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
 #        bdsamp.mcmc_go(nwalk_mult=4,nstep_mult=4)
         extents_this_run = [[min(bdsamp.cropchain[:,i])*0.9,
             max(bdsamp.cropchain[:,i])*1.1] for i in range(bdsamp.ndim)]
@@ -146,8 +147,8 @@ class OneBatch(object): #THAT needs a better name
                 'flux':self.bd.specs['low']['flux'][bands[b]],
                 'unc':self.bd.specs['low']['unc'][bands[b]]}
 
-            band_plot_title = '{} Marley {} {}'.format(self.bd.shortname, b,
-                 self.date)
+            band_plot_title = '{}_{}_{}_{}'.format(self.bd.shortname, b,
+                 self.model_name,self.date)
             self.run_one(band_spectrum,band_plot_title,b,
                  wavelength_bins=norm_bins[b])
             self.run_titles.append(b)
