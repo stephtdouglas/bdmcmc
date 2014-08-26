@@ -10,6 +10,8 @@ import astropy.units as u
 import bdmcmc.spectra, bdmcmc.batch
 from bdmcmc.config import *
 
+logging.basicConfig(level=logging.DEBUG)
+
 def fetch_sxd():
     """
     Searches the database for all SpeX Cross-Dispersed spectra
@@ -31,10 +33,14 @@ def fetch_sxd():
 
 def make_sxd_batch(model_name="marley",model_file="SXD2_Marley_r1200.pkl"):
 
+    logging.debug("model {} file {}".format(model_name,model_file))
+
     spex_sxd = fetch_sxd()
+    logging.debug("Got Sample")
 
     h = open('submit_all_{}.sh'.format(model_name),'w')
     for name,date,sid in spex_sxd:
+        logging.debug("name {} obs on {} sid {}".format(name,date,sid))
         h.write('qsub run_{}_{}.sh\n'.format(model_name,name))
 
         f = open('run_{}_{}.py'.format(model_name,name),'w')
@@ -44,7 +50,7 @@ def make_sxd_batch(model_name="marley",model_file="SXD2_Marley_r1200.pkl"):
         f.write('logging.basicConfig(level=logging.INFO)\n\n')
         f.write("ob = OneBatch('{}',"
              "'/vega/astro/users/sd2706/modelSpectra/{}',"
-             "{},obs_date='{}')\n".format(name,model_file,model_name,date))
+             "'{}',obs_date='{}')\n".format(name,model_file,model_name,date))
         f.close()
 
         g = open('run_{}_{}.sh'.format(model_name,name),'w')
@@ -202,4 +208,4 @@ def get_source_info():
 
 
 make_sxd_batch("BTSettl","btsettl_r1200.pkl")
-#make_sxd_batch("Burrows06","B06_cloud_exp_r1200.pkl")
+#make_sxd_batch("B06_","B06_cloud_exp_r1200.pkl")
