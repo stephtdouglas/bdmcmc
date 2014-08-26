@@ -34,7 +34,7 @@ class OneBatch(object): #THAT needs a better name
             self.bd.get_low()
 
         self.am = bdmcmc.get_mod.AtmoModel(model_filename)
-        self.model_name = model_filename[:-4]
+        self.model_name = model_name
 
         if mask_H:
             self.mask = bdmcmc.mask_bands.BandMask(
