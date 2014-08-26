@@ -90,7 +90,7 @@ class BDSampler(object):
     """
 
     def __init__(self,obj_name,spectrum,model,params,smooth=False,
-        plot_title='None'):
+        plot_title='None',snap=False,wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
         """
         Parameters 
         ----------
@@ -122,6 +122,7 @@ class BDSampler(object):
         self.date = datetime.date.isoformat(datetime.date.today()) 
         # Eventually - Add a timestamp?
 
+        self.snap = snap
         self.name = obj_name
         logging.info('%s',self.name)
 
@@ -130,7 +131,8 @@ class BDSampler(object):
         else:
             self.plot_title = plot_title
 
-        self.model = ModelGrid(spectrum,model,params,smooth=smooth)
+        self.model = ModelGrid(spectrum,model,params,smooth=smooth,
+             snap=snap,wavelength_bins=wavelength_bins)
         #print spectrum.keys()
         logging.info('Set model')
 
@@ -147,14 +149,33 @@ class BDSampler(object):
                 self.start_p[i] = self.start_p[i]*1.05
 
         self.all_params = list(np.copy(params))
+
+#        self.all_params.append('r2/d2')
+#        self.all_params.append('N')
+        if len(wavelength_bins)>1:
+            norm_number = len(wavelength_bins)-1
+        else:
+            norm_number = 1
+        for i in range(norm_number):
+            self.all_params.append("N{}".format(i))
         self.all_params.append('ln(s)')
         logging.info('All params: {}'.format(str(self.all_params)))
         logging.debug('input {} now {}'.format(type(params),type(self.all_params)))
 
+#        # add r2/d2 parameter
+#        start_flux1 = self.model.interp_models(self.start_p)
+#        start_flux2, start_ck = self.model.normalize_model(start_flux1,True)
+#        self.start_p = np.append(self.start_p,start_ck)
+
+        # add normalization parameter
+        self.start_p = np.append(self.start_p,np.ones(norm_number))
+
+        # add (log of) tolerance parameter
         start_lns = np.log(2.0*np.average(self.model.unc))
         logging.info('starting ln(s)={} s={}'.format(start_lns,
             np.exp(start_lns)))
         self.start_p = np.append(self.start_p,start_lns)
+
         logging.info('Set starting params %s', str(self.start_p))
 
         self.ndim = len(self.all_params)
@@ -209,11 +230,26 @@ class BDSampler(object):
         logging.info('sampler completed')
         logging.info("avg accept {}".format(np.average(
             sampler.acceptance_fraction)))
-        logging.info("avg autocorrelation length {}".format(np.average(
-            sampler.acor)))
+        #logging.info("avg autocorrelation length {}".format(np.average(
+        #    sampler.acor)))
 
         ## store chains for plotting/analysis
         self.chain = sampler.chain
+
+
+        ## cut out the burn-in samples (first 10%, for now)
+        burn_in = np.floor(nsteps*0.1)
+        self.cropchain = sampler.chain[:,burn_in:,:].reshape(
+            (-1,self.ndim))
+
+        if self.snap:
+            chain_shape = np.shape(self.chain[:,burn_in:,:])
+            logging.debug("starting to snap {}".format(chain_shape))
+            self.cropchain = self.model.snap_full_run(self.cropchain)
+            logging.debug("Snapped cropchains {} to {}".format(
+                chain_shape,np.shape(self.cropchain)))
+            self.chain = self.cropchain.reshape(chain_shape)
+            logging.debug("Snapped chains")
 
         ## Save the chains to a pkl file for any diagnostics
         if outfile==None:
@@ -221,12 +257,6 @@ class BDSampler(object):
         open_outfile = open(outfile,'wb')
         cPickle.dump(self.chain,open_outfile)
         open_outfile.close()
-
-
-        ## cut out the burn-in samples (first 10%, for now)
-        burn_in = np.floor(nsteps*0.1)
-        self.cropchain = sampler.chain[:,burn_in:,:].reshape(
-            (-1,self.ndim))
 
 
     def plot_triangle(self):

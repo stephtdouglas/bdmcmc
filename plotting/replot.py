@@ -33,7 +33,7 @@ def replot(bd_name,chain_filename,plot_title,
         (default='/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl')
         filename containing the model grid
 
-    wavelength_range : iterable/tuple (2, optional)
+    wavelength_range : astropy.units Quantity - iterable/tuple (2, optional)
         if given, only the indicated range will be plotted
         For reference:
             Jband: 0.9-1.4 microns
@@ -82,10 +82,13 @@ def replot(bd_name,chain_filename,plot_title,
     chains = cPickle.load(cpfile)
     cpfile.close()
 
-    extents = [[mg.plims[i]['min'],mg.plims[i]['max']] for i in mg.params]
-    extents.append(
-        [min(chains[:,:,-1].flatten()),max(chains[:,:,-1].flatten())])
+    #extents = [[mg.plims[i]['min'],mg.plims[i]['max']] for i in mg.params]
+    #extents.append(
+    #    [min(chains[:,:,-2].flatten())*0.95,max(chains[:,:,-2].flatten())*1.05])
+    #extents.append(
+    #    [min(chains[:,:,-1].flatten())*0.95,max(chains[:,:,-1].flatten())*1.05])
+    #print extents
 
-    plot_ax,corner_array = fp.page_plot(chains,mg,plot_title,extents=extents)
+    plot_ax,corner_array = fp.page_plot(chains,mg,plot_title)#,extents=extents)
 
-    plot_realistic(bd.spt,mg,plot_ax,corner_array)
+    #plot_realistic(bd.spt,mg,plot_ax,corner_array)

@@ -41,6 +41,16 @@ class ModelGrid(object):
         (a check will be performed before interpolation to see if it's
         it's necessary)
 
+    resolution: astropy.units Quantity (optional)
+        Resolution of the input DATA, to be used in smoothing the model.
+        Only relevant if smooth=True
+
+    snap: boolean (default=False)
+        Rather than interpolate between points in the model grid,
+        return the model closest to the input parameters. (To make the
+        emcee output also stay on the grid, this needs to be set to 
+        True in bdfit as well)
+
     Creates
     -------
     wave (array; astropy.units quantity)
@@ -56,7 +66,8 @@ class ModelGrid(object):
 
     """
 
-    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None):
+    def __init__(self,spectrum,model_dict,params,smooth=False,resolution=None,
+        snap=False,wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
         """
         NOTE: at this point I have not accounted for model parameters
         that are NOT being used for the fit - this means there will be 
@@ -86,10 +97,17 @@ class ModelGrid(object):
             Resolution of the input DATA, to be used in smoothing the model.
             Only relevant if smooth=True
 
+        snap: boolean (default=False)
+            Rather than interpolate between points in the model grid,
+            return the model closest to the input parameters. (To make the
+            emcee output also stay on the grid, this needs to be set to 
+            True in bdfit as well)
+
         """
 
         self.model = model_dict
         self.mod_keys = model_dict.keys()
+        self.wavelength_bins = wavelength_bins
 
         # check that the input model dictionary is formatted correctly
         if ('wsyn' in self.mod_keys)==False:
@@ -119,11 +137,16 @@ class ModelGrid(object):
         self.smooth = smooth
 
         # convert data wavelength here; rather than at every interpolation
+        logging.debug("data units w {} f {} u {}".format(
+            spectrum['wavelength'].unit, spectrum['flux'].unit,
+            spectrum['unc'].unit))
+        logging.debug("model units w {} f {}".format(self.model['wsyn'].unit,
+            self.model['fsyn'].unit))
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = spectrum['flux'].to(self.model['fsyn'].unit,
-             equivalencies=u.spectral_density(self.wave))
-        self.unc = spectrum['unc'].to(self.model['fsyn'].unit,
-             equivalencies=u.spectral_density(self.wave))
+        self.flux = np.float64(spectrum['flux'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave)))
+        self.unc = np.float64(spectrum['unc'].to(self.model['fsyn'].unit,
+             equivalencies=u.spectral_density(self.wave)))
 
         check_diff = self.model['wsyn'][0]-self.wave[0]
 
@@ -135,7 +158,16 @@ class ModelGrid(object):
             self.interp = True
             logging.info('INTERPOLATION NEEDED')
 
+        self.is_grid_complete = self.check_grid_coverage()
+        if self.is_grid_complete==False:
+            self.snap = True
+            logging.info("Grid is incomplete; no interpolation on the model grid")
+        else:
+            logging.info("Grid is complete")
+            self.snap = snap
+        self.snap = snap
 
+        self.model_flux_units = self.model['fsyn'][0].unit
 
 
     def __call__(self,*args):
@@ -160,10 +192,23 @@ class ModelGrid(object):
         # the next two, if present, correspond to vsini and rv 
         # ^ vsini/rv are NOT IMPLEMENTED YET
         # the last, always, corresponds to the tolerance
+        # the second to last corresponds to the normalization variance
         p = np.asarray(args)[0]
+        model_p = p[:self.ndim]
         lns = p[-1]
-        model_p = p[:-1]
-        logging.debug('params {} ln(s) {}'.format(str(model_p),lns))
+        norm_values = p[self.ndim:-1]
+        logging.debug('params {} normalization {} ln(s) {}'.format(
+            model_p,norm_values,lns))
+#        r2d2 = p[-3]
+
+#        if (normalization<0.) or (normalization>2.0):
+#            return -np.inf
+
+        normalization = self.calc_normalization(norm_values,#[])
+            self.wavelength_bins)
+
+        if (lns>1.0):
+            return -np.inf
 
         for i in range(self.ndim):
             if ((model_p[i]>=self.plims[self.params[i]]['max']) or 
@@ -173,22 +218,40 @@ class ModelGrid(object):
                     self.plims[self.params[i]]['max'])
                 return -np.inf
 
-        mod_flux = self.interp_models(model_p)
+        if self.snap:
+            # new function that will just get the model from the grid
+            # placeholder for now
+            mod_flux = self.retrieve_model(model_p)
+        else:
+            mod_flux = self.interp_models(model_p)
 
         # if the model isn't found, interp_models returns an array of -99s
-        logging.debug("type {} units {} elem1 {}".format(type(mod_flux),
-            mod_flux.unit,mod_flux[0]))
+#        logging.debug(str(type(mod_flux)))
+#        logging.debug(str(mod_flux.dtype))
+#        logging.debug(mod_flux)
         if sum(mod_flux.value)<0: 
             return -np.inf
+
+#        mod_flux = mod_flux*normalization
 
         # On the advice of Dan Foreman-Mackey, I'm changing the calculation
         # of lnprob.  The additional uncertainty/tolerance needs to be 
         # included in the definition of the gaussian used for chi^squared
-        s = np.exp(lns)*self.unc.unit
-        unc_sq = self.unc**2 + s**2
-        flux_pts = (self.flux-mod_flux)**2/unc_sq
+        # And on the advice of Mike Cushing (who got it from David Hogg)
+        # I'm changing it again, so that the normalization is accounted for
+        s = np.float64(np.exp(lns))*self.unc.unit
+        logging.debug("type unc {} s {} n {}".format(self.unc.value.dtype,
+            type(s.value),type(normalization)))
+        unc_sq = (self.unc**2 + s**2)  * normalization**2 
+#        unc_sq = (self.unc**2) * normalization**2
+#        logging.debug("unc_sq {}".format(unc_sq))
+        logging.debug("units f {} mf {}".format(self.flux.unit,
+            mod_flux.unit))
+        flux_pts = (self.flux-mod_flux*normalization)**2/unc_sq
         width_term = np.log(2*np.pi*unc_sq.value)
-        logging.debug("units flux pts {}".format(flux_pts.unit))
+#        logging.debug("flux+pts {}".format(flux_pts))
+#        logging.debug("width_term {} flux pts {} units fp {}".format(
+#            np.sum(width_term),np.sum(flux_pts),flux_pts.unit))
         #logging.debug("units wt {}".format(width_term.unit))
         lnprob = -0.5*(np.sum(flux_pts + width_term))
         logging.debug('p {} lnprob {}'.format(str(args),str(lnprob)))
@@ -234,7 +297,7 @@ class ModelGrid(object):
                      self.plims[self.params[i]]['vals']<p[i]])
                 up_val = min(self.plims[self.params[i]]['vals'][
                      self.plims[self.params[i]]['vals']>p[i]])
-                logging.debug('up {} down {}'.format(up_val,dn_val))
+#                logging.debug('up {} down {}'.format(up_val,dn_val))
                 grid_edges[self.params[i]] = np.array([dn_val,up_val])
                 edge_inds[self.params[i]] = np.array([np.where(
                     self.plims[self.params[i]]['vals']==dn_val)[0],np.where(
@@ -351,40 +414,286 @@ class ModelGrid(object):
                 logging.debug('make_model WTF')
         mod_flux = old_spectra[()][0]
 #        logging.debug('all done! %d %d', len(mod_flux), len(self.flux))
+#        logging.debug('all done! {} {}'.format(type(mod_flux), type(self.flux)))
 
         # THIS IS WHERE THE CODE TAKES A LONG TIME
         if self.smooth:
 #            logging.debug('starting smoothing')
             mod_flux = falt2(self.model['wsyn'],mod_flux,resolution) 
-#            logging.debug('finished smoothing')
-        else:
-            logging.debug('no smoothing')
+#            logging.debug('finished smoothing {}'.format(type(mod_flux)))
+#        else:
+#            logging.debug('no smoothing')
         if self.interp:
 #            logging.debug('starting interp')
             mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
 #            logging.debug('finished interp')
 
-        # Need to normalize (taking below directly from old makemodel code)
+        mod_flux = self.normalize_model(mod_flux)
 
-        #This defines a scaling factor; it expresses the ratio 
-        #of the observed flux to the model flux in a way that 
-        #takes into account the entire spectrum.
-        #The model spectra are at some arbitrary luminosity; 
-        #the scaling factor places this model spectrum at the same 
-        #apparent luminosity as the observed spectrum.
-        mult1 = self.flux*mod_flux
-        bad = np.isnan(mult1)
-        mult = np.sum(mult1[~bad])
-        #print 'mult',mult
-        sq1 = mod_flux**2
-        square = np.sum(sq1[~bad])
-        #print 'sq',square
-        ck = mult/square
-        #print 'ck',ck
+        if type(mod_flux)!=u.quantity.Quantity:
+            mod_flux = mod_flux*self.model_flux_units
 
-        #Applying scaling factor to rescale model flux array
-        mod_flux = mod_flux*ck
-#        logging.debug('finished renormalization')
-
-
+#        logging.debug('returning {}'.format(type(mod_flux)))
         return mod_flux
+
+    def normalize_model(self,model_flux,return_ck=False):
+        # Need to normalize (taking below directly from old makemodel code)
+        #This defines a scaling factor; it expresses the ratio 
+        #of the observed flux to the model flux in a way that  
+        #takes into account the entire spectrum.  
+        #The model spectra are at some arbitrary luminosity;
+        #the scaling factor places this model spectrum at the same
+        #apparent luminosity as the observed spectrum.     
+        mult1 = self.flux*model_flux
+	bad = np.isnan(mult1)
+	mult = np.sum(mult1[~bad])
+        #print 'mult',mult                                 
+        sq1 = model_flux**2
+        square = np.sum(sq1[~bad])
+        #print 'sq',square                                 
+        ck = mult/square
+        #print 'ck',ck                                     
+        #Applying scaling factor to rescale model flux array
+        model_flux = model_flux*ck
+#        logging.debug('finished renormalization') 
+
+        if return_ck:
+            return model_flux, ck
+        else:
+            return model_flux
+
+
+    def check_grid_coverage(self):
+        """ checks if every parameter permutation has a corresponding model """
+
+        unique_params = [np.unique(self.plims[self.params[i]]["vals"]) for 
+                         i in range(self.ndim)]
+
+        # calculate the number of possible permutations 
+        ncomb = 1 
+        for i in range(self.ndim):
+            ncomb = ncomb * len(unique_params[i])
+
+        unique_combinations = np.zeros(ncomb*self.ndim).reshape((ncomb,self.ndim))
+
+        for i in range(self.ndim):
+            div_by = 2**(self.ndim - i - 1)
+            loc = ((np.arange(ncomb)/div_by) % len(unique_params[i]))
+            for j in range(len(unique_params[i])):
+                loc_j = np.where(loc==j)[0]
+                unique_combinations[loc_j,i] = unique_params[i][j]
+
+        is_grid_full = True
+        for i, up in enumerate(unique_combinations):
+            p_loc = np.arange(len(unique_combinations))
+            for j in range(self.ndim):
+                p_loc = np.intersect1d(p_loc,np.where(
+                     self.plims[self.params[i]]["vals"]==up[j])[0])
+            if len(p_loc)==0:
+                logging.info("UNEVEN GRID")
+                is_grid_full = False
+                break
+            else:
+                continue
+
+        return is_grid_full
+
+
+    def find_nearest(self,arr,val):
+        """
+        Finds the *locations* (indices) in an array (arr) 
+        that are closest to a given value (val)
+
+        This only works when the entire grid is filled and evenly spaced
+        """
+
+        close_val = arr[np.abs(arr-val).argmin()]
+        logging.debug("{} nearest {}".format(val,close_val))
+
+        indices = np.where(np.abs(arr-close_val)<=1e-5)[0]
+        return indices
+
+    def find_nearest2(self,param_arrays,p_values):
+        """
+        finds the set of model parameters in param_arrays that is
+        closest to the values give in p_values
+
+        Parameters
+        ----------
+        param_arrays: array-like (n_models, ndim)
+
+        p_values: array-like (ndim)
+
+        """
+
+        min_distance = 1e10
+        matched_i = -99
+        for i, mod_params in enumerate(param_arrays):
+#            logging.debug("mod_p {} p_val {}".format(mod_params,p_values))
+            mod_difference = abs(np.array(mod_params) - np.array(p_values))
+            check_distance = np.average(mod_difference)
+            if check_distance==min_distance:
+                logging.debug("MULTIPLE MODELS FOUND {}".format(p_values))
+            elif check_distance<min_distance:
+                min_distance = check_distance
+                matched_i = i
+            else:
+                continue
+
+        return matched_i
+
+    def retrieve_model(self,*args):
+        """
+        NOTE: at this point I have not accounted for model parameters
+        that are NOT being used for the fit - this means there will be 
+        duplicate spectra!
+
+        Parameters
+        ----------
+        *args: array or list
+             new parameters. Order and number must correspond to params
+        
+        Returns
+        -------
+        mod_flux: array
+             model flux corresponding to input parameters
+
+        """
+
+        p = np.asarray(args)[0]
+#        logging.debug('starting params %s',str(p))
+
+        # p_loc is the location in the model grid that fits all the 
+        # constraints up to that point. There aren't constraints yet,
+        # so it matches the full array.
+        p_loc = range(len(self.model['fsyn']))
+
+        if self.is_grid_complete:
+            for i in range(self.ndim):
+                # find the location in the ith parameter array corresponding
+                # to the ith parameter
+                this_p_loc = self.find_nearest(self.model[self.params[i]],p[i])
+
+                # then match that with the locations that already exist
+                p_loc = np.intersect1d(p_loc,this_p_loc)
+        else:
+            num_models = len(self.plims[self.params[0]]["vals"])
+            param_arrays = [[self.plims[self.params[i]]["vals"][j]
+                for i in range(self.ndim)] for j in range(num_models)]
+            p_loc = [self.find_nearest2(param_arrays,p)]
+
+        logging.debug(str(p_loc))
+        mod_flux = np.ones(len(self.wave))*-99.0*self.flux.unit
+        if len(p_loc)==1:
+            mod_flux = self.model['fsyn'][p_loc]
+            while len(mod_flux)==1:
+                mod_flux = mod_flux[0]
+        else:
+            logging.info("MODEL NOT FOUND/DUPLICATE MODELS FOUND!!")
+            logging.info("params {} location(s) {}".format(p, p_loc))
+            return mod_flux
+
+        if self.smooth:
+#            logging.debug('starting smoothing')
+            mod_flux = falt2(self.model['wsyn'],mod_flux,resolution) 
+#            logging.debug('finished smoothing')
+#        else:
+#            logging.debug('no smoothing')
+        if self.interp:
+            logging.debug('starting interp {} {} {}'.format(len(self.wave),
+                len(self.model['wsyn']),len(mod_flux)))
+            mod_flux = np.interp(self.wave,self.model['wsyn'],mod_flux)
+            logging.debug('finished interp')
+
+        mod_flux = self.normalize_model(mod_flux)
+
+        if type(mod_flux)!=u.quantity.Quantity:
+            mod_flux = mod_flux*self.model_flux_units
+
+#        logging.debug('returning {}'.format(type(mod_flux)))
+        return mod_flux
+
+    def snap_full_run(self,cropchain):
+        """
+        """
+        new_cropchain = np.copy(cropchain)
+        round_is_valid = False
+        for i in range(self.ndim):
+            check = np.unique(np.diff(np.unique(self.model[self.params[i]])))
+            if len(check)!=1:
+                round_is_valid=False
+                logging.info("can't round {}".format(self.params[i]))
+                break
+            else:
+                round_is_valid=True
+                logging.info("{} ok to round".format(self.params[i]))
+                continue
+
+        logging.info("Starting to snap chains")
+        if round_is_valid and self.is_grid_complete:
+            def my_round(x,base):
+                return np.round(base * np.round(x / base),2)
+
+            for i in range(self.ndim):
+                base_i = np.unique(np.diff(np.unique(self.model[self.params[i]]
+                    )))[0]
+                new_cropchain[:,i] = my_round(cropchain[:,i],base_i)
+            logging.info("Finished rounding chains")
+        else:
+            num_models = len(self.plims[self.params[0]]["vals"])
+            param_arrays = [[self.plims[self.params[i]]["vals"][j]
+                for i in range(self.ndim)] for j in range(num_models)]
+            for j,p_all in enumerate(cropchain):
+                p = p_all[:self.ndim]
+#                logging.debug('starting params %s',str(p))
+                p_loc = self.find_nearest2(param_arrays,p)
+
+                for i in range(self.ndim):
+#                    logging.debug("i {} p[i] {}".format(i,self.model[self.params[i]][p_loc]))
+                    new_cropchain[j,i] = self.model[self.params[i]][p_loc]
+#                logging.debug("snapped params {}".format(new_cropchain[j]))
+            logging.info("Finished snapping chains")
+
+        return new_cropchain
+
+
+    def calc_normalization(self,n_values,
+        wavelength_bins=[0.9,1.4,1.9,2.5]*u.um):
+        """
+        calculates normalization as a function of wavelength
+
+        Parameters
+        ----------
+        n_values: array or list
+            normalization values for the regions given by wavelength_bins
+    
+        wavelength_bins: array or list
+            the wavelength bins corresponding to n_values
+            length should be one longer then n_values
+            the normalization for wavelengths below and above the minimum
+            and maximum bin edges will be set to the same as the nearest bin
+
+
+        Returns
+        -------
+        normalization: array
+            normalization values as a function of wavelength
+            corresponding to self.wave
+
+        """
+
+        normalization = np.zeros(len(self.wave))
+
+        if len(wavelength_bins)==0:
+            normalization[:] = n_values
+        else:
+            for i in range(len(n_values)):
+                norm_loc = np.where((self.wave>wavelength_bins[i]) &
+                    (self.wave<=wavelength_bins[i+1]))[0]
+                normalization[norm_loc] = n_values[i]
+            norm_loc = np.where(self.wave<=wavelength_bins[0])[0]
+            normalization[norm_loc] = n_values[i]
+            norm_loc = np.where(self.wave>wavelength_bins[-1])[0]
+            normalization[norm_loc] = n_values[i]
+
+        return normalization
