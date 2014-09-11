@@ -44,8 +44,11 @@ def plot_random(cropchain,model,ax=None,rand_color='r',plot_s=True):
         new_flux = model.interp_models(p[:model.ndim])
         new_norm = model.calc_normalization(p[model.ndim:-1],
             model.wavelength_bins)
-        #logging.debug('new flux '+str(new_flux))
-        ax.step(model.wave,new_flux*new_norm,color=rand_color,alpha=0.05)
+        #logging.debug("flen {} wlen {}".format(len(new_flux),len(model.wave)))
+        #logging.debug('wave '+str(model.wave[:10]))
+        #logging.debug('new flux '+str(new_flux[:10]))
+        #logging.debug('new norm '+str(new_norm[:10]))
+        ax.step(model.wave,new_flux,color=rand_color,alpha=0.05)
         if plot_s:
             new_lns = p[-1]
             new_s = np.exp(new_lns)*model.unc.unit

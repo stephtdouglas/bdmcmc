@@ -138,14 +138,18 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params,
     return cropchain
 
 
-chain_file = '/home/stephanie/ldwarfs/batch_ldwarfs/SpeX_2014-04-16/0205-1159 SpeX full 2014-04-16_chains.pkl'
+#chain_file = '/home/stephanie/ldwarfs/batch_ldwarfs/SpeX_2014-04-16/0205-1159 SpeX full 2014-04-16_chains.pkl'
+#model_file = '/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl'
 
 orig_params = [5.21,2018]
 
-model_file = '/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl'
+chain_file = '/home/stephanie/ldwarfs/batch_ldwarfs/Marley_2014-05-13/1228-1547 Marley H 2014-05-13_chains.pkl'
+model_file = '/home/stephanie/ldwarfs/modelSpectra/SpeX_Marley.pkl'
+
 
 obj_name = chain_file.split('/')[-1].split()[0]
 date = chain_file.split('/')[-2].split('_')[-1]
+print obj_name, date
 
 cropchain = plot_one(obj_name,chain_file,'',orig_params,model_file)
 plt.show()

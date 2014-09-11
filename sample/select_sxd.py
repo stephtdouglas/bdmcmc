@@ -148,7 +148,7 @@ def get_source_info():
     # spectra: publication_id
     # (tie all above to publications: id, shortname, eventually bibtex)
 
-    outfile = "/home/stephanie/ldwarfs/SXD_info.dat"
+    outfile = "/home/stephanie/ldwarfs/SXD_info2.dat"
     f = open(outfile,"w")
     f.write("shortname\tcomponents\t")
     f.write("spec_pub\t")
@@ -177,13 +177,15 @@ def get_source_info():
             sid)).fetchall()
         optical_found=False
         for i,res_line in enumerate(result):
+            print name, res_line["spectral_type"],
+            print res_line["gravity"],res_line["regime"]
             if res_line["regime"]=="OPT":
                 f.write("{}\t{}\t{}\t".format(res_line["spectral_type"],
                      res_line["gravity"],res_line["regime"]))
                 #print "{}\t{}\t{}\t".format(res_line["spectral_type"],
                 #     res_line["gravity"],res_line["regime"])
                 optical_found=True
-                break
+                #break
         #print "spt {} optical {}".format(len(result),optical_found)
         if (optical_found==False) and (len(result)>0):
             res_line = result[0]
@@ -207,5 +209,5 @@ def get_source_info():
 
 
 
-make_sxd_batch("BTSettl","btsettl_r1200.pkl")
+#make_sxd_batch("BTSettl","btsettl_r1200.pkl")
 #make_sxd_batch("B06_","B06_cloud_exp_r1200.pkl")

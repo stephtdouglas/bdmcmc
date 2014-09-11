@@ -3,7 +3,7 @@ import logging
 
 ## Third-party
 import matplotlib
-matplotlib.use('agg')
+#matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
@@ -20,19 +20,22 @@ import bdmcmc.mask_bands as mb
 from bdmcmc.plotting.plot_random import plot_random
 import bdmcmc.plotting.compare_results as cr
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 def one_reg(ax, cropchain, model,rand_color):
+#    plt.figure()
+#    ax2 = plt.subplot(111)
+#    rs = plot_random(cropchain, model, ax2,rand_color,False)
     rs = plot_random(cropchain, model, ax,rand_color,False)
 
 
 def plot_four(bd_name,chain_filename,plot_title,
     model_filename='/home/stephanie/ldwarfs/modelSpectra/SpeX_dusty.pkl',
-    mask_H=True):
+    mask_H=True,obs_date=None):
 
     # Set up brown dwarf
     bd = bdmcmc.spectra.BrownDwarf(bd_name)
-    bd.get_low()
+    bd.get_low(obs_date=obs_date)
     if mask_H:
         mask = mb.BandMask(bd.specs['low']['wavelength'])
         mask.mask_Hband()
@@ -77,10 +80,11 @@ def plot_four(bd_name,chain_filename,plot_title,
     color_norm = Normalize(vmin=0,vmax=4)
     scalar_map = cm.ScalarMappable(norm=color_norm,cmap=cmap)
     plot_colors = [scalar_map.to_rgba(i) for i in range(4)]
-    rand_color = [plot_colors[i] for i in [3,2,0,1]] # reset from ['H','K','J','full'][i]
+#    rand_color = [plot_colors[i] for i in [3,2,0,1]] # reset from ['H','K','J','full'][i]
+    rand_color = [plot_colors[i] for i in [3,0,2,1]] # reset from ['H','J','K','full'][i]
 
-    texty = max(bd.specs['low']['flux'].value)
-    textx = [0.85,0.85,1.45,2.0]
+    texty = max(bd.specs['low']['flux'].value)*0.9
+    textx = [0.95,0.95,1.45,2.0]
 
 
     for i in range(4):
@@ -90,6 +94,10 @@ def plot_four(bd_name,chain_filename,plot_title,
             'wavelength':bd.specs['low']['wavelength'][bands[b]],
             'flux':bd.specs['low']['flux'][bands[b]],
             'unc':bd.specs['low']['unc'][bands[b]]}
+
+        print band_spectrum["wavelength"][0:10]
+        print band_spectrum["flux"][0:10]
+        print band_spectrum["unc"][0:10]
 
         mg = bdmcmc.make_model.ModelGrid(band_spectrum,am.model,
             am.params,smooth=False)
@@ -116,6 +124,8 @@ def plot_four(bd_name,chain_filename,plot_title,
         
     yl = ax2.get_ylim()
     ax1.set_ylim(yl)
+    ax1.set_xlim(0.92,2.45)
+    ax2.set_xlim(0.92,2.45)
     ax2.plot((1.4,1.4),yl,'k-',lw=2)
     ax2.plot((1.9,1.9),yl,'k-',lw=2)
     ax2.set_yticklabels([])
@@ -128,16 +138,20 @@ results_file = '/home/stephanie/ldwarfs/batch_ldwarfs/Marley_2014-05-13/1228-154
 chain_file = '/home/stephanie/ldwarfs/batch_ldwarfs/Marley_2014-05-13/0036+1821 Marley H 2014-05-13_chains.pkl'
 results_file = '/home/stephanie/ldwarfs/batch_ldwarfs/Marley_2014-05-13/0036+1821_2014-05-13_all.pkl'
 
+chain_file = '/home/stephanie/ldwarfs/batch_ldwarfs/BTSettl_2014-08-25_med/2057-0252_full_BTSettl_2014-08-25_chains.pkl'
+#results_file = '/home/stephanie/ldwarfs/batch_ldwarfs/'
 
-model_file = '/home/stephanie/ldwarfs/modelSpectra/SpeX_marley_nolowg.pkl'
 
-obj_name = chain_file.split('/')[-1].split()[0]
+model_file = '/home/stephanie/ldwarfs/modelSpectra/btsettl_r1200.pkl'
+
+obj_name = chain_file.split('/')[-1].split("_")[0]
 date = chain_file.split('/')[-2].split('_')[-1]
 
-plot_four(obj_name,chain_file,'',model_file)
+plot_four(obj_name,chain_file,'',model_file,obs_date="2006-11-18")
 plt.show()
 plt.savefig('region_ex_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches='tight')
 
+"""
 infile = open(results_file,'rb')
 results = cPickle.load(infile)
 infile.close()
@@ -168,3 +182,4 @@ axes[1,0].legend(loc='best',numpoints=1,prop = fontP)
 
 plt.show()
 plt.savefig('region_res_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches='tight')
+"""
