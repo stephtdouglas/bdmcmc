@@ -148,18 +148,22 @@ def get_source_info():
     # spectra: publication_id
     # (tie all above to publications: id, shortname, eventually bibtex)
 
-    outfile = "/home/stephanie/ldwarfs/SXD_info2.dat"
+    outfile = "/home/stephanie/ldwarfs/SXD_info.dat"
     f = open(outfile,"w")
-    f.write("shortname\tcomponents\t")
+    f.write("shortname\tunum\tcomponents\t")
     f.write("spec_pub\t")
     f.write("SpT\tGrav\tRegime\n")
     for name,date,sid in spex_sxd:
         result = db.dict.execute("SELECT s.ra, s.dec, "#s.publication_id, "
-            "s.shortname, s.components FROM sources AS s WHERE s.id={}".format(
-            sid)).fetchall()
+            "s.names, s.designation, "
+            "s.shortname, s.unum, s.components FROM sources AS s WHERE "
+            "s.id={}".format(sid)).fetchall()
         #print len(result)
-        f.write("{}\t{}\t".format(result[0]["shortname"],
+        f.write("{}\t{}\t".format(result[0]["shortname"],result[0]["unum"],
             result[0]["components"]))
+
+        names = result[0]["names"]
+        designation = result[0]["designation"]
 
         result = db.dict.execute("SELECT p.shortname "
             " FROM spectra AS s JOIN publications AS p ON "
@@ -189,10 +193,11 @@ def get_source_info():
         #print "spt {} optical {}".format(len(result),optical_found)
         if (optical_found==False) and (len(result)>0):
             res_line = result[0]
-            f.write("{}\t{}\t{}\n".format(res_line["spectral_type"],
+            f.write("{}\t{}\t{}\t".format(res_line["spectral_type"],
                  res_line["gravity"],res_line["regime"]))
         else:
-            f.write("n/a\tn/a\tn/a\n")
+            f.write("n/a\tn/a\tn/a\t")
+        f.write("{}\t{}\n".format(designation,names))
     f.close()
 
 #        result = db.dict.execute("SELECT "
@@ -201,7 +206,7 @@ def get_source_info():
 #        f.write("{}\t{}\t".format())
 
 
-#get_source_info()
+get_source_info()
 
 #plot_sxd_res()
 
