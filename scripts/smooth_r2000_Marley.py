@@ -11,25 +11,27 @@ import astropy.units as u
 from scipy.io.idl import readsav
 import cPickle
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
-#modelpath = '/vega/astro/users/sd2706/modelSpectra/'
-modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
-am = bdmcmc.get_mod.AtmoModel(modelpath+'marley_ldwarfs.pkl')#,wave_unit=u.um)
+modelpath = '/vega/astro/users/sd2706/modelSpectra/'
+#modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
+am = bdmcmc.get_mod.AtmoModel(modelpath+'marley_ldwarfs_all.pkl')#,wave_unit=u.um)
 
 
-bd = bdmcmc.spectra.BrownDwarf('2057-0252')
+bd = bdmcmc.spectra.BrownDwarf('0752+1612')
 
-spectrum = bdmcmc.spectra.spectrum_query(bd.sid,7,6,obs_date="2006-11-18")
+spectrum = bdmcmc.spectra.spectrum_query(bd.sid,7,6,obs_date="2006-11-19")
 new_flux_unit = u.erg / (u.um * u.cm**2 * u.s)
-spectrum['flux'] = spectrum['flux'].to(new_flux_unit,equivalencies=u.spectral_density(spectrum['wavelength'])
-spectrum['unc'] = spectrum['unc'].to(new_flux_unit,equivalencies=u.spectral_density(spectrum['wavelength'])
+spectrum['flux'] = spectrum['flux'].to(new_flux_unit,equivalencies=u.spectral_density(spectrum['wavelength']))
+spectrum['unc'] = spectrum['unc'].to(new_flux_unit,equivalencies=u.spectral_density(spectrum['wavelength']))
 
-wave_diff = np.median(np.diff(spectrum["wavelength"]))
+wave_diff = np.median(spectrum["wavelength"][:-2]-spectrum["wavelength"][2:])
 new_wave_diff = wave_diff/10.0
-new_wave = np.arange(min(spectrum["wavelength"])-10.0*wave_diff,
-                     max(spectrum["wavelength"])+10.0*wave_diff,new_wave_diff
-                    )*u.um
+logging.info("old {} new {}".format(wave_diff,new_wave_diff))
+logging.info("min {} max {}".format(min(spectrum["wavelength"]),max(spectrum["wavelength"])))
+new_wave = np.arange((min(spectrum["wavelength"])-10.0*wave_diff).value,
+                     (max(spectrum["wavelength"])+10.0*wave_diff).value,
+                    new_wave_diff.value)*new_wave_diff.unit
 
 R = 2000.0 #lambda/delta-lambda
 res = 1.5*u.um/R
