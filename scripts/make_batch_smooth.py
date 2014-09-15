@@ -1,3 +1,7 @@
+import numpy as np
+
+import asciitable as at
+
 import bdmcmc.get_mod
 
 
@@ -57,6 +61,51 @@ def make_batch_smooth(model_name,model_file):
 
     h.close()
 
-make_batch_smooth("Marley","marley_ldwarfs_all.pkl")
-make_batch_smooth("BTS","btsettl_wide.pkl")
-make_batch_smooth("Bur","burrows_06_cloud_expanded.pkl")
+def recombine_batches(filelist,original_model_file,output_file):
+    sub_files = at.read("filelist")
+
+    #modelpath = '/vega/astro/users/sd2706/modelSpectra/'
+    modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
+
+    am = bdmcmc.get_mod.AtmoModel(modelpath+original_model_file)
+    num_jobs = len(am.model["teff"])/10 + 1
+
+    if num_jobs!=len(sub_files):
+        print "!!! {} files but should have {}".format(num_jobs,len(sub_files))
+        return
+
+    orig_params = np.asarray(am.params)
+    orig_params = np.delete(orig_params,np.where(orig_params=="wsyn"))
+    orig_params = np.delete(orig_params,np.where(orig_params=="fsyn"))
+
+    for i,sfile in enumerate(sub_files):
+        print i, sfile
+        infile = open(modelpath+"smoothfiles/"+sfile)
+        sub_grid = cPickle.load(infile)
+        infile.close()
+
+        sub_params = np.asarray(sub_grid.keys())
+        sub_params = np.delete(sub_params,np.where(sub_params=="wsyn"))
+        sub_params = np.delete(sub_params,np.where(sub_params=="fsyn"))
+
+
+        for j in range(len(sub_grid["teff"])):
+            same_params = True
+
+            for k,param in enumerate(sub_params):
+                if (am.model[param][i]!=sub_grid[param][j]):
+                    same_params=False
+
+            if same_params:
+                model['fsyn'][start+i] = sub_grid['fsyn'][i]
+            else:
+                for k,param in enumerate(sub_params):
+                    logging.debug('OH NO {} {} {} {}'.format(i,param
+                    am.model[param][i],sub_grid[param][j])
+            
+
+#make_batch_smooth("Marley","marley_ldwarfs_all.pkl")
+#make_batch_smooth("BTS","btsettl_wide.pkl")
+#make_batch_smooth("Bur","burrows_06_cloud_expanded.pkl")
+
+recombine_batches("BTS_subgrids","btsettl_wide.pkl","SpeX_BTS_wide.pkl")
