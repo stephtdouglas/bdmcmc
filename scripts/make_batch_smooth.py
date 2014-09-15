@@ -2,17 +2,17 @@ import bdmcmc.get_mod
 
 
 def make_batch_smooth(model_name,model_file):
-    #modelpath = '/vega/astro/users/sd2706/modelSpectra/'
-    modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
+    modelpath = '/vega/astro/users/sd2706/modelSpectra/'
+    #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
     am = bdmcmc.get_mod.AtmoModel(modelpath+model_file)
     num_jobs = len(am.model["teff"])/10 + 1
 
     
     h = open('submit_{}_smooth.sh'.format(model_name),'w')
     for i in range(num_jobs):
-        h.write('qsub variable_smooth{}.sh\n'.format(i))
+        h.write('qsub variable_smooth_{}{}.sh\n'.format(model_name,i))
     
-        g = open('variable_smooth{}{}.sh'.format(model_name,i),'w')
+        g = open('variable_smooth_{}{}.sh'.format(model_name,i),'w')
         g.write("#!/bin/sh\n\n")
         g.write("# Directives\n")
         g.write("#PBS -N Smooth{}{}\n".format(model_name,i))
@@ -29,7 +29,7 @@ def make_batch_smooth(model_name,model_file):
         g.write("# End of script\n")
         g.close()
 
-        f = open('variable_smooth{}{}.py'.format(model_name,i),'w')
+        f = open('variable_smooth_{}{}.py'.format(model_name,i),'w')
         f.write("import logging\nfrom datetime import date\n")
         f.write("import bdmcmc.spectra,bdmcmc.get_mod,bdmcmc.smooth\n")
         f.write("import numpy as np\nimport astropy.units as u\n")
