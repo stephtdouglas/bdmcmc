@@ -1,9 +1,12 @@
-import numpy as np
+import logging
 
+import numpy as np
 import asciitable as at
+import cPickle
 
 import bdmcmc.get_mod
 
+logging.basicConfig(level=logging.INFO)
 
 def make_batch_smooth(model_name,model_file):
     modelpath = '/vega/astro/users/sd2706/modelSpectra/'
@@ -62,10 +65,13 @@ def make_batch_smooth(model_name,model_file):
     h.close()
 
 def recombine_batches(filelist,original_model_file,output_file):
-    sub_files = at.read("filelist")
 
-    #modelpath = '/vega/astro/users/sd2706/modelSpectra/'
-    modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
+    modelpath = '/vega/astro/users/sd2706/modelSpectra/'
+    #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
+
+    sub_files0 = at.read(modelpath+"smoothfiles/"+filelist)
+    sub_files = sub_files0["filenames"]
+    print sub_files
 
     am = bdmcmc.get_mod.AtmoModel(modelpath+original_model_file)
     num_jobs = len(am.model["teff"])/10 + 1
@@ -73,6 +79,8 @@ def recombine_batches(filelist,original_model_file,output_file):
     if num_jobs!=len(sub_files):
         print "!!! {} files but should have {}".format(num_jobs,len(sub_files))
         return
+    else:
+        logging.info("expected {} files, got {}!".format(num_jobs,len(sub_files)))
 
     orig_params = np.asarray(am.params)
     orig_params = np.delete(orig_params,np.where(orig_params=="wsyn"))
@@ -87,25 +95,36 @@ def recombine_batches(filelist,original_model_file,output_file):
         sub_params = np.asarray(sub_grid.keys())
         sub_params = np.delete(sub_params,np.where(sub_params=="wsyn"))
         sub_params = np.delete(sub_params,np.where(sub_params=="fsyn"))
-
+        logging.info(sub_params)
+        logging.info(sub_grid["teff"])
 
         for j in range(len(sub_grid["teff"])):
+#            logging.debug("{} {}".format(i,j))
             same_params = True
 
             for k,param in enumerate(sub_params):
-                if (am.model[param][i]!=sub_grid[param][j]):
+                if (am.model[param][10*i+j]!=sub_grid[param][j]):
                     same_params=False
 
             if same_params:
-                model['fsyn'][start+i] = sub_grid['fsyn'][i]
+                for k,param in enumerate(sub_params):
+                    logging.debug('!GOOD {} {} {} {} {}'.format(i,j,param,
+                        am.model[param][10*i+j],sub_grid[param][j]))
+
+                am.model['fsyn'][10*i + j] = sub_grid['fsyn'][j]
             else:
                 for k,param in enumerate(sub_params):
-                    logging.debug('OH NO {} {} {} {}'.format(i,param
-                    am.model[param][i],sub_grid[param][j])
+                    logging.debug('OH NO {} {} {} {} {}'.format(i,j,param,
+                        am.model[param][10*i+j],sub_grid[param][j]))
             
+    logging.info("types fsyn {} fsyn[0] {}".format(type(am.model["fsyn"]),
+        type(am.model["fsyn"][0])))
+    logging.info("shapes f {} w {}".format(np.shape(am.model["fsyn"]),
+        np.shape(am.model["wsyn"])))
+
 
 #make_batch_smooth("Marley","marley_ldwarfs_all.pkl")
 #make_batch_smooth("BTS","btsettl_wide.pkl")
 #make_batch_smooth("Bur","burrows_06_cloud_expanded.pkl")
 
-recombine_batches("BTS_subgrids","btsettl_wide.pkl","SpeX_BTS_wide.pkl")
+recombine_batches("BTS_subgrids.lst","btsettl_wide.pkl","SpeX_BTS_wide.pkl")
