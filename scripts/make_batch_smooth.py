@@ -4,7 +4,7 @@ import numpy as np
 import asciitable as at
 import cPickle
 
-import bdmcmc.get_mod
+import bdmcmc.get_mod, bdmcmc.spectra
 
 logging.basicConfig(level=logging.INFO)
 
@@ -64,7 +64,8 @@ def make_batch_smooth(model_name,model_file):
 
     h.close()
 
-def recombine_batches(filelist,original_model_file,output_file):
+def recombine_batches(filelist,original_model_file,output_file,data_wave,
+    data_flux_units):
 
     modelpath = '/vega/astro/users/sd2706/modelSpectra/'
     #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
@@ -122,9 +123,36 @@ def recombine_batches(filelist,original_model_file,output_file):
     logging.info("shapes f {} w {}".format(np.shape(am.model["fsyn"]),
         np.shape(am.model["wsyn"])))
 
+    am.model["wsyn"] = data_wave
+
+    new_grid = am.model.copy()
+
+    another_fsyn = []
+    for i in range(len(new_grid['logg'])):
+        logging.debug(i)
+        logging.debug(type(new_grid['fsyn'][i]))
+        converted_fsyn = new_grid['fsyn'][i].to(data_flux_units,
+            equivalencies=u.spectral_density(data_wave))
+        logging.debug("converted! {}".format(converted_fsyn.unit))
+        another_fsyn = np.append(another_fsyn,converted_fsyn).reshape((i+1,-1))
+        logging.debug(another_fsyn[0])
+    new_grid['fsyn'] = np.array(another_fsyn)*spectrum['flux'].unit
+
+    logging.info("final w {} f {}".format(new_grid['wsyn'].unit,
+                                          new_grid['fsyn'].unit))
+
+    outfile = open(modelpath+output_file,'wb')
+    cPickle.dump(new_grid,outfile)
+    outfile.close()
+
 
 #make_batch_smooth("Marley","marley_ldwarfs_all.pkl")
 #make_batch_smooth("BTS","btsettl_wide.pkl")
 #make_batch_smooth("Bur","burrows_06_cloud_expanded.pkl")
 
-recombine_batches("BTS_subgrids.lst","btsettl_wide.pkl","SpeX_BTS_wide.pkl")
+bd = bdmcmc.spectra.BrownDwarf('U20165')
+bd.get_low()
+data_wave = bd.specs['low']['wavelength']
+data_flux_units = bd.specs['low']['flux'].unit
+recombine_batches("BTS_subgrids.lst","btsettl_wide.pkl","SpeX_BTS_wide.pkl",
+                  data_wave,data_flux_units)
