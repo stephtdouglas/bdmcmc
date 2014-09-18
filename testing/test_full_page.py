@@ -48,7 +48,7 @@ logging.info("all done!")
 bd = bdmcmc.spectra.BrownDwarf('0355+1133')
 bd.get_low(obs_date='2007-11-13')
 
-am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SXD_marley.pkl')
+am = bdmcmc.get_mod.AtmoModel(mbase_path+'modelSpectra/SXD_r2000_Marley.pkl')
 
 mg = bdmcmc.make_model.ModelGrid(bd.specs["low"],am.model,am.params)
 
@@ -57,5 +57,10 @@ infile = open(chainfile,"rb")
 chain = cPickle.load(infile)
 infile.close()
 
+extents = [[min(chain[:,:,i].flatten())*0.9,
+    max(chain[:,:,i].flatten())*1.1] for i in range(bdsamp.ndim)]
+
+
 plot_title="Test_{}_{}".format(bd.shortname,todays_date)
-fp.page_plot(chain,mg,plot_title)
+fp.page_plot(chain,mg,plot_title,extents=extents)
+plt.savefig("{}.pdf".format(plot_title))
