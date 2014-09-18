@@ -141,11 +141,11 @@ class ModelGrid(object):
             spectrum['wavelength'].unit, spectrum['flux'].unit,
             spectrum['unc'].unit))
         logging.debug("model units w {} f {}".format(self.model['wsyn'].unit,
-            self.model['fsyn'].unit))
+            self.model['fsyn'][0].unit))
         self.wave = spectrum['wavelength'].to(self.model['wsyn'].unit)
-        self.flux = np.float64(spectrum['flux'].to(self.model['fsyn'].unit,
+        self.flux = np.float64(spectrum['flux'].to(self.model['fsyn'][0].unit,
              equivalencies=u.spectral_density(self.wave)))
-        self.unc = np.float64(spectrum['unc'].to(self.model['fsyn'].unit,
+        self.unc = np.float64(spectrum['unc'].to(self.model['fsyn'][0].unit,
              equivalencies=u.spectral_density(self.wave)))
 
         check_diff = self.model['wsyn'][0]-self.wave[0]
