@@ -64,8 +64,10 @@ def page_plot(chains,model,plot_title,extents=None):
     rand_ax = plt.subplot(rand_grid[:,:])
 
     # the bottom grid will contain the corner plot
-    corner_grid = gridspec.GridSpecFromSubplotSpec(K,K,
-        subplot_spec=split_grid[1])
+#    corner_grid = gridspec.GridSpecFromSubplotSpec(K,K,
+#        subplot_spec=split_grid[1])
+    corner_grid = gridspec.GridSpecFromSubplotSpec(len(model.params),
+        len(model.params),subplot_spec=split_grid[1])
 
     # plot the random samples plot in the top axis
     random_samp = plot_random(cropchain,model,ax=rand_ax)
@@ -85,28 +87,35 @@ def page_plot(chains,model,plot_title,extents=None):
         labels=model.params
     logging.info(labels)
     logging.info(extents)
-    fig,axes_array = triangle.corner(cropchain,spec_grid=corner_grid,
-        labels=labels, quantiles=[0.16,0.5,0.84],extents=extents,
-        plot_datapoints=False)
+    # And now to just go back to what I had, I just want to show the 
+    # model parameter results alone
+    mod_labels = np.copy(model.params)
+    mod_cropchain = cropchain[:,:len(model.params)]
+    fig,axes_array = triangle.corner(mod_cropchain,spec_grid=corner_grid,
+        labels=mod_labels, extents=extents, plot_datapoints=False)
 
+#    fig,axes_array = triangle.corner(cropchain,spec_grid=corner_grid,
+#        labels=labels, quantiles=[0.16,0.5,0.84],extents=extents,
+#        plot_datapoints=False)
 
-    # overplot the random samples
-    for i in range(K):
-        for j in np.arange(i):
-            ax = axes_array[i,j]
-
-            if (i==(K-1)) or (j==(K-1)):
-                plot_color='DarkOrange'
-            else:
-                plot_color='r'
-            ax.plot(random_samp[:,j],random_samp[:,i],'.',
-                color=plot_color,alpha=0.5,mec='None')
+## I don't want to clutter the plot for now
+#    # overplot the random samples
+#    for i in range(K):
+#        for j in np.arange(i):
+#            ax = axes_array[i,j]
+#
+#            if (i==(K-1)) or (j==(K-1)):
+#                plot_color='DarkOrange'
+#            else:
+#                plot_color='r'
+#            ax.plot(random_samp[:,j],random_samp[:,i],'.',
+#                color=plot_color,alpha=0.5,mec='None')
 
     ax = axes_array[0,2]
     ax.set_xlim(0,1)
     ax.set_ylim(0,1)
     text_y_pos = 0.6
-    for i in range(K):
+    for i in range(len(model.params)):
         quantiles = quantile(cropchain[:,i],[.16,.5,.84])
         string_unc = unc_string(labels[i],quantiles)
         ax.text(0.0,text_y_pos,string_unc)
