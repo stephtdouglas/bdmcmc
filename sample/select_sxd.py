@@ -31,7 +31,7 @@ def fetch_sxd():
 
     return spex_sxd
 
-def make_sxd_batch(model_name="marley",model_file="SXD2_Marley_r1200.pkl"):
+def make_sxd_batch(model_name="marley",model_file="SXD_Marley.pkl"):
 
     logging.debug("model {} file {}".format(model_name,model_file))
 
@@ -214,5 +214,6 @@ get_source_info()
 
 
 
+make_sxd_batch("Marley","SXD_marley.pkl")
 #make_sxd_batch("BTSettl","btsettl_r1200.pkl")
 #make_sxd_batch("B06_","B06_cloud_exp_r1200.pkl")

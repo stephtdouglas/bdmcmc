@@ -52,32 +52,41 @@ print mcount, 'models'
 
 
 modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
-for t in range(1200,2500,100):                                                    
-    for g in [100,300,1000,3000]:                                                 
-        for f in [1,2,3]:                                                         
-            filename = "sp_t{}g{}f{}".format(t,g,f)                               
-            if os.path.exists(modelpath+"more_sm08"+filename):                    
-                check_dict = np.where((models['teff']==t) &                     
-                    (models['logg']==g) & (models['fsed']==f))[0]             
-                if len(check_dict)==0:                                            
-                    new_model = at.read(modelpath+filename,data_start=2)          
+for t in range(1200,2500,100):
+    for g in [100,300,1000,3000]:
+        for f in [1,2,3]:
+            filename = "sp_t{}g{}f{}".format(t,g,f)
+            if os.path.exists(modelpath+"more_sm08/"+filename):
+                check_dict = np.where((models['teff']==t) & 
+                    (models['logg']==g) & (models['fsed']==f))[0]
+                if len(check_dict)==0:
+                    new_model = at.read(modelpath+"more_sm08/"+filename,data_start=2)
                     models['logg'] = np.append(models['logg'],g)              
                     models['teff'] = np.append(models['teff'],t)              
                     models['fsed'] = np.append(models['fsed'],f)              
-                    models['fsyn'] = np.append(models['fsyn'],                
-                         new_model['col2']*flux_unit)                             
-                    models['wsyn'] = np.append(models['wsyn'],                
-                         new_model['col1']*u.um)                 
+                    models['fsyn'].append(new_model['col2'][::-1]*flux_unit)
+                    models['wsyn'].append(new_model['col1'][::-1]*u.um)
                     mcount += 1
+                else:
+                    print "model existst{} g{} f{}".format(t,g,f)
+            else:
+                print 'no model t{} g{} f{}'.format(t,g,f)
 
 print mcount, 'models'
 
 for i in range(len(models['logg'])):
-#    logging.debug("{} {}".format(type(models['wsyn'][i]),models['wsyn'][i]))
-#    logging.debug(np.where(models['wsyn'][i]<(4*u.um)))                        
+    logging.debug("{} {}".format(type(models['wsyn'][i]),models['wsyn'][i]))
+    logging.debug(np.where(models['wsyn'][i]<(4*u.um)))                        
     nir = np.where(models['wsyn'][i]<(4*u.um))[0]
     models['fsyn'][i] = models['fsyn'][i][nir]#*flux_unit                 
     models['wsyn'][i] = models['wsyn'][i][nir]#*u.um                      
+
+
+models['logg'][models['logg']==100] = 4.0
+models['logg'][models['logg']==178] = 4.25
+models['logg'][models['logg']==300] = 4.5
+models['logg'][models['logg']==1000] = 5.0
+models['logg'][models['logg']==3000] = 5.5
 
 
 output = open('/home/stephanie/ldwarfs/modelSpectra/marley_ldwarfs_all.pkl','wb')

@@ -15,7 +15,7 @@ import BDdb
 
 from bdmcmc.smooth import falt2
 
-teffs = np.arange(1400,2550,50)
+teffs = np.arange(1200,3040,50)
 loggs = np.arange(2.5,6.1,0.5)
 
 db = BDdb.get_db("model_atmospheres.db")
@@ -46,6 +46,6 @@ for i in range(len(models['logg'])):
     models['wsyn'][i] = models['wsyn'][i][nir]#*u.um                      
 
 
-output = open('/home/stephanie/ldwarfs/modelSpectra/btsettl.pkl','wb')
+output = open('/home/stephanie/ldwarfs/modelSpectra/btsettl_wide.pkl','wb')
 cPickle.dump(models, output)
 output.close()
