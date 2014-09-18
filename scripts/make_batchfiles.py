@@ -1,7 +1,11 @@
 import bdmcmc.sample.fetch as fetch
 
-model_name = "BT-Settl"
-model_file = "SpeX_BTS_wide.pkl"
+#model_name = "BT-Settl"
+#model_file = "SpeX_BTS_wide.pkl"
+#model_name = "B06"
+#model_file = "SpeX_B06_wide.pkl"
+model_name = "Dusty"
+model_file = "SpeX_dusty_cut.pkl"
 modelpath = '/vega/astro/users/sd2706/modelSpectra/'
 #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
 
@@ -19,8 +23,8 @@ for unum in unums:
     f.write('from datetime import date\n\n')
     f.write('from bdmcmc.batch import OneBatch\n\n')
     f.write('logging.basicConfig(level=logging.INFO)\n\n')
-    f.write("ob = OneBatch('{}','/vega/astro/users/sd2706/modelSpectra/'"
-            " )\n".format(model_file,unum))
+    f.write("ob = OneBatch('{}','/vega/astro/users/sd2706/modelSpectra/{}'"
+            ", '{}' )\n".format(unum,model_file,model_name))
     f.close()
 
     g = open('run_{}_{}.sh'.format(model_name,unum),'w')
@@ -28,7 +32,7 @@ for unum in unums:
     g.write("# Directives\n")
     g.write("#PBS -N {}{}\n".format(model_name,unum))
     g.write("#PBS -W group_list=yetiastro\n")
-    g.write("#PBS -l nodes=1,walltime=8:00:00,mem=4000mb\n")
+    g.write("#PBS -l nodes=1,walltime=12:00:00,mem=4000mb\n")
     g.write("#PBS -M sd2706@columbia.edu \n")
     g.write("#PBS -m a\n")
     g.write("#PBS -V\n\n")

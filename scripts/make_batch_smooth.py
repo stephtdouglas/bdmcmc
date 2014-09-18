@@ -2,17 +2,20 @@ import logging
 
 import numpy as np
 import asciitable as at
+import astropy.units as u
 import cPickle
 
 import bdmcmc.get_mod, bdmcmc.spectra
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 def make_batch_smooth(model_name,model_file):
     modelpath = '/vega/astro/users/sd2706/modelSpectra/'
     #modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
     am = bdmcmc.get_mod.AtmoModel(modelpath+model_file)
-    num_jobs = len(am.model["teff"])/10 + 1
+    num_jobs = len(am.model["teff"])/10
+    if np.mod(len(am.model["teff"]),10)!=0:
+        num_jobs += 1
 
     
     h = open('submit_{}_smooth.sh'.format(model_name),'w')
@@ -24,7 +27,7 @@ def make_batch_smooth(model_name,model_file):
         g.write("# Directives\n")
         g.write("#PBS -N Smooth{}{}\n".format(model_name,i))
         g.write("#PBS -W group_list=yetiastro\n")
-        g.write("#PBS -l nodes=1,walltime=24:00:00,mem=3000mb\n")
+        g.write("#PBS -l nodes=1,walltime=36:00:00,mem=4000mb\n")
         g.write("#PBS -M sd2706@columbia.edu \n")
         g.write("#PBS -m ae\n")
         g.write("#PBS -V\n\n")
@@ -54,7 +57,10 @@ def make_batch_smooth(model_name,model_file):
         f.write("logging.info(str(r_scale))\n\n")
         f.write("sub_grid = am.model.copy()\n")
         f.write("for k in sub_grid.keys():\n")
-        f.write("    sub_grid[k] = sub_grid[k][{}:{}]\n".format(i*10,(i+1)*10))
+        if (i+1)*10>len(am.model["teff"]):
+            f.write("    sub_grid[k] = sub_grid[k][{}:]\n".format(i*10))
+        else:
+            f.write("    sub_grid[k] = sub_grid[k][{}:{}]\n".format(i*10,(i+1)*10))
         f.write("new_grid = bdmcmc.smooth.smooth_grid(sub_grid,data_wave, "
                 "res_scale=r_scale,incremental_outfile="
                 "'{}_backup{}.pkl')\n\n".format(model_name,i))
@@ -75,7 +81,9 @@ def recombine_batches(filelist,original_model_file,output_file,data_wave,
     print sub_files
 
     am = bdmcmc.get_mod.AtmoModel(modelpath+original_model_file)
-    num_jobs = len(am.model["teff"])/10 + 1
+    num_jobs = len(am.model["teff"])/10 
+    if np.mod(len(am.model["teff"]),10)!=0:
+        num_jobs += 1
 
     if num_jobs!=len(sub_files):
         print "!!! {} files but should have {}".format(num_jobs,len(sub_files))
@@ -136,7 +144,7 @@ def recombine_batches(filelist,original_model_file,output_file,data_wave,
         logging.debug("converted! {}".format(converted_fsyn.unit))
         another_fsyn = np.append(another_fsyn,converted_fsyn).reshape((i+1,-1))
         logging.debug(another_fsyn[0])
-    new_grid['fsyn'] = np.array(another_fsyn)*spectrum['flux'].unit
+    new_grid['fsyn'] = np.array(another_fsyn)*data_flux_units
 
     logging.info("final w {} f {}".format(new_grid['wsyn'].unit,
                                           new_grid['fsyn'].unit))
@@ -154,5 +162,9 @@ bd = bdmcmc.spectra.BrownDwarf('U20165')
 bd.get_low()
 data_wave = bd.specs['low']['wavelength']
 data_flux_units = bd.specs['low']['flux'].unit
-recombine_batches("BTS_subgrids.lst","btsettl_wide.pkl","SpeX_BTS_wide.pkl",
+#recombine_batches("BTS_subgrids.lst","btsettl_wide.pkl","SpeX_BTS_wide.pkl",
+#                  data_wave,data_flux_units)
+#recombine_batches("B06_subgrids.lst","burrows_06_cloud_expanded.pkl","SpeX_B06_wide.pkl",
+#                  data_wave,data_flux_units)
+recombine_batches("Marley_subgrids.lst","marley_ldwarfs_all.pkl","SpeX_Marley_wide.pkl",
                   data_wave,data_flux_units)

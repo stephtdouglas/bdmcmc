@@ -71,10 +71,13 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
         logging.info('spectrum not found for %s', full_query)
 
     qheader = q_result['header']
-    header_flux_unit = qheader["YUNITS"]
-    # edit flux units string so that astropy.units will parse it correctly
-    header_flux_unit = header_flux_unit.replace("ergss","erg s").replace(
-        'ergs','erg s').replace('Wm','W m').replace("A","AA")
+    if "YUNITS" in qheader.keys():
+        header_flux_unit = qheader["YUNITS"]
+        # edit flux units string so that astropy.units will parse it correctly
+        header_flux_unit = header_flux_unit.replace("ergss","erg s").replace(
+            'ergs','erg s').replace('Wm','W m').replace("A","AA")
+    else:
+        header_flux_unit = u.dimensionless_unscaled
 
 
     wave_unit = q_result['wavelength_units']
@@ -83,6 +86,9 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
     flux_unit = flux_unit.replace("ergss","erg s").replace(
         'ergs','erg s').replace('Wm','W m').replace(
         "A","AA")
+
+    if header_flux_unit==u.dimensionless_unscaled:
+        header_flux_unit = flux_unit
 
     logging.info("header says {} and db says {}, using header unit".format(
         header_flux_unit,flux_unit))

@@ -207,7 +207,8 @@ def smooth_model(w, f, data_wave, res):
 
 
 def smooth_grid(model_dict, data_wave, variable=True, delta_pixels=2, 
-    res_scale=1,res=3000,incremental_outfile='incremental_outfile.pkl'):
+    res_scale=1,res=3000,incremental_outfile='incremental_outfile.pkl',
+    indiv_wave_arrays=True):
     """
     Computes a new grid of model spectra, where all calculated models
     in the grid are matched to the wavelength grid from the data
@@ -260,12 +261,17 @@ def smooth_grid(model_dict, data_wave, variable=True, delta_pixels=2,
 
     # for each grid point, call variable_smooth to get the smoothed model
     for i in range(mlen):
+        if indiv_wave_arrays:
+            model_wave_array = model_dict['wsyn'][i]
+        else:
+            model_wave_array = model_dict['wsyn']
+
         if variable:
-            new_flux = variable_smooth(model_dict['wsyn'][i],
+            new_flux = variable_smooth(model_wave_array,
                 model_dict['fsyn'][i],data_wave,delta_pixels=delta_pixels,
                 res_scale=res_scale)
         else:
-            new_flux = smooth_model(model_dict['wsyn'][i],
+            new_flux = smooth_model(model_wave_array,
                 model_dict['fsyn'][i],data_wave,res)
         logging.debug('{} {}'.format(len(new_flux),len(data_wave)))
         logging.debug('{} {}'.format(i,str(model_new.keys())))
