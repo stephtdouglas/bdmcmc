@@ -25,7 +25,7 @@ new_flux_unit = u.erg / (u.um * u.cm**2 * u.s)
 spectrum['flux'] = spectrum['flux'].to(new_flux_unit,equivalencies=u.spectral_density(spectrum['wavelength']))
 spectrum['unc'] = spectrum['unc'].to(new_flux_unit,equivalencies=u.spectral_density(spectrum['wavelength']))
 
-wave_diff = np.median(spectrum["wavelength"][:-2]-spectrum["wavelength"][2:])
+wave_diff = np.median(spectrum["wavelength"][2:]-spectrum["wavelength"][:-2])
 new_wave_diff = wave_diff/10.0
 logging.info("old {} new {}".format(wave_diff,new_wave_diff))
 logging.info("min {} max {}".format(min(spectrum["wavelength"]),max(spectrum["wavelength"])))
@@ -63,7 +63,7 @@ for i in range(len(new_grid['logg'])):
     logging.debug(i)
     logging.debug(type(new_grid['fsyn'][i]))
     converted_fsyn = new_grid['fsyn'][i].to(spectrum['flux'].unit,
-        equivalencies=u.spectral_density(spectrum['wavelength']))
+        equivalencies=u.spectral_density(new_wave))
     logging.debug("converted! {}".format(converted_fsyn.unit))
     another_fsyn = np.append(another_fsyn,converted_fsyn).reshape((i+1,-1))
     logging.debug(another_fsyn[0])

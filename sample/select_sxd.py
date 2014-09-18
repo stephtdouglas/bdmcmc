@@ -207,6 +207,7 @@ def get_source_info():
 
 
 
-make_sxd_batch("Marley","SXD_r2000_Marley.pkl")
-#make_sxd_batch("BTSettl","btsettl_r1200.pkl")
+#make_sxd_batch("Marley","SXD_r2000_Marley.pkl")
+#make_sxd_batch("BTSettl","SXD_r2000_BTS.pkl")
 #make_sxd_batch("B06_","B06_cloud_exp_r1200.pkl")
+make_sxd_batch("Dusty","SXD_r2000_Dusty.pkl")
