@@ -39,6 +39,9 @@ def plot_random(cropchain,model,ax=None,rand_color='r',plot_s=True):
         plt.figure(figsize=(12,9))
         ax = plt.subplot(111)
 
+    ax.step(model.wave,model.flux,color='k')
+    if plot_s:
+        ax.step(model.wave,model.unc,color='DarkGrey')
     for p in random_samp:
 #        logging.debug('random params '+str(p))
         new_flux = model.interp_models(p[:model.ndim])
@@ -59,9 +62,6 @@ def plot_random(cropchain,model,ax=None,rand_color='r',plot_s=True):
     ax.set_xlabel(r'$\lambda (\mu m)$',fontsize='x-large')
     ax.set_ylabel('Flux (normalized)',fontsize='large')
     ax.tick_params(labelsize='medium')
-    ax.step(model.wave,model.flux,color='k')
-    if plot_s:
-        ax.step(model.wave,model.unc,color='DarkGrey')
 #    ax.set_title('{}  {}'.format(self.name,self.date))
 
     return random_samp
