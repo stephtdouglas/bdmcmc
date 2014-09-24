@@ -207,7 +207,7 @@ def corner(medians, errors, spt, param_labels, run_labels,
 
     return fig, axes
 
-def plot_two(x,y,yerr,xerr,run_labels,*args,**kwargs):
+def plot_two(x,y,yerr,xerr,run_labels,run_colors=None,*args,**kwargs):
     """
     Plot a set of discrete values
 
@@ -235,19 +235,26 @@ def plot_two(x,y,yerr,xerr,run_labels,*args,**kwargs):
     logging.debug('{} runs'.format(num_runs))
 
     markers = ['o','v','s','^','*','<','D','>']
-    cmap = cm.get_cmap("paired")
-    color_norm = Normalize(vmin=0,vmax=num_runs)
-    scalar_map = cm.ScalarMappable(norm=color_norm,cmap=cmap)
+    use_cmap=False
+    if (run_colors==None) or (len(run_labels)>len(run_colors)):
+        cmap = cm.get_cmap("paired")
+        color_norm = Normalize(vmin=0,vmax=num_runs)
+        scalar_map = cm.ScalarMappable(norm=color_norm,cmap=cmap)
+        use_cmap = True
     
 
+    
     for i in range(num_runs):
-        plot_color = scalar_map.to_rgba(i)
+        if use_cmap:
+            plot_color = scalar_map.to_rgba(i)
+        else:
+            plot_color = run_colors[i]
         logging.debug('x {}'.format(x[i]))
         logging.debug('y {}'.format(y[i]))
-        logging.debug('xerr {}'.format(xerr[i].reshape((-1,2)).T))
-        logging.debug('yerr {}'.format(yerr[i].reshape((-1,2)).T))
-        ax.errorbar(x[i],y[i],
-            yerr[i].reshape((-1,2)).T,xerr[i].reshape((-1,2)).T,
+        logging.debug('xerr {}'.format(xerr[i]))#.reshape((-1,2)).T))
+        logging.debug('yerr {}'.format(yerr[i]))#.reshape((-1,2)).T))
+        ax.errorbar(x[i]+(0.05*i),y[i],yerr[i],xerr[i],
+#            yerr[i].reshape((-1,2)).T,xerr[i].reshape((-1,2)).T,
             marker=markers[i],color=plot_color,ms=9,mec='None',elinewidth=2,
             capsize=5,ecolor=plot_color,barsabove=True,mew=2,
             label=run_labels[i],linewidth=0)
