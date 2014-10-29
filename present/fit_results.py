@@ -38,6 +38,13 @@ model_params = {"Gaia-DUSTY": ["logg","teff"],
                 "Marley": ["logg", "fsed", "teff"]
                 }
 
+model_labels = {"Gaia-DUSTY": "Gaia-DUSTY (Rice+2010)",
+                "BT-Settl": "BT-Settl (Allard+2011)",
+                "Burrows": "Burrows",
+                "Marley": "Saumon & Marley (2008)"
+                }
+
+
 mcolors = ["Blue","Magenta","LimeGreen","Orange"]
 mod_names = ["Marley","Gaia-DUSTY","BT-Settl","Burrows"]
 mod_file_names = ["Marley","Dusty","BT-Settl","B06"]
@@ -50,10 +57,14 @@ model_extents = {"Marley":[[4.5,5.5],[1,5],[1500,2400]],
                  "Gaia-DUSTY":[[3.0,5.5],[1400,2400]],
                  "BT-Settl":[[2.5,6.0],[1200,3000]],
                  "Burrows":[[4.5,5.5],[700,2300]]}
-sxd_extents = {"Marley":[[4.,5.5],[1,5],[1200,2400]],
-                 "Gaia-DUSTY":[[3.0,6.0],[1400,2400]],
-                 "BT-Settl":[[2.5,6.0],[1200,3000]],
-                 "Burrows":[[4.5,5.5],[700,2300]]}
+#sxd_extents = {"Marley":[[4.,5.5],[1,5],[1200,2400]],
+#                 "Gaia-DUSTY":[[3.0,6.0],[1400,2400]],
+#                 "BT-Settl":[[2.5,6.0],[1200,3000]],
+#                 "Burrows":[[4.5,5.5],[700,2300]]}
+sxd_extents = {"Marley":[[0,7],[1,5],[1200,3500]],
+                 "Gaia-DUSTY":[[0,7],[1200,3500]],
+                 "BT-Settl":[[0,7],[1200,3500]],
+                 "Burrows":[[0,7],[1200,3500]]}
 
 fitpath = "/home/stephanie/ldwarfs/batch_ldwarfs/"
 #fitfolders = ["Marley_2014-09-15_med","Dusty_2014-09-17_med/",
@@ -345,10 +356,12 @@ def spt_plot_models(object_names,spts,sample_name,mcolors,names,
         logging.info("DONE WITH {}".format(b))
         logging.info(medians)
         logging.info(errors)
-        spt_plot(medians,errors,spts,["logg","teff"],names,
+        mod_labels = [model_labels[name] for name in names]
+        spt_plot(medians,errors,spts,["logg","teff"],mod_labels,
                  "{}_{}".format(sample_name,b),single_figure=False,
                  extents=plot_extents[names[i]],
                  model_extents=[[2.5,6.0],[1200,3000]],run_colors=mcolors)
+        
         
 def plot_marley_correlations(object_names,spts,sample_name,name,
     modfilename,fitfolder,date,mod_extents):
@@ -473,10 +486,10 @@ sxd_names = sxd_sample["shortname"][ra_order]#[:6]
 sxd_types = sxd_sample["SpT"][ra_order]#[:6]
 
 
-#smarley = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Marley.pkl')
-#sdusty = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Dusty.pkl')
-#ssettl = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS.pkl')
-#sxd_models=[smarley,sdusty,ssettl]
+smarley = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Marley.pkl')
+sdusty = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Dusty.pkl')
+ssettl = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS.pkl')
+sxd_models=[smarley,sdusty,ssettl]
 
 sxd_fitfolders = ["Marley_2014-09-15_med/","Dusty_2014-09-17_med/",
               "BTSettl_2014-09-16_med/"]
@@ -496,12 +509,12 @@ sxd_mod_file_names = ["Marley","Dusty","BTSettl"]
 #    sxd_extents)
 #plt.close("all")
 
-#spt_plot_models(sxd_names,sxd_types,"SXD",mcolors[:-1],
-#    mod_names[:-1],sxd_mod_file_names,sxd_fitfolders,sxd_dates,
-#    sxd_extents)
-#plt.close("all")
+spt_plot_models(sxd_names,sxd_types,"SXD",mcolors[:-1],
+    mod_names[:-1],sxd_mod_file_names,sxd_fitfolders,sxd_dates,
+    sxd_extents)
+plt.close("all")
 
-
+"""
 bd_name = "0033-1521"
 i=2 #BT-Settl
 b="K"
@@ -523,3 +536,4 @@ for ax in axes.flatten():
 plt.savefig("corner_ex_{}_{}.png".format(bd_name,sxd_mod_file_names[i]))
 plt.savefig("corner_ex_{}_{}.eps".format(bd_name,sxd_mod_file_names[i]))
 
+"""
