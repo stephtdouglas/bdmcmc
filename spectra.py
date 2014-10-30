@@ -227,6 +227,60 @@ class BrownDwarf(object):
             self.specs['low']['slit_width'] = -9.
             logging.info('no header available; no slit_width information')
 
+    def get_med(self,spectrograph,obs_date=None,filename=None):
+        """
+        Get low-resolution (SpeX) observation from database;
+        calls spectra.spectrum_query
+
+        Parameters
+        ----------
+        spectrograph: string
+            The spectrograph corresponding to the desired data.
+            Allowed values: "triplespec","spex","sxd","fire"
+
+        obs_date: string (default=None) 
+            (required if there are 2 or more possibilities)
+            format as 'YYYY-MM-DD'
+
+        filename: string (default=None) 
+            (required if there are more than 2 w/ same obs_date)
+            IF THERE ARE TWO OBSERVATIONS WITH THE SAME DATE IT WILL 
+            PICK THE FIRST BY DEFAULT.
+
+        Creates
+        -------
+        self.specs['med']: dictionary
+            'wavelength', 'flux', and 'unc' as arrays,
+            and 'slit_width' as a float, all in a nested dictionary
+            access as, e.g., self.specs['low']['wavelength']
+        """
+
+        spec=spectrograph.lower()
+
+        if (spec=="spex") or (spec=="sxd"):
+            inst_id = 6
+            tel_id = 7 # IRTF
+        elif (spec=="triplespec") or (spec=="tspec"):
+            inst_id = 16
+            tel_id = 19 # ARC 3.5m (APO)
+        elif (spec=="fire"):
+            inst_id = 11
+            tel_id = 22 # Baade
+
+        self.specs['med'] = spectrum_query(self.sid,
+            tel_id, inst_id, True, obs_date, filename)
+
+        if 'header' in self.specs['med'].keys():
+            header = self.specs['med'].pop('header')
+            if "SLITW_ARC" in header.keys():
+                self.specs['med']['slit_width'] = header['SLTW_ARC']*u.arcsec
+            else:
+                self.specs['med']['slit_width'] = -9.
+                logging.info('no slit_width information in header')
+        else:
+            self.specs['med']['slit_width'] = -9.
+            logging.info('no header available; no slit_width information')
+
 
 
     def get_order(self,order,obs_date=None):
