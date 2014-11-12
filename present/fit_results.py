@@ -424,52 +424,6 @@ def plot_marley_correlations(object_names,spts,sample_name,name,
     
 
 ############################# 
-
-#all_filenames, all_names, all_band_names = collect_results.sort_files(
-#    fitpath+"BTSettl_2014-09-15/results_and_chains.lst")
-
-#prism_names = np.unique(all_names)
-#prism_types = collect_results.get_spts(prism_names)
-
-prism_sample = at.read("/home/stephanie/Dropbox/paperBD/prism_sample.csv",
-                     delimiter="\t")
-ra_order = np.argsort(prism_sample["Shortname"])
-prism_names = prism_sample["Shortname"][ra_order]
-prism_names[-1] = "U12128"
-prism_types = prism_sample["Ntype"][ra_order]
-prism_spectypes = prism_sample["Type"][ra_order]
-
-
-#burrows = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_B06_wide.pkl')
-#marley = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_marley.pkl')
-#dusty = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_dusty_cut.pkl')
-#settl = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_BTS_wide.pkl')
-#prism_models=[marley,dusty,settl,burrows]
-
-prism_fitfolders = ["Marley_2014-06-23/","Dusty_2014-09-17/",
-              "BTSettl_2014-09-15/","Burrows_2014-09-16/"]
-prism_dates = [prism_fitfolders[i].split("_")[1][:-1] for i in range(4)]
-
-#plot_marley_correlations(prism_names,prism_spectypes,"prism",
-#    mod_names[0],mod_file_names[0],prism_fitfolders[0],prism_dates[0],
-#    model_extents["Marley"])
-#plot_all_results(prism_names,"prism",prism_models,mcolors,mod_names,
-#    mod_file_names,prism_fitfolders,prism_dates)
-#plt.close("all")
-
-#tabulate_all_results(prism_names,"prism",
-#    mod_names,mod_file_names,prism_fitfolders,prism_dates)
-
-#spt_plot_all(prism_names,prism_types,"prism",mcolors,
-#    mod_names,mod_file_names,prism_fitfolders,prism_dates,model_extents)
-#plt.close("all")
-
-#spt_plot_models(prism_names,prism_types,"prism",mcolors,
-#    mod_names,mod_file_names,prism_fitfolders,prism_dates,model_extents)
-#plt.close("all")
-
-
-
 ### SXD ####
 
 #all_filenames, all_names, all_band_names = collect_results.sort_files(
