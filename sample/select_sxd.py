@@ -27,7 +27,8 @@ def fetch_sxd():
     # only keep object names and observation_dates for those with resolution 
     # over 1000 (Prism has R~200-400, XD has R~2000)
     spex_sxd = [[i['shortname'],i['obs_date'],i['source_id']] for i in all_spex if 
-        (np.average(i['wavelength'][:-1] / np.diff(i['wavelength'])))>1000]
+        ((np.average(i['wavelength'][:-1] / np.diff(i['wavelength']))>1000)
+         and (np.average(i['wavelength'][:50] / np.diff(i['wavelength'][:51]))>1000))]
 
     return spex_sxd
 
@@ -40,6 +41,10 @@ def make_sxd_batch(model_name="marley",model_file="SXD_Marley.pkl"):
 
     h = open('submit_all_{}.sh'.format(model_name),'w')
     for name,date,sid in spex_sxd:
+        if name==None:
+            name = db.query.execute("SELECT names FROM sources WHERE id={}".format(sid)
+                                    ).fetchone()[0]
+
         logging.debug("name {} obs on {} sid {}".format(name,date,sid))
         h.write('qsub run_{}_{}.sh\n'.format(model_name,name))
 
@@ -79,15 +84,18 @@ def plot_all_sxd():
     plt.figure()
     ax = plt.subplot(111)
     for name,date,sid in spex_sxd:
-         if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
-             bd = bdmcmc.spectra.BrownDwarf(name)
-             bd.get_low(obs_date=date)
-             print name,date,bd.specs['low']['slit_width']
-             ax.step(bd.specs['low']['wavelength'],bd.specs['low']['flux'])
-             ax.set_title(name)
-             ax.set_xlim(0.8,2.6)
-             pp.savefig()
-             ax.cla()
+        if name==None:
+            name = db.query.execute("SELECT names FROM sources WHERE id={}".format(sid)
+                                    ).fetchone()[0]
+        if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
+            bd = bdmcmc.spectra.BrownDwarf(name)
+            bd.get_low(obs_date=date)
+            print name,date,bd.specs['low']['slit_width']
+            ax.step(bd.specs['low']['wavelength'],bd.specs['low']['flux'])
+            ax.set_title(name)
+            ax.set_xlim(0.8,2.6)
+            pp.savefig()
+            ax.cla()
     pp.close()
 
 
@@ -97,17 +105,20 @@ def plot_sxd_res():
     fig1 = plt.figure()
     ax1 = plt.subplot(111)
     for name,date,sid in spex_sxd:
-         if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
-             bd = bdmcmc.spectra.BrownDwarf(name)
-             bd.get_low(obs_date=date)
-             print name,date,bd.specs['low']['slit_width']
-             w = bd.specs['low']['wavelength']
-             wdiff = w[2:]-w[:-2]
-             R = w[:-2] / wdiff * (
-                 0.3/bd.specs['low']['slit_width'].value)
-             Rclean = R[R>1000]
-             wclean = w[:-1][R>1000]#w[:-2][wdiff>0.01*u.um]
-             ax1.plot(wclean, Rclean,'.',label=name)
+        if name==None:
+            name = db.query.execute("SELECT names FROM sources WHERE id={}".format(sid)
+                                    ).fetchone()[0]
+        if (name!=None) and (name!='0559-1404') and (name!='1254-0122'):
+            bd = bdmcmc.spectra.BrownDwarf(name)
+            bd.get_low(obs_date=date)
+            print name,date,bd.specs['low']['slit_width']
+            w = bd.specs['low']['wavelength']
+            wdiff = w[2:]-w[:-2]
+            R = w[:-2] / wdiff * (
+                0.3/bd.specs['low']['slit_width'].value)
+            Rclean = R[R>1000]
+            wclean = w[:-1][R>1000]#w[:-2][wdiff>0.01*u.um]
+            ax1.plot(wclean, Rclean,'.',label=name)
 #    ax1.legend(ncol=3)
 
 def calc_sxd_res():
@@ -154,6 +165,9 @@ def get_source_info():
     f.write("spec_pub\t")
     f.write("SpT\tGrav\tRegime\n")
     for name,date,sid in spex_sxd:
+        if name==None:
+            name = db.query.execute("SELECT names FROM sources WHERE id={}".format(sid)
+                                    ).fetchone()[0]
         result = db.dict.execute("SELECT s.ra, s.dec, "#s.publication_id, "
             "s.names, s.designation, "
             "s.shortname, s.unum, s.components FROM sources AS s WHERE "

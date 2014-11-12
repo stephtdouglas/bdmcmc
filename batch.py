@@ -20,7 +20,7 @@ class OneBatch(object): #THAT needs a better name
     """
 
     def __init__(self,bd_name,model_filename,model_name,
-        mask_H=True,band_names=None,obs_date=None):
+        mask_H=True,band_names=None,obs_date=None,filename=None):
         """
         """
 
@@ -30,6 +30,8 @@ class OneBatch(object): #THAT needs a better name
         self.bd = bdmcmc.spectra.BrownDwarf(bd_name)
         if obs_date:
             self.bd.get_low(obs_date=obs_date)
+        elif filename:
+            self.bd.get_low(filename=filename)
         else:
             self.bd.get_low()
 
