@@ -170,11 +170,11 @@ def get_source_info():
                                     ).fetchone()[0]
         result = db.dict.execute("SELECT s.ra, s.dec, "#s.publication_id, "
             "s.names, s.designation, "
-            "s.shortname, s.unum, s.components FROM sources AS s WHERE "
+            "s.shortname, s.unum FROM sources AS s WHERE "
             "s.id={}".format(sid)).fetchall()
         #print len(result)
         f.write("{}\t{}\t".format(result[0]["shortname"],result[0]["unum"],
-            result[0]["components"]))
+            "---"))
 
         names = result[0]["names"]
         designation = result[0]["designation"]
