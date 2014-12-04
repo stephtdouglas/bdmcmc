@@ -30,12 +30,12 @@ figurepath = "/home/stephanie/Dropbox/paperBD/figures/"
 modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
 
 all_extents = {'logg':[2.75,6.25],'fsed':[0.9,5.1],'teff':[1150,3050],
-    'ln(s)':[-36,-30]}
+    'ln(s)':[-36,-30],"N0":[.9,1.1],"N1":[.9,1.1],"N2":[.9,1.1]}
 
-model_params = {"Gaia-DUSTY": ["logg","teff"],
-                "BT-Settl": ["logg","teff"],
-                "Burrows": ["logg","teff"],
-                "Marley": ["logg", "fsed", "teff"]
+model_params = {"Gaia-DUSTY": ["logg","teff","N0","N1","N2","ln(s)"],
+                "BT-Settl": ["logg","teff","N0","N1","N2","ln(s)"],
+                "Burrows": ["logg","teff","N0","N1","N2","ln(s)"],
+                "Marley": ["logg", "fsed", "teff","N0","N1","N2","ln(s)"]
                 }
 
 model_labels = {"Gaia-DUSTY": "Gaia-DUSTY (Rice+2010)",
@@ -49,7 +49,7 @@ mcolors = ["Blue","Magenta","LimeGreen","Orange"]
 mod_names = ["Marley","Gaia-DUSTY","BT-Settl","Burrows"]
 mod_file_names = ["Marley","Dusty","BT-Settl","B06"]
 band_names = ["full","J","H","K"]
-num_params = {"Marley":3,"Gaia-DUSTY":2,"BT-Settl":2,"Burrows":2}
+num_params = {"Marley":3+4,"Gaia-DUSTY":2+4,"BT-Settl":2+4,"Burrows":2+4}
 plot_extents = {}
 for i, mname in enumerate(mod_names):
     plot_extents[mname] = [all_extents[p] for p in model_params[mname]]
@@ -189,7 +189,7 @@ def plot_all_results(object_names,sample_name,models,mcolors,names,
             bbox_inches="tight")
         plt.clf()
 
-def tabulate_all_results(object_names,sample_name,names,modfilenames,
+def latex_all_results(object_names,sample_name,names,modfilenames,
     fitfolders,dates):
 
     num_cols = 1
@@ -197,8 +197,8 @@ def tabulate_all_results(object_names,sample_name,names,modfilenames,
         num_cols += num_params[mname]
     cols = "l"*num_cols
 
-    f = open("/home/stephanie/Dropbox/paperBD/{}_results.tbl".format(sample_name),
-             "w")
+    f = open("/home/stephanie/Dropbox/paperBD/{}_results_{}.tbl".format(
+             sample_name,date.isoformat(date.today())),"w")
 
     f.write('\\begin{deluxetable}{%s}[!t]\n' % (cols))
     f.write('%\\rotate\n')
@@ -247,6 +247,76 @@ def tabulate_all_results(object_names,sample_name,names,modfilenames,
 #                         f.write(" \\\\ \n")
 
     f.write('\\enddata\n\\end{deluxetable}\n')
+    f.close()
+
+
+def tabulate_all_results(object_names,sample_name,names,modfilenames,
+    fitfolders,dates,object_types,object_gravities=None):
+
+    f = open("/home/stephanie/Dropbox/paperBD/{}_results_{}.tsv".format(
+             sample_name,date.isoformat(date.today())),"w")
+
+    num_cols = 4
+    f.write("Name\tSpT\tGrav\tBand")
+    param_string = "--"
+    for mname in names:
+        num_cols += num_params[mname]*3
+        name_str = "\t"+mname
+        for p in model_params[mname]:
+            f.write("\t{0}_{1}\t{0}_{1}_dn\t{0}_{1}_up".format(mname,p))
+    f.write("\n")
+
+    for j,bd_name in enumerate(object_names):
+        bd_type = object_types[j]
+        if object_gravities!=None:
+            bd_grav = object_gravities[j]
+        else:
+            bd_grav = "-"
+        for k,b in enumerate(band_names):
+            b_print = b
+            if b=="full":
+                b_print = "f"
+            f.write("\n{}\t{}\t{}\t{}".format(bd_name,bd_type,bd_grav,b_print))
+
+            for i,mod in enumerate(modfilenames):
+                this_chainfile = fitpath+"{}{}_{}_{}_{}_chains.pkl".format(
+                    fitfolders[i],bd_name,b,modfilenames[i],dates[i])
+                if (i==0) and (sample_name=="prism"):
+                   this_chainfile  = fitpath+"{}{} {} {} {}_chains.pkl".format(
+                        fitfolders[i],bd_name,modfilenames[i],b,dates[i])
+                if os.path.exists(this_chainfile)==False:
+                    logging.info("{} does not exist! Skipping.".format(
+                                 this_chainfile))
+                    f.write(" \t-9999"*num_params[names[i]]*3)
+                    continue
+                cpfile = open(this_chainfile,'rb')
+                chains = cPickle.load(cpfile)
+                cpfile.close()
+
+                cropchain = chains.reshape((-1,np.shape(chains)[-1]))
+
+                if np.shape(chains)[-1]==num_params[names[i]]:
+                    quantiles = [quantile(cropchain[:,m],[.05,.5,.95])
+                        for m in range(num_params[names[i]])]
+                else:
+                    quantiles = [quantile(cropchain[:,m],[.05,.5,.95])
+                        for m in range(num_params[names[i]]-3)]
+                    quantiles.append([(0.05,-9999),(0.5,-9999),(0.95,-9999)])
+                    quantiles.append([(0.05,-9999),(0.5,-9999),(0.95,-9999)])
+                    quantiles.append(quantile(cropchain[:,-1],[.05,.5,.95]))
+                print quantiles
+                for p in range(num_params[names[i]]):
+                    dn_err = quantiles[p][1][1] - quantiles[p][0][1]
+                    up_err = quantiles[p][2][1] - quantiles[p][1][1]
+                    median = quantiles[p][1][1]
+                    if p<(num_params[names[i]]-4):
+                        f.write("\t{0:.1f}\t{1:.1f}\t{2:.1f}".format(
+                                 median, dn_err, up_err))
+                    else:
+                        f.write("\t{0:.3f}\t{1:.3f}\t{2:.3f}".format(
+                                 median, dn_err, up_err))
+
+    f.write("\n")
     f.close()
 
 def spt_plot_all(object_names,spts,sample_name,mcolors,names,
@@ -426,36 +496,44 @@ def plot_marley_correlations(object_names,spts,sample_name,name,
 ############################# 
 ### SXD ####
 
-#all_filenames, all_names, all_band_names = collect_results.sort_files(
-#    fitpath+"Dusty_2014-09-17_med/results_and_chains.lst")
-#
-#sxd_names = np.unique(all_names)
-#sxd_types = collect_results.get_spts(sxd_names)
+all_filenames, all_names, all_band_names = collect_results.sort_files(
+    fitpath+"BTSettl10_2014-11-05_sxd/results_and_chains.lst")
+
+sxd_names = np.unique(all_names)
+sxd_types = collect_results.get_spts(sxd_names)
 
 
 sxd_sample = at.read("/home/stephanie/Dropbox/paperBD/SXD_table.csv",
                      delimiter="\t")
-ra_order = np.argsort(sxd_sample["shortname"])
-sxd_names = sxd_sample["shortname"][ra_order]#[:6]
-sxd_types = sxd_sample["SpT"][ra_order]#[:6]
+data_order = np.argsort(sxd_sample["dataname"])
+sxd_names = sxd_sample["dataname"][data_order]#[:6]
+sxd_types = sxd_sample["SpT"][data_order]#[:6]
+sxd_grav0 = sxd_sample["Grav"][data_order]
+sxd_gravs = np.empty(len(data_order),"S1")
+for i,grav in enumerate(sxd_grav0):
+    if grav=="": sxd_gravs[i] = "f" 
+    else: sxd_gravs[i] = "l"
+sxd_printtypes = sxd_sample["SpT2"]
 
 
-smarley = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Marley.pkl')
-sdusty = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Dusty.pkl')
-ssettl = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS.pkl')
-sxd_models=[smarley,sdusty,ssettl]
+#smarley = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Marley.pkl')
+#sdusty = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Dusty.pkl')
+#ssettl = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS.pkl')
+#ssettl13 = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS13.pkl')
+#sxd_models=[smarley,sdusty,ssettl,ssettl13]
 
-sxd_fitfolders = ["Marley_2014-09-15_med/","Dusty_2014-09-17_med/",
-              "BTSettl_2014-09-16_med/"]
-sxd_dates = [sxd_fitfolders[i].split("_")[1] for i in range(3)]
-sxd_mod_file_names = ["Marley","Dusty","BTSettl"]
+sxd_fitfolders = ["Marley_2014-10-29_med/","Dusty_2014-10-30_med/",
+              "BTSettl10_2014-11-05_sxd/","BTSettl13_2014-11-05_sxd/"]
+sxd_dates = [folder.split("_")[1] for folder in sxd_fitfolders]
+sxd_mod_file_names = ["Marley","Dusty","BTSettl","BTS13"]
+sxd_mod_names = ["Marley","Gaia-DUSTY","BT-Settl","BT-Settl"]
 
 #plot_all_results(sxd_names,"SXD",sxd_models,mcolors[:-1],mod_names[:-1],
 #    sxd_mod_file_names,sxd_fitfolders,sxd_dates)
 #plt.close("all")
 
-#tabulate_all_results(sxd_names,"SXD",mod_names[:-1],
-#    sxd_mod_file_names,sxd_fitfolders,sxd_dates)
+tabulate_all_results(sxd_names,"SXD",sxd_mod_names,
+    sxd_mod_file_names,sxd_fitfolders,sxd_dates,sxd_types,sxd_gravs)
 
 
 #spt_plot_all(sxd_names,sxd_types,"SXD",mcolors[:-1],
@@ -463,10 +541,49 @@ sxd_mod_file_names = ["Marley","Dusty","BTSettl"]
 #    sxd_extents)
 #plt.close("all")
 
-spt_plot_models(sxd_names,sxd_types,"SXD",mcolors[:-1],
-    mod_names[:-1],sxd_mod_file_names,sxd_fitfolders,sxd_dates,
-    sxd_extents)
-plt.close("all")
+#spt_plot_models(sxd_names,sxd_types,"SXD",mcolors[:-1],
+#    mod_names[:-1],sxd_mod_file_names,sxd_fitfolders,sxd_dates,
+#    sxd_extents)
+#plt.close("all")
+
+
+### TRIPLESPEC
+
+
+tspec_sample = at.read("/home/stephanie/ldwarfs/TSPEC_forplotting.csv",
+                       delimiter="\t")
+data_order = np.argsort(tspec_sample["dataname"])
+tspec_names = tspec_sample["dataname"][data_order]#[:6]
+tspec_types = tspec_sample["SpT"][data_order]#[:6]
+tspec_grav0 = tspec_sample["Grav"][data_order]
+tspec_gravs = np.empty(len(data_order),"S1")
+for i,grav in enumerate(tspec_grav0):
+    if grav=="": tspec_gravs[i] = "f" 
+    else: tspec_gravs[i] = "l"
+tspec_printtypes = tspec_sample["SpT2"]
+
+#tspec_models=[smarley,sdusty,ssettl,ssettl13]
+
+tspec_fitfolders = ["Marley_2014-11-07_tspec/","Dusty_2014-11-07_tspec/",
+              "Dusty_2014-11-08_tspec/",
+              "BTSettl10_2014-11-06_tspec/","BTSettl13_2014-11-06_tspec/"]
+tspec_dates = [folder.split("_")[1] for folder in tspec_fitfolders]
+tspec_mod_file_names = ["Marley","Dusty","Dusty","BTS10","BTS13"]
+
+tspec_mod_names = ["Marley","Gaia-DUSTY","Gaia-DUSTY","BT-Settl","BT-Settl"]
+
+tabulate_all_results(tspec_names,"TSPEC",tspec_mod_names,
+    tspec_mod_file_names,tspec_fitfolders,tspec_dates,tspec_types,tspec_gravs)
+
+
+
+
+
+
+
+
+
+
 
 """
 bd_name = "0033-1521"
