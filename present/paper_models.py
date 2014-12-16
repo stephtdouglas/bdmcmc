@@ -12,22 +12,22 @@ figurepath = "/home/stephanie/Dropbox/paperBD/figures/"
 
 flux_unit=(u.erg / u.cm**2 / u.s / u.um)
 modelpath = '/home/stephanie/ldwarfs/modelSpectra/'
-burrows = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_B06_wide.pkl')
-marley = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_marley.pkl')
-dusty = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_dusty.pkl')
-settl = bdmcmc.get_mod.AtmoModel(modelpath+'SpeX_BTS_wide.pkl')
+#marley = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Marley.pkl')
+#dusty = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Dusty.pkl')
+#settl = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS.pkl')
+#settl13 = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS13.pkl')
 # Need to fix wavelength arrays and units
 
 
-bd = bdmcmc.spectra.BrownDwarf('U20165')
-bd.get_low()
+#bd = bdmcmc.spectra.BrownDwarf('U20165')
+#bd.get_low()
 
 #marley.model["wsyn"] = bd.specs['low']['wavelength']
 
 
-mcolors = ["Blue","Magenta","LimeGreen","Orange"]
-gstyles = ["-","--",":"]
-names = ["Marley","Gaia-DUSTY","BT-Settl","Burrows"]
+mcolors = ["Blue","Magenta","LimeGreen","Red"]
+gstyles = ["-","--",":","-."]
+names = ["Marley","Gaia-DUSTY","BT-Settl10","BT-Settl13"]
 
 
 for j, g in enumerate([4.5,5.0,5.5]):
@@ -41,7 +41,7 @@ for j, g in enumerate([4.5,5.0,5.5]):
 
 #    for i,T in enumerate([1500,1800,2100]):
     for i,T in enumerate([1400,1700,2000,2300]):
-        for k, atmo_model in enumerate([marley,dusty,settl,burrows]):
+        for k, atmo_model in enumerate([marley,dusty,settl,settl13]):
             ax = axes[k]
             model = atmo_model.model
             if k==0:
@@ -66,31 +66,35 @@ for j, g in enumerate([4.5,5.0,5.5]):
                 continue
 #            print "k {} lw {} lf {}".format(k, len(mwave),len(mflux))
 
-            norm_by = np.sum(mflux)
-            ax.step(mwave,mflux/norm_by+i*5e-3,color=mcolors[k])
+            norm_by = np.median(mflux)
+            offset = i*1.5
+            ax.step(mwave,mflux/norm_by+offset,color=mcolors[k])
                 #,ls=gstyles[j])
             #print "{} {} {} {}".format(k,T,g,i*5e-3)
 
             ax.tick_params(labelleft=False)
-            ax.set_xticklabels(["","1","1.5","2","2.5"])
+            ax.set_xlim(0.85,2.5)
+            ax.set_xticks([1,1.5,2,2.5])
+            ax.set_xticklabels(["1","1.5","2","2.5"])
             ax.set_xlabel(r"$\lambda$ (micron)",fontsize="large")
 
             #if k>0:
             #    #print k
             #    ax.set_ylim(axes[0].get_ylim())
-            ax.set_ylim((-0.001,0.021))
+            ax.set_ylim((-0.001,8))
 
     plt.subplots_adjust(wspace=0.0,top=0.95,bottom=0.2,left=0.1,right=0.95)
     axes[0].set_ylabel("Flux (normalized)",fontsize="large")
-    axes[0].text(1.5,0.014,r"T$_{eff}$=2300 K")
-    axes[0].text(1.5,0.009,r"T$_{eff}$=2000 K")
-    axes[0].text(1.5,0.004,r"T$_{eff}$=1700 K")
-    axes[0].text(1.5,0.0001,r"T$_{eff}$=1400 K")
-    axes[0].text(1.5,0.019,names[0],color=mcolors[0])
-    axes[1].text(1.5,0.019,names[1],color=mcolors[1])
-    axes[2].text(1.6,0.019,names[2],color=mcolors[2])
-    axes[3].text(1.6,0.019,names[3],color=mcolors[3])
-    plt.savefig(figurepath+"models_spex_g{}.eps".format(g*10),bbox_inches="tight")
+    axes[0].text(2,5.5,"2300 K",fontsize="small")
+    axes[0].text(2,4.,"2000 K",fontsize="small")
+    axes[0].text(2,2.75,"1700 K",fontsize="small")
+    axes[0].text(2,1.4,r"1400 K",fontsize="small")
+    axes[0].text(1.9,7,names[0],color=mcolors[0])
+    axes[1].text(1.5,7,names[1],color=mcolors[1])
+    axes[2].text(1.6,7,names[2],color=mcolors[2])
+    axes[3].text(1.6,7,names[3],color=mcolors[3])
+    plt.savefig(figurepath+"models_sxd_g{}.eps".format(g*10),bbox_inches="tight")
+    #break
 
 """
 fig = plt.figure(figsize=(8,3))
