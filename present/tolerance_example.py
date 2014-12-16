@@ -56,10 +56,10 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
         'wavelength':bd.specs['low']['wavelength'][full],
         'flux':bd.specs['low']['flux'][full],
         'unc':bd.specs['low']['unc'][full]}
-#    band_spectrum = {
-#        'wavelength':bd.specs['low']['wavelength'][J],
-#        'flux':bd.specs['low']['flux'][J],
-#        'unc':bd.specs['low']['unc'][J]}
+    band_spectrum = {
+        'wavelength':bd.specs['low']['wavelength'][J],
+        'flux':bd.specs['low']['flux'][J],
+        'unc':bd.specs['low']['unc'][J]}
 #    band_spectrum = {
 #        'wavelength':bd.specs['low']['wavelength'][K],
 #        'flux':bd.specs['low']['flux'][K],
@@ -73,7 +73,7 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
 
     left = np.where(mg.wave<1.6*u.um)[0]
     right = np.where(mg.wave>1.6*u.um)[0]
-    rand_color='r'
+    rand_color='g'#'r'
 
 
     cpfile = open(chain_filename,'rb')
@@ -87,7 +87,7 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
     # first plot the model from the fit without adding tolerance
     if orig_params==None:
         orig_params = [np.median(cropchain[:,i]) for i in range(ndim)]
-    fig = plt.figure(figsize=(10,7))
+    fig = plt.figure(figsize=(10,3))
     ax = plt.subplot(111)
     ax.set_xlim(min(band_spectrum["wavelength"].value),max(band_spectrum["wavelength"].value))
     new_flux = mg.interp_models(orig_params)
@@ -107,24 +107,25 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
     ax.set_ylabel('Flux',fontsize='xx-large')
     ax.set_xlabel('Wavelength (microns)',fontsize='xx-large')
 
-    text_step = (ax.get_ylim()[1]-ax.get_ylim()[0])*0.05
-    texty = ax.get_ylim()[0]+text_step*2
+    text_step = (ax.get_ylim()[1]-ax.get_ylim()[0])*0.1
+    texty = ax.get_ylim()[0]+text_step*1.
 #    for i,param in enumerate(["log(g)","Fsed","Teff"]):
     for i,param in enumerate(["log(g)","Teff"]):
-        ax.text(1.3,texty+text_step*i,"{} = {:.0f}".format(param,orig_params[i]),color="r",
-            fontsize="large")
+        ax.text(1.27,texty+text_step*i,"{} = {:.0f}".format(param,orig_params[i]),
+            color=rand_color,fontsize="x-large")
     ax.set_yticklabels([])
     notol_ylim = ax.get_ylim()
+    plt.subplots_adjust(left=0.07,right=0.93,bottom=0.12)
 
     plt.savefig('notol_ex_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches="tight")
 
-
+    
     # then plot the random draws from the fit with the tolerance parameter,
     # showing the additional uncertainty
 
     random_samp = cropchain[np.random.randint(len(cropchain),size=200)]
 
-    fig = plt.figure(figsize=(10,7))
+    fig = plt.figure(figsize=(10,3))
     ax = plt.subplot(111)
     ax.set_xlim(min(band_spectrum["wavelength"].value),max(band_spectrum["wavelength"].value))
     ax.set_ylim(notol_ylim)
@@ -166,14 +167,15 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
     ax.set_ylabel('Flux',fontsize='xx-large')
     ax.set_xlabel('Wavelength (microns)',fontsize='xx-large')
 
-    text_step = (ax.get_ylim()[1]-ax.get_ylim()[0])*0.05
-    texty = ax.get_ylim()[0]+text_step*2
+    text_step = (ax.get_ylim()[1]-ax.get_ylim()[0])*0.1
+    texty = ax.get_ylim()[0]+text_step*1.
 #    for i,param in enumerate(["log(g)","Fsed","Teff"]):
     for i,param in enumerate(["log(g)","Teff"]):
-        ax.text(1.25,texty+text_step*i,"{}: {} - {}".format(param,
-            min(cropchain[:,i]),max(cropchain[:,i])),color="r",
-            fontsize="large")
-    
+        ax.text(1.27,texty+text_step*i,"{}: {} - {}".format(param,
+            min(cropchain[:,i]),max(cropchain[:,i])),color=rand_color,
+            fontsize="x-large")
+    plt.subplots_adjust(left=0.07,right=0.93,bottom=0.12)
+
 
 #    ax.text(1.7,5.3e-15,"Data & original uncertainties",color='k',
 #        fontsize='large')
@@ -209,15 +211,15 @@ orig_params=None
 obs_date="2006-08-20"
 
 
-chain_file = "/home/stephanie/ldwarfs/batch_ldwarfs/BTSettl_2014-09-16_med/2013-2806_K_BTSettl_2014-09-16_chains.pkl"
-model_file = "/home/stephanie/ldwarfs/modelSpectra/SXD_r2000_BTS.pkl"
-orig_params=None
-obs_date="2006-08-21"
+#chain_file = "/home/stephanie/ldwarfs/batch_ldwarfs/BTSettl_2014-09-16_med/2013-2806_K_BTSettl_2014-09-16_chains.pkl"
+#model_file = "/home/stephanie/ldwarfs/modelSpectra/SXD_r2000_BTS.pkl"
+#orig_params=None
+#obs_date="2006-08-21"
 
-chain_file = "/home/stephanie/ldwarfs/batch_ldwarfs/BTSettl_2014-09-16_med/2013-2806_full_BTSettl_2014-09-16_chains.pkl"
-model_file = "/home/stephanie/ldwarfs/modelSpectra/SXD_r2000_BTS.pkl"
-orig_params=None
-obs_date="2006-08-21"
+#chain_file = "/home/stephanie/ldwarfs/batch_ldwarfs/BTSettl_2014-09-16_med/2013-2806_full_BTSettl_2014-09-16_chains.pkl"
+#model_file = "/home/stephanie/ldwarfs/modelSpectra/SXD_r2000_BTS.pkl"
+#orig_params=None
+#obs_date="2006-08-21"
 
 
 obj_name = chain_file.split('/')[-1].split("_")[0]
