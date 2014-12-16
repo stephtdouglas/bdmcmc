@@ -516,24 +516,24 @@ for i,grav in enumerate(sxd_grav0):
 sxd_printtypes = sxd_sample["SpT2"]
 
 
-#smarley = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Marley.pkl')
-#sdusty = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Dusty.pkl')
-#ssettl = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS.pkl')
-#ssettl13 = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS13.pkl')
-#sxd_models=[smarley,sdusty,ssettl,ssettl13]
+smarley = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Marley.pkl')
+sdusty = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_Dusty.pkl')
+ssettl = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS.pkl')
+ssettl13 = bdmcmc.get_mod.AtmoModel(modelpath+'SXD_r2000_BTS13.pkl')
+sxd_models=[smarley,sdusty,ssettl,ssettl13]
 
 sxd_fitfolders = ["Marley_2014-10-29_med/","Dusty_2014-10-30_med/",
               "BTSettl10_2014-11-05_sxd/","BTSettl13_2014-11-05_sxd/"]
 sxd_dates = [folder.split("_")[1] for folder in sxd_fitfolders]
 sxd_mod_file_names = ["Marley","Dusty","BTSettl","BTS13"]
-sxd_mod_names = ["Marley","Gaia-DUSTY","BT-Settl","BT-Settl"]
+sxd_mod_names = ["Marley","Gaia-DUSTY","BT-Settl10","BT-Settl13"]
 
-#plot_all_results(sxd_names,"SXD",sxd_models,mcolors[:-1],mod_names[:-1],
-#    sxd_mod_file_names,sxd_fitfolders,sxd_dates)
-#plt.close("all")
+plot_all_results(sxd_names,"SXD",sxd_models,["Blue","Magenta","LimeGreen","Red"],sxd_mod_names,
+    sxd_mod_file_names,sxd_fitfolders,sxd_dates)
+plt.close("all")
 
-tabulate_all_results(sxd_names,"SXD",sxd_mod_names,
-    sxd_mod_file_names,sxd_fitfolders,sxd_dates,sxd_types,sxd_gravs)
+#tabulate_all_results(sxd_names,"SXD",sxd_mod_names,
+#    sxd_mod_file_names,sxd_fitfolders,sxd_dates,sxd_types,sxd_gravs)
 
 
 #spt_plot_all(sxd_names,sxd_types,"SXD",mcolors[:-1],
@@ -562,7 +562,7 @@ for i,grav in enumerate(tspec_grav0):
     else: tspec_gravs[i] = "l"
 tspec_printtypes = tspec_sample["SpT2"]
 
-#tspec_models=[smarley,sdusty,ssettl,ssettl13]
+tspec_models=[smarley,sdusty,ssettl,ssettl13]
 
 tspec_fitfolders = ["Marley_2014-11-07_tspec/","Dusty_2014-11-07_tspec/",
               "Dusty_2014-11-08_tspec/",
@@ -572,14 +572,11 @@ tspec_mod_file_names = ["Marley","Dusty","Dusty","BTS10","BTS13"]
 
 tspec_mod_names = ["Marley","Gaia-DUSTY","Gaia-DUSTY","BT-Settl","BT-Settl"]
 
-tabulate_all_results(tspec_names,"TSPEC",tspec_mod_names,
-    tspec_mod_file_names,tspec_fitfolders,tspec_dates,tspec_types,tspec_gravs)
+#tabulate_all_results(tspec_names,"TSPEC",tspec_mod_names,
+#    tspec_mod_file_names,tspec_fitfolders,tspec_dates,tspec_types,tspec_gravs)
 
-
-
-
-
-
+#plot_all_results(tspec_names,"TSPEC",tspec_models,["Blue","Magenta","LimeGreen","Red"],tspec_mod_names,tspec_mod_file_names,tspec_fitfolders,tspec_dates)
+#plt.close("all")
 
 
 
