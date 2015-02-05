@@ -56,10 +56,10 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
         'wavelength':bd.specs['low']['wavelength'][full],
         'flux':bd.specs['low']['flux'][full],
         'unc':bd.specs['low']['unc'][full]}
-    band_spectrum = {
-        'wavelength':bd.specs['low']['wavelength'][J],
-        'flux':bd.specs['low']['flux'][J],
-        'unc':bd.specs['low']['unc'][J]}
+#    band_spectrum = {
+#        'wavelength':bd.specs['low']['wavelength'][J],
+#        'flux':bd.specs['low']['flux'][J],
+#        'unc':bd.specs['low']['unc'][J]}
 #    band_spectrum = {
 #        'wavelength':bd.specs['low']['wavelength'][K],
 #        'flux':bd.specs['low']['flux'][K],
@@ -73,7 +73,7 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
 
     left = np.where(mg.wave<1.6*u.um)[0]
     right = np.where(mg.wave>1.6*u.um)[0]
-    rand_color='g'#'r'
+    rand_color='m'
 
 
     cpfile = open(chain_filename,'rb')
@@ -87,22 +87,22 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
     # first plot the model from the fit without adding tolerance
     if orig_params==None:
         orig_params = [np.median(cropchain[:,i]) for i in range(ndim)]
-    fig = plt.figure(figsize=(10,3))
+    fig = plt.figure(figsize=(8,3))
     ax = plt.subplot(111)
     ax.set_xlim(min(band_spectrum["wavelength"].value),max(band_spectrum["wavelength"].value))
     new_flux = mg.interp_models(orig_params)
     if len(left)>1:
-        ax.step(mg.wave[left],new_flux[left],color=rand_color,lw=1.5,
-            where='mid')
         ax.step(mg.wave[left],mg.flux[left],'k-',where='mid')
         ax.errorbar(mg.wave.value[left],mg.flux.value[left],mg.unc.value[left],
             linewidth=0,elinewidth=1,ecolor='k',color='k',capsize=0)
-    if len(right)>1:
-        ax.step(mg.wave[right],new_flux[right],color=rand_color,lw=1.5,
+        ax.step(mg.wave[left],new_flux[left],color=rand_color,lw=1.5,
             where='mid')
+    if len(right)>1:
         ax.step(mg.wave[right],mg.flux[right],'k-',where='mid')
         ax.errorbar(mg.wave.value[right],mg.flux.value[right],mg.unc.value[right],
             linewidth=0,elinewidth=1,ecolor='k',color='k',capsize=0)
+        ax.step(mg.wave[right],new_flux[right],color=rand_color,lw=1.5,
+            where='mid')
     ax.tick_params(labelleft=False,labelright=False,labelsize='large')
     ax.set_ylabel('Flux',fontsize='xx-large')
     ax.set_xlabel('Wavelength (microns)',fontsize='xx-large')
@@ -111,8 +111,19 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
     texty = ax.get_ylim()[0]+text_step*1.
 #    for i,param in enumerate(["log(g)","Fsed","Teff"]):
     for i,param in enumerate(["log(g)","Teff"]):
-        ax.text(1.27,texty+text_step*i,"{} = {:.0f}".format(param,orig_params[i]),
+        ax.text(1.27,texty+text_step*i,"{} = {:.1f}".format(param,orig_params[i]),
             color=rand_color,fontsize="x-large")
+
+    texty = ax.get_ylim()[1]-text_step*1.1
+    textx = 1.35
+    xstep = 0.35
+    if max(mg.wave)<1.6*u.um:
+        textx = 1.13
+        xstep  = 0.06
+    ax.text(textx,texty,"Data w/ unc.",color="k",fontsize="x-large")
+    ax.text(textx+xstep,texty,"Best-fit model",color=rand_color,
+        fontsize="x-large")
+
     ax.set_yticklabels([])
     notol_ylim = ax.get_ylim()
     plt.subplots_adjust(left=0.07,right=0.93,bottom=0.12)
@@ -125,10 +136,12 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
 
     random_samp = cropchain[np.random.randint(len(cropchain),size=200)]
 
-    fig = plt.figure(figsize=(10,3))
+    fig = plt.figure(figsize=(8,3))
     ax = plt.subplot(111)
     ax.set_xlim(min(band_spectrum["wavelength"].value),max(band_spectrum["wavelength"].value))
     ax.set_ylim(notol_ylim)
+    ax.plot((1.4,1.4),notol_ylim,':',lw=2,color="Grey")
+    ax.plot((1.9,1.9),notol_ylim,':',lw=2,color="Grey")
 
     logging.debug('random sample '+str(random_samp))
     for p in random_samp:
@@ -143,6 +156,17 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
             unc_line = ax.errorbar(mg.wave.value[right],mg.flux.value[right],
                 new_unc.value[right],color='LightGrey',
                 alpha=0.05,linewidth=0,elinewidth=1,capsize=0)
+    if len(left)>1:
+        data_line = ax.step(mg.wave[left],mg.flux[left],'k-',where='mid')
+        ax.errorbar(mg.wave.value[left],mg.flux.value[left],
+            mg.unc.value[left],linewidth=0,elinewidth=1,ecolor='k',
+            color='k',capsize=0)
+    if len(right)>1:
+        data_line = ax.step(mg.wave[right],mg.flux[right],'k-',
+            where='mid')
+        ax.errorbar(mg.wave.value[right],mg.flux.value[right],
+            mg.unc.value[right],linewidth=0,elinewidth=1,ecolor='k',
+            color='k',capsize=0)
     for p in random_samp:
         new_flux = mg.interp_models(p[:2])
         norm = mg.calc_normalization(p[2:-1])
@@ -150,18 +174,9 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
         if len(left)>1:
             rand_line = ax.step(mg.wave[left],new_flux[left],
                 color=rand_color,alpha=0.1,where='mid')
-            data_line = ax.step(mg.wave[left],mg.flux[left],'k-',where='mid')
-            ax.errorbar(mg.wave.value[left],mg.flux.value[left],
-                mg.unc.value[left],linewidth=0,elinewidth=1,ecolor='k',
-                color='k',capsize=0)
         if len(right)>1:
             rand_line = ax.step(mg.wave[right],new_flux[right],color=rand_color,
                 alpha=0.05,where='mid')
-            data_line = ax.step(mg.wave[right],mg.flux[right],'k-',
-                where='mid')
-            ax.errorbar(mg.wave.value[right],mg.flux.value[right],
-                mg.unc.value[right],linewidth=0,elinewidth=1,ecolor='k',
-                color='k',capsize=0)
     ax.tick_params(labelleft=False,labelright=False,labelsize='large')
     ax.set_yticklabels([])
     ax.set_ylabel('Flux',fontsize='xx-large')
@@ -171,20 +186,21 @@ def plot_one(bd_name,chain_filename,plot_title,orig_params=None,
     texty = ax.get_ylim()[0]+text_step*1.
 #    for i,param in enumerate(["log(g)","Fsed","Teff"]):
     for i,param in enumerate(["log(g)","Teff"]):
-        ax.text(1.27,texty+text_step*i,"{}: {} - {}".format(param,
+        ax.text(1.26,texty+text_step*i,"{}: {} - {}".format(param,
             min(cropchain[:,i]),max(cropchain[:,i])),color=rand_color,
             fontsize="x-large")
+    textx = 1.35
+    xstep = 0.35
+    texty = ax.get_ylim()[1]-text_step*1.1
+    if max(mg.wave)<1.6*u.um:
+        textx = 1.13
+        xstep  = 0.06
+    ax.text(textx,texty,"Data w/ unc.",color="k",fontsize="x-large")
+    ax.text(textx+xstep,texty,"Models",color=rand_color,
+        fontsize="x-large")
+    ax.text(textx+1.75*xstep,texty,"Tolerance",color="grey",fontsize="x-large")
+
     plt.subplots_adjust(left=0.07,right=0.93,bottom=0.12)
-
-
-#    ax.text(1.7,5.3e-15,"Data & original uncertainties",color='k',
-#        fontsize='large')
-#    ax.text(1.7,5.0e-15,"Increased tolerance",color='Grey',
-#        fontsize='large')
-#    ax.text(1.7,5.0e-15,"Increased tolerance",color='Grey',
-#        fontsize='large')
-#    ax.text(1.7,4.7e-15,"Models from posterior probability distribution",
-#        color='r',fontsize='large')
 
     print data_line,unc_line,rand_line
 
@@ -216,10 +232,10 @@ obs_date="2006-08-20"
 #orig_params=None
 #obs_date="2006-08-21"
 
-#chain_file = "/home/stephanie/ldwarfs/batch_ldwarfs/BTSettl_2014-09-16_med/2013-2806_full_BTSettl_2014-09-16_chains.pkl"
-#model_file = "/home/stephanie/ldwarfs/modelSpectra/SXD_r2000_BTS.pkl"
-#orig_params=None
-#obs_date="2006-08-21"
+chain_file = "/home/stephanie/ldwarfs/batch_ldwarfs/BTSettl_2014-09-16_med/2013-2806_full_BTSettl_2014-09-16_chains.pkl"
+model_file = "/home/stephanie/ldwarfs/modelSpectra/SXD_r2000_BTS.pkl"
+orig_params=None
+obs_date="2006-08-21"
 
 
 obj_name = chain_file.split('/')[-1].split("_")[0]
@@ -236,4 +252,4 @@ plt.savefig('tol_ex_{}_{}.png'.format(obj_name,date),dpi=600,bbox_inches='tight'
 #plt.savefig('tol_corner_{}_{}.png'.format(obj_name,date),bbox_inches='tight')#,dpi=600)
 
 #triangle.corner(cropchain[:,:2],extents=[[4.8,5.8],[1450,1700]])
-#plt.savefig('tol_corner_marg_{}_{}.png'.format(obj_name,date),bbox_inches='tight')
+#plt.savefig('tol_corner_marg_{}_{}.png'.format(obj_name,date),bbox_inches='tight',dpi=300)

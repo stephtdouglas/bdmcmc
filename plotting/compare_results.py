@@ -38,7 +38,7 @@ from matplotlib.cbook import flatten
 def corner(medians, errors, spt, param_labels, run_labels,
            extents=None, truths=None, truth_color="#4682b4",
            scale_hist=False, quantiles=[], verbose=True, 
-           spec_grid=None, **kwargs):
+           spec_grid=None, run_colors=None, **kwargs):
     """
     Make a *sick* corner plot showing the projections of a data set in a
     multi-dimensional space. kwargs are passed to hist2d() or used for
@@ -87,6 +87,7 @@ def corner(medians, errors, spt, param_labels, run_labels,
     """
 
     K = len(medians)
+    logging.info("K "+str(K))
     logging.debug(str(medians))
     logging.debug(str(errors))
     logging.debug('K {} spt {}'.format(K,spt))
@@ -144,7 +145,7 @@ def corner(medians, errors, spt, param_labels, run_labels,
         #spt_two = np.arange(sum(mshape)).reshape(mshape)*0.1
         spt_array = spt_one #+ spt_two
         spt_errors = np.zeros(np.shape(errors[i]))
-        plot_two(medians[i],spt_array,spt_errors,errors[i],run_labels,ax=ax)
+        plot_two(medians[i],spt_array,spt_errors,errors[i],run_labels,ax=ax,run_colors=run_colors)
         if i==0:
             ax.legend(loc=3,numpoints=1)
 
@@ -247,14 +248,15 @@ def plot_two(x,y,yerr,xerr,run_labels,run_colors=None,*args,**kwargs):
     for i in range(num_runs):
         if use_cmap:
             plot_color = scalar_map.to_rgba(i)
+            if i==2: plot_color = [99.0/255,202.0/255,0,1]
         else:
             plot_color = run_colors[i]
         logging.debug('x {}'.format(x[i]))
         logging.debug('y {}'.format(y[i]))
         logging.debug('xerr {}'.format(xerr[i]))#.reshape((-1,2)).T))
         logging.debug('yerr {}'.format(yerr[i]))#.reshape((-1,2)).T))
-        ax.errorbar(x[i]+(0.05*i),y[i],yerr[i],xerr[i],
-#            yerr[i].reshape((-1,2)).T,xerr[i].reshape((-1,2)).T,
+        ax.errorbar(x[i]+(0.05*i),y[i],#yerr[i],xerr[i],
+            yerr[i].reshape((-1,2)).T,xerr[i].reshape((-1,2)).T,
             marker=markers[i],color=plot_color,ms=9,mec='None',elinewidth=2,
             capsize=5,ecolor=plot_color,barsabove=True,mew=2,
             label=run_labels[i],linewidth=0)
