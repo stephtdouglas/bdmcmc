@@ -29,7 +29,7 @@ class BandMask(object):
 
         self.wave_mask = np.array([])
 
-        if wavelength_grid!=None:
+        if wavelength_grid is not None:
             self.wave = wavelength_grid
 
     def mask_Hband(self):

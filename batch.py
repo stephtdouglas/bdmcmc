@@ -30,7 +30,7 @@ class OneBatch(object): #THAT needs a better name
         self.bd = bdmcmc.spectra.BrownDwarf(bd_name)
         spec = spectrograph.lower()
         if spec in ("sxd","spex","triplespec","arc","fire"):
-            res = "med"
+            self.res = "med"
             if obs_date:
                 self.bd.get_med(spectrograph,obs_date=obs_date)
             elif filename:
@@ -38,7 +38,7 @@ class OneBatch(object): #THAT needs a better name
             else:
                 self.bd.get_med(spectrograph)
         else:
-            res = "low"
+            self.res = "low"
             if obs_date:
                 self.bd.get_low(obs_date=obs_date)
             elif filename:
@@ -51,21 +51,21 @@ class OneBatch(object): #THAT needs a better name
 
         if mask_H:
             self.mask = bdmcmc.mask_bands.BandMask(
-                self.bd.specs[res]['wavelength'])
+                self.bd.specs[self.res]['wavelength'])
 
             self.mask.mask_Hband()
             self.mask.make_pixel_mask()
 
             reverse_mask = np.delete(np.arange(len
-                (self.bd.specs[res]['wavelength'])),self.mask.pixel_mask)
+                (self.bd.specs[self.res]['wavelength'])),self.mask.pixel_mask)
 
             self.mask.pixel_mask = reverse_mask
 
-            self.bd.specs[res]['wavelength'] = self.bd.specs[res]['wavelength'][
+            self.bd.specs[self.res]['wavelength'] = self.bd.specs[
+                self.res]['wavelength'][self.mask.pixel_mask]
+            self.bd.specs[self.res]['flux'] = self.bd.specs[self.res]['flux'][
                 self.mask.pixel_mask]
-            self.bd.specs[res]['flux'] = self.bd.specs[res]['flux'][
-                self.mask.pixel_mask]
-            self.bd.specs[res]['unc'] = self.bd.specs[res]['unc'][
+            self.bd.specs[self.res]['unc'] = self.bd.specs[self.res]['unc'][
                 self.mask.pixel_mask]
 
         self.pdf_file = PdfPages('{}_{}_all.pdf'.format(self.bd.shortname,
@@ -102,9 +102,9 @@ class OneBatch(object): #THAT needs a better name
             plot_title=plot_title,wavelength_bins=wavelength_bins)
 #        bdsamp.mcmc_go(nwalk_mult=200,nstep_mult=250)
 #        bdsamp.mcmc_go(nwalk_mult=150,nstep_mult=150)
-        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
+#        bdsamp.mcmc_go(nwalk_mult=100,nstep_mult=100)
 #        bdsamp.mcmc_go(nwalk_mult=50,nstep_mult=50)
-#        bdsamp.mcmc_go(nwalk_mult=4,nstep_mult=4)
+        bdsamp.mcmc_go(nwalk_mult=4,nstep_mult=4)
         extents_this_run = [[min(bdsamp.cropchain[:,i])*0.9,
             max(bdsamp.cropchain[:,i])*1.1] for i in range(bdsamp.ndim)]
         # deal with the ln(s) extents separately because they're negative
@@ -140,7 +140,7 @@ class OneBatch(object): #THAT needs a better name
         """
         
 
-        wav = self.bd.specs[res]['wavelength']
+        wav = self.bd.specs[self.res]['wavelength']
         full = np.where(wav>=0.9*u.um)[0]
         Jband = np.where((wav>=0.9*u.um) & (wav<1.4*u.um))[0]
         Hband = np.where((wav>=1.4*u.um) & (wav<1.9*u.um))[0]
@@ -156,9 +156,9 @@ class OneBatch(object): #THAT needs a better name
         for b in band_names:
             logging.debug(b)
             band_spectrum = {
-                'wavelength':self.bd.specs[res]['wavelength'][bands[b]],
-                'flux':self.bd.specs[res]['flux'][bands[b]],
-                'unc':self.bd.specs[res]['unc'][bands[b]]}
+                'wavelength':self.bd.specs[self.res]['wavelength'][bands[b]],
+                'flux':self.bd.specs[self.res]['flux'][bands[b]],
+                'unc':self.bd.specs[self.res]['unc'][bands[b]]}
 
             band_plot_title = '{}_{}_{}_{}'.format(self.bd.shortname, b,
                  self.model_name,self.date)

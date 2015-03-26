@@ -19,12 +19,13 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
           [(7, 'NASA IRTF'),(8, 'Keck I'),(9, 'Keck II'),(10, 'KP 4m'),
           (11, 'KP 2.1m'),(12, 'KP Bok'),(13, 'MMT'),(14, 'CTIO 1.5m'),
           (15, 'CTIO 4m'),(16, 'Gemini-North'),(17, 'Gemini-South'),
-          (18, 'ESO VLT U2'),(19, 'ARC 3.5m'),(20, 'Subaru')]
+          (18, 'ESO VLT U2'),(19, 'ARC 3.5m'),(20, 'Subaru'),
+          (22, 'Magellan I Baade')]
 
         instrument_id (int)
           [(1, 'R-C Spec'),(2, 'GMOS-N'),(3, 'GMOS-S'),(4, 'FORS'),
           (5, 'LRIS'),(6, 'SPeX, IRTF Spectrograph'),(7, 'LDSS3-Two'),
-          (8, 'FOCAS'),(9, 'NIRSPEC')]
+          (8, 'FOCAS'),(9, 'NIRSPEC'),(11,'FIRE')]
 
         header (bool; default=False) whether to return the header
 
@@ -76,11 +77,14 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
         # edit flux units string so that astropy.units will parse it correctly
         header_flux_unit = header_flux_unit.replace("ergss","erg s").replace(
             'ergs','erg s').replace('Wm','W m').replace("A","AA")
+    elif instrument_id==11: # FIRE data has no assoc. units, using Faherty14
+        header_flux_unit = "erg s-1 cm-2 Hz-1"
     else:
         header_flux_unit = u.dimensionless_unscaled
 
-
     wave_unit = q_result['wavelength_units']
+    if instrument_id==11:# FIRE data has no assoc. units, using Faherty14
+        wave_unit = "um"
     flux_unit = q_result['flux_units']
     # edit flux units string so that astropy.units will parse it correctly
     flux_unit = flux_unit.replace("ergss","erg s").replace(
@@ -90,6 +94,8 @@ def spectrum_query(source_id,telescope_id,instrument_id,return_header=False,
     if header_flux_unit==u.dimensionless_unscaled:
         header_flux_unit = flux_unit
 
+    logging.info(q_result["wavelength"][:10])
+    logging.info(wave_unit)
     logging.info("header says {} and db says {}, using header unit".format(
         header_flux_unit,flux_unit))
 

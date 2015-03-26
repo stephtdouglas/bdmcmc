@@ -51,7 +51,8 @@ def make_fire_batch(model_name="marley",model_file="SXD_Marley.pkl"):
         f.write('logging.basicConfig(level=logging.INFO)\n\n')
         f.write("ob = OneBatch('{}',"
              "'/vega/astro/users/sd2706/modelSpectra/{}',"
-             "'{}',filename='{}')\n".format(name,model_file,model_name,filename))
+             "'{}',filename='{}',spectrograph='{}')\n".format(
+             name,model_file,model_name,filename,"FIRE"))
         f.close()
 
         g = open('run_{}_{}.sh'.format(model_name,name),'w')
@@ -59,7 +60,7 @@ def make_fire_batch(model_name="marley",model_file="SXD_Marley.pkl"):
         g.write("# Directives\n")
         g.write("#PBS -N {}{}\n".format(model_name,name))
         g.write("#PBS -W group_list=yetiastro\n")
-        g.write("#PBS -l nodes=1,walltime=12:00:00,mem=2500mb\n")
+        g.write("#PBS -l nodes=1,walltime=24:00:00,mem=2500mb\n")
         g.write("#PBS -M sd2706@columbia.edu \n")
         g.write("#PBS -m a\n")
         g.write("#PBS -V\n\n")
@@ -218,6 +219,6 @@ def get_source_info():
 
 
 #make_fire_batch("Marley","SXD_r2000_Marley.pkl")
-#make_fire_batch("BTSettl","SXD_r2000_BTS.pkl")
+make_fire_batch("BTSettl","SXD_r2000_BTS.pkl")
 #make_fire_batch("B06_","B06_cloud_exp_r1200.pkl")
-make_fire_batch("Dusty","SXD_r2000_Dusty.pkl")
+#make_fire_batch("Dusty","SXD_r2000_Dusty.pkl")

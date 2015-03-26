@@ -171,7 +171,8 @@ class BDSampler(object):
         self.start_p = np.append(self.start_p,np.ones(norm_number))
 
         # add (log of) tolerance parameter
-        start_lns = np.log(2.0*np.average(self.model.unc))
+        good_unc = np.where(np.isnan(self.model.unc)==False)[0]
+        start_lns = np.log(2.0*np.average(self.model.unc[good_unc]))
         logging.info('starting ln(s)={} s={}'.format(start_lns,
             np.exp(start_lns)))
         self.start_p = np.append(self.start_p,start_lns)
